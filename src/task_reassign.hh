@@ -10,12 +10,15 @@ namespace focusstack {
 class Task_Reassign: public ImgTask
 {
 public:
-  Task_Reassign(const std::vector<std::shared_ptr<ImgTask> > &images, std::shared_ptr<ImgTask> merged);
+  Task_Reassign(const std::vector<std::shared_ptr<ImgTask> > &grayscale_imgs,
+                const std::vector<std::shared_ptr<ImgTask> > &color_imgs,
+                std::shared_ptr<ImgTask> merged);
 
 private:
   virtual void task();
 
-  std::vector<std::shared_ptr<ImgTask> > m_images;
+  std::vector<std::shared_ptr<ImgTask> > m_grayscale_imgs;
+  std::vector<std::shared_ptr<ImgTask> > m_color_imgs;
   std::shared_ptr<ImgTask> m_merged;
 };
 

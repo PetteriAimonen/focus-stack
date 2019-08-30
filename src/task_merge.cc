@@ -13,7 +13,7 @@ Task_Merge::Task_Merge(const std::vector<std::shared_ptr<ImgTask> >& images):
 
 void Task_Merge::task()
 {
-  m_result = m_images.at(0)->img();
+  m_result = m_images.back()->img();
 
   m_images.clear();
 }
