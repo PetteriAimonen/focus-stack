@@ -5,14 +5,14 @@
 
 namespace focusstack {
 
-class Task_Wavelet
+class Task_Wavelet: public ImgTask
 {
 public:
   Task_Wavelet(std::shared_ptr<ImgTask> input, bool inverse);
 
   virtual const cv::Mat &img() const { return m_result; }
 
-  virtual std::string filename() const { return m_input.filename(); }
+  virtual std::string filename() const { return m_input->filename(); }
   virtual std::string name() const;
 
 private:

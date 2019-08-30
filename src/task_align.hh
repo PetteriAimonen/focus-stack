@@ -16,8 +16,8 @@ public:
 
   virtual const cv::Mat &img() const { return m_result; }
 
-  virtual std::string filename() const { return m_color.filename(); }
-  virtual std::string name() const { return "Align " + filename(); }
+  virtual std::string filename() const { return "aligned_" + m_color->filename(); }
+  virtual std::string name() const { return "Align " + m_color->filename(); }
 
 private:
   virtual void task();

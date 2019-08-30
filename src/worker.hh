@@ -15,8 +15,8 @@ class Task
 {
 public:
   virtual bool ready_to_run();
-  bool is_completed() const final { return m_done; }
-  void run() final;
+  bool is_completed() const { return m_done; }
+  void run();
   virtual std::string filename() const { return "unknown"; }
   virtual std::string name() const { return filename(); }
 

@@ -85,9 +85,10 @@ void FocusStack::run()
   // Save aligned images if requested
   if (m_save_aligned)
   {
-    for (ImgTask &img: aligned_imgs)
+    for (std::shared_ptr<ImgTask> img: aligned_imgs)
     {
-      worker.add(std::make_shared<Task_SaveImg>("aligned_" + img.filename(), img));
+      // Task_Align adds "aligned_" prefix to the filename, so just use that name for saving also.
+      worker.add(std::make_shared<Task_SaveImg>(img->filename(), img));
     }
   }
 
@@ -124,7 +125,7 @@ void FocusStack::run()
   worker.add(std::move(mergetask));
 
   // Reassign pixel values
-  std::make_shared<ImgTask> reassigntask = std::make_shared<Task_Reassign>(aligned_imgs, merged);
+  std::shared_ptr<ImgTask> reassigntask = std::make_shared<Task_Reassign>(aligned_imgs, merged);
   std::shared_ptr<ImgTask> reassigned = reassigntask;
   worker.add(std::move(reassigntask));
 

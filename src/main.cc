@@ -1,4 +1,4 @@
-#include <iostream>>
+#include <iostream>
 #include "options.hh"
 #include "focusstack.hh"
 

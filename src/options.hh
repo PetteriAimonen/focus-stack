@@ -17,7 +17,7 @@ public:
   bool has_flag(std::string name);
 
   // Example: with "--output=file.jpg", then get_arg("--output") returns "file.jpg"
-  std::string get_arg(std::string name, std::string default = "");
+  std::string get_arg(std::string name, std::string defval = "");
 
   // Returns all arguments that don't begin with --
   std::vector<std::string> get_filenames();

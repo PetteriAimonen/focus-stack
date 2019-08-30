@@ -16,11 +16,13 @@ public:
 
   virtual void run();
 
-  virtual std::string filename() const { return m_merged.filename(); }
+  virtual std::string filename() const { return m_merged->filename(); }
   virtual std::string name() const { return "Reassign pixel values"; }
 
 private:
-  std::vector<ImgTask&> m_images;
-  ImgTask &m_merged;
+  std::vector<std::shared_ptr<ImgTask> > m_images;
+  std::shared_ptr<ImgTask> m_merged;
   cv::Mat m_result;
 };
+
+}
