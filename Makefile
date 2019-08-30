@@ -4,7 +4,7 @@ CXX ?= g++
 CXXFLAGS ?= -Og -g3 -ggdb -Wall -Wextra -Wno-sign-compare
 CXXFLAGS += --std=c++14
 LDFLAGS += -lpthread -lm
-LDFLAGS += -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
+LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
 
 # List of source code files
 CXXSRCS += focusstack.cc main.cc worker.cc options.cc

@@ -68,7 +68,7 @@ private:
   std::deque<std::shared_ptr<Task> > m_tasks;
 
   bool m_closed;
-  int m_tasks_completed;
+  int m_tasks_started;
   int m_total_tasks;
 
   std::mutex m_mutex;

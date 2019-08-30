@@ -46,7 +46,7 @@ void Task::run()
 }
 
 Worker::Worker(int max_threads, bool verbose):
-  m_verbose(verbose), m_closed(false), m_tasks_completed(0), m_total_tasks(0)
+  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0)
 {
   m_start_time = std::chrono::steady_clock::now();
 
@@ -129,20 +129,23 @@ void Worker::worker(int thread_idx)
 
     if (task)
     {
+      float start = seconds_passed();
+      int taskidx = 0;
+
       if (m_verbose)
       {
         std::unique_lock<std::mutex> lock(m_mutex);
+        taskidx = ++m_tasks_started;
         std::printf("%6.3f [%3d/%3d] T%d Starting task: %s\n",
-                    seconds_passed(), m_tasks_completed, m_total_tasks, thread_idx, task->name().c_str());
+                    seconds_passed(), m_tasks_started, m_total_tasks, thread_idx, task->name().c_str());
       }
 
       task->run();
 
       {
         std::unique_lock<std::mutex> lock(m_mutex);
-        m_tasks_completed++;
-        std::printf("%6.3f [%3d/%3d] T%d Finished task: %s\n",
-                    seconds_passed(), m_tasks_completed, m_total_tasks, thread_idx, task->name().c_str());
+        std::printf("%6.3f           T%d Finished task %d in %0.3f s.\n",
+                    seconds_passed(), thread_idx, taskidx, seconds_passed() - start);
       }
 
       // Wake all threads to re-check dependencies

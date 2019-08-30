@@ -1,6 +1,5 @@
 // Aligns one image against a reference image.
-// Algorithm is based on "A Pyramid Approach to Subpixel Registration Based on Intensity" by
-//                       P. Thévenaz, U.E. Ruttimann, M. Unser, January 1998
+// Uses OpenCV findTransformECC() as the algorithm.
 //
 // Alignment is calculated on grayscale image, but final transformation is applied to the color image.
 
@@ -17,9 +16,17 @@ public:
 private:
   virtual void task();
 
+  void match_contrast();
+  void match_transform();
+
+  void apply_transform(const cv::Mat &src, cv::Mat &dst, bool inverse);
+
   std::shared_ptr<ImgTask> m_reference;
   std::shared_ptr<ImgTask> m_grayscale;
   std::shared_ptr<ImgTask> m_color;
+
+  cv::Mat m_transformation;
+  float m_contrast;
 };
 
 }
