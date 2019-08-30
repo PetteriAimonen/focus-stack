@@ -2,7 +2,8 @@
 
 #pragma once
 #include <thread>
-#include <queue>
+#include <deque>
+#include <vector>
 #include <memory>
 #include <exception>
 #include <opencv2/core/core.hpp>
@@ -14,23 +15,23 @@ class Task
 {
 public:
   virtual bool ready_to_run();
-  virtual bool is_completed() const { return m_done; }
-  virtual void run() = 0;
+  bool is_completed() const final { return m_done; }
+  void run() final;
   virtual std::string filename() const { return "unknown"; }
   virtual std::string name() const { return filename(); }
 
 protected:
-  std::vector<Task&> m_inputs; // List of tasks this task needs as inputs
+  virtual void task();
+
+  std::vector<std::shared_ptr<Task> > m_inputs; // List of tasks this task needs as inputs
   bool m_done;
 };
 
 // Task that has image as a result.
-// Can have either both or one of rgb/grayscale results, if other is not available it throws exception.
 class ImgTask: public Task
 {
 public:
-  virtual const cv::Mat &img_rgb() const { throw std::logic_error("RGB data is not available"); }
-  virtual const cv::Mat &img_gray() const  { throw std::logic_error("Grayscale data is not available"); }
+  virtual const cv::Mat &img() const;
 };
 
 // Work queue class that distributes tasks to threads.
@@ -39,14 +40,19 @@ class Worker
 public:
   Worker(int max_threads, bool verbose);
 
-  void add(std::unique_ptr<Task> task);
+  // Add task to the end of the queue
+  void add(std::shared_ptr<Task> task);
+  void add(const std::vector<std::shared_ptr<Task> > task);
+
+  // Prepend task, causing it to run as soon as possible
+  void prepend(std::shared_ptr<Task> task);
 
   void runall();
 
 private:
   bool m_verbose;
   std::vector<std::thread> m_threads;
-  std::vector<std::unique_ptr<Task> > m_tasks;
+  std::deque<std::shared_ptr<Task> > m_tasks;
 
   void worker();
 };

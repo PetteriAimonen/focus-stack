@@ -14,6 +14,7 @@ int main(int argc, const char *argv[])
     std::cerr << "Usage: " << argv[0] << " [options] file1.jpg file2.jpg ...\n";
     std::cerr << "Options:\n"
                  "  --output=output.jpg           Set output filename\n"
+                 "  --reference=0                 Set index of image used as alignment reference\n"
                  "  --threads=2                   Select number of threads to use\n"
                  "  --save_aligned                Save intermediate aligned images\n"
                  "  --verbose                     Verbose output from steps\n"
@@ -28,7 +29,12 @@ int main(int argc, const char *argv[])
 
   if (options.has_flag("--threads"))
   {
-    stack.set_threads(options.get_arg("--threads"));
+    stack.set_threads(std::stoi(options.get_arg("--threads")));
+  }
+
+  if (options.has_flag("--reference"))
+  {
+    stack.set_reference(std::stoi(options.get_arg("--reference")));
   }
 
   stack.run();
