@@ -14,18 +14,12 @@ class Task_Align: public ImgTask
 public:
   Task_Align(std::shared_ptr<ImgTask> reference, std::shared_ptr<ImgTask> grayscale, std::shared_ptr<ImgTask> color);
 
-  virtual const cv::Mat &img() const { return m_result; }
-
-  virtual std::string filename() const { return "aligned_" + m_color->filename(); }
-  virtual std::string name() const { return "Align " + m_color->filename(); }
-
 private:
   virtual void task();
 
   std::shared_ptr<ImgTask> m_reference;
   std::shared_ptr<ImgTask> m_grayscale;
   std::shared_ptr<ImgTask> m_color;
-  cv::Mat m_result;
 };
 
 }

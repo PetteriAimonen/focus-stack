@@ -70,16 +70,9 @@ void FocusStack::run()
   std::vector<std::shared_ptr<ImgTask> > aligned_imgs;
   for (int i = 0; i < input_imgs.size(); i++)
   {
-    if (i == m_reference)
-    {
-      aligned_imgs.push_back(input_imgs.at(i));
-    }
-    else
-    {
-      std::shared_ptr<ImgTask> task = std::make_shared<Task_Align>(grayscale_reference, grayscale_imgs.at(i), input_imgs.at(i));
-      aligned_imgs.push_back(task);
-      worker.add(std::move(task));
-    }
+    std::shared_ptr<ImgTask> task = std::make_shared<Task_Align>(grayscale_reference, grayscale_imgs.at(i), input_imgs.at(i));
+    aligned_imgs.push_back(task);
+    worker.add(std::move(task));
   }
 
   // Save aligned images if requested
@@ -98,16 +91,9 @@ void FocusStack::run()
   std::vector<std::shared_ptr<ImgTask> > aligned_grayscale;
   for (int i = 0; i < aligned_imgs.size(); i++)
   {
-    if (i != m_reference)
-    {
-      std::shared_ptr<ImgTask> task = std::make_shared<Task_Grayscale>(aligned_imgs.at(i), grayscale_reference);
-      aligned_grayscale.push_back(task);
-      worker.add(task);
-    }
-    else
-    {
-      aligned_grayscale.push_back(grayscale_reference);
-    }
+    std::shared_ptr<ImgTask> task = std::make_shared<Task_Grayscale>(aligned_imgs.at(i), grayscale_reference);
+    aligned_grayscale.push_back(task);
+    worker.add(task);
   }
 
   // Wavelet transform all images
@@ -132,6 +118,6 @@ void FocusStack::run()
   // Save result image
   worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned));
 
-  worker.runall();
+  worker.wait_all();
 }
 

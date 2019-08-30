@@ -14,13 +14,13 @@ public:
   Options(int argc, const char *argv[]);
 
   // Example: has_flag("--verbose") returns true if that flag exists
-  bool has_flag(std::string name);
+  bool has_flag(std::string name) const;
 
   // Example: with "--output=file.jpg", then get_arg("--output") returns "file.jpg"
-  std::string get_arg(std::string name, std::string defval = "");
+  std::string get_arg(std::string name, std::string defval = "") const;
 
   // Returns all arguments that don't begin with --
-  std::vector<std::string> get_filenames();
+  std::vector<std::string> get_filenames() const;
 
 private:
   std::vector<std::string> m_options;

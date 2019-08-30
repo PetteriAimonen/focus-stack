@@ -1,9 +1,18 @@
+
+# Compilation flags
 CXX ?= g++
-CXXFLAGS ?= -O2 -g3 -ggdb -Wall -Wextra -Wno-sign-compare
+CXXFLAGS ?= -Og -g3 -ggdb -Wall -Wextra -Wno-sign-compare
 CXXFLAGS += --std=c++14
+LDFLAGS += -lpthread -lm
+LDFLAGS += -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
 
-CXXSRCS += focusstack.cc main.cc
+# List of source code files
+CXXSRCS += focusstack.cc main.cc worker.cc options.cc
+CXXSRCS += task_align.cc task_grayscale.cc task_loadimg.cc
+CXXSRCS += task_merge.cc task_reassign.cc task_saveimg.cc
+CXXSRCS += task_wavelet.cc
 
+# Generate list of object file and dependency file names
 OBJS = $(CXXSRCS:%.cc=build/%.o)
 DEPS := $(OBJS:%.o=%.d)
 
@@ -18,7 +27,7 @@ clean:
 -include $(DEPS)
 
 build/focus-stack: $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 build/%.o: src/%.cc
 	$(CXX) $(CXXFLAGS) -MMD -c -o $@ $<

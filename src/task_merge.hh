@@ -12,16 +12,10 @@ class Task_Merge: public ImgTask
 public:
   Task_Merge(const std::vector<std::shared_ptr<ImgTask> > &images);
 
-  virtual const cv::Mat &img() const { return m_result; }
-
-  virtual std::string filename() const { return "merge result"; }
-  virtual std::string name() const { return "Merge " + std::to_string(m_images.size()) + " images"; }
-
 private:
   virtual void task();
 
   std::vector<std::shared_ptr<ImgTask> > m_images;
-  cv::Mat m_result;
 };
 
 }

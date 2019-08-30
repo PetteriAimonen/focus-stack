@@ -5,6 +5,9 @@
 #include <deque>
 #include <vector>
 #include <memory>
+#include <mutex>
+#include <condition_variable>
+#include <chrono>
 #include <exception>
 #include <opencv2/core/core.hpp>
 
@@ -14,16 +17,22 @@ namespace focusstack {
 class Task
 {
 public:
+  Task();
+  virtual ~Task();
+
   virtual bool ready_to_run();
   bool is_completed() const { return m_done; }
   void run();
-  virtual std::string filename() const { return "unknown"; }
-  virtual std::string name() const { return filename(); }
+  std::string filename() const { return m_filename; }
+  std::string name() const { return m_name; }
 
 protected:
-  virtual void task();
+  virtual void task() = 0;
 
-  std::vector<std::shared_ptr<Task> > m_inputs; // List of tasks this task needs as inputs
+  std::string m_filename;
+  std::string m_name;
+  std::mutex m_mutex;
+  std::vector<std::shared_ptr<Task> > m_depends_on; // List of tasks this task needs as inputs
   bool m_done;
 };
 
@@ -31,7 +40,10 @@ protected:
 class ImgTask: public Task
 {
 public:
-  virtual const cv::Mat &img() const;
+  virtual const cv::Mat &img() const { return m_result; }
+
+protected:
+  cv::Mat m_result;
 };
 
 // Work queue class that distributes tasks to threads.
@@ -39,22 +51,33 @@ class Worker
 {
 public:
   Worker(int max_threads, bool verbose);
+  ~Worker();
 
   // Add task to the end of the queue
   void add(std::shared_ptr<Task> task);
-  void add(const std::vector<std::shared_ptr<Task> > task);
 
   // Prepend task, causing it to run as soon as possible
   void prepend(std::shared_ptr<Task> task);
 
-  void runall();
+  // Wait until all tasks have finished
+  void wait_all();
 
 private:
   bool m_verbose;
   std::vector<std::thread> m_threads;
   std::deque<std::shared_ptr<Task> > m_tasks;
 
-  void worker();
+  bool m_closed;
+  int m_tasks_completed;
+  int m_total_tasks;
+
+  std::mutex m_mutex;
+  std::condition_variable m_wakeup;
+
+  std::chrono::time_point<std::chrono::steady_clock> m_start_time;
+  float seconds_passed() const;
+
+  void worker(int thread_idx);
 };
 
 
