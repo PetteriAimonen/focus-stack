@@ -22,13 +22,15 @@ public:
 
   virtual bool ready_to_run();
   bool is_completed() const { return m_done; }
-  void run();
+  void run(bool verbose = false);
   std::string filename() const { return m_filename; }
   std::string name() const { return m_name; }
+  std::string basename() const;
 
 protected:
-  virtual void task() = 0;
+  virtual void task() { };
 
+  bool m_verbose;
   std::string m_filename;
   std::string m_name;
   std::mutex m_mutex;
@@ -40,6 +42,8 @@ protected:
 class ImgTask: public Task
 {
 public:
+  ImgTask() {};
+  ImgTask(cv::Mat result): m_result(result) {}
   virtual const cv::Mat &img() const { return m_result; }
 
 protected:

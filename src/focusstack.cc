@@ -12,7 +12,7 @@
 using namespace focusstack;
 
 FocusStack::FocusStack():
-  m_output("output.jpg"), m_save_aligned(false), m_verbose(false),
+  m_output("output.jpg"), m_save_steps(false), m_verbose(false),
   m_threads(std::thread::hardware_concurrency()),
   m_reference(-1)
 {
@@ -57,7 +57,7 @@ void FocusStack::run()
     {
       if (i != m_reference)
       {
-        std::shared_ptr<ImgTask> task = std::make_shared<Task_Grayscale>(input_imgs.at(i));
+        std::shared_ptr<ImgTask> task = std::make_shared<Task_Grayscale>(input_imgs.at(i), grayscale_reference);
         worker.add(task);
         grayscale_imgs.push_back(task);
       }
@@ -67,17 +67,26 @@ void FocusStack::run()
       }
     }
 
+    if (m_save_steps)
+    {
+      for (int i = 0; i < grayscale_imgs.size(); i++)
+      {
+        worker.add(std::make_shared<Task_SaveImg>("grayscale_" + grayscale_imgs.at(i)->basename(), grayscale_imgs.at(i)));
+      }
+    }
+
     // Align other images with respect to the reference
     std::vector<std::shared_ptr<ImgTask> > aligned_imgs;
     for (int i = 0; i < input_imgs.size(); i++)
     {
-      std::shared_ptr<ImgTask> task = std::make_shared<Task_Align>(grayscale_reference, grayscale_imgs.at(i), input_imgs.at(i));
+      std::shared_ptr<ImgTask> task = std::make_shared<Task_Align>(grayscale_reference, input_imgs.at(m_reference),
+                                                                   grayscale_imgs.at(i), input_imgs.at(i));
       aligned_imgs.push_back(task);
       worker.add(std::move(task));
     }
 
     // Save aligned images if requested
-    if (m_save_aligned)
+    if (m_save_steps)
     {
       for (std::shared_ptr<ImgTask> img: aligned_imgs)
       {
@@ -106,10 +115,26 @@ void FocusStack::run()
       worker.add(std::move(task));
     }
 
+    if (m_save_steps)
+    {
+      for (int i = 0; i < aligned_imgs.size(); i++)
+      {
+        worker.add(std::make_shared<Task_SaveImg>("wavelet_" + std::to_string(i) + ".png", wavelets.at(i)));
+      }
+    }
+
     // Merge images
-    std::shared_ptr<ImgTask> mergetask = std::make_shared<Task_Merge>(wavelets);
-    std::shared_ptr<ImgTask> merged = mergetask;
-    worker.add(std::move(mergetask));
+    std::shared_ptr<ImgTask> merged_wavelet = std::make_shared<Task_Merge>(wavelets);
+    worker.add(merged_wavelet);
+
+    // Inverse-transform merged image
+    std::shared_ptr<ImgTask> merged = std::make_shared<Task_Wavelet>(merged_wavelet, true);
+    worker.add(merged);
+
+    if (m_save_steps)
+    {
+      worker.add(std::make_shared<Task_SaveImg>(merged->filename(), merged));
+    }
 
     // Reassign pixel values
     std::shared_ptr<ImgTask> reassigntask = std::make_shared<Task_Reassign>(aligned_grayscale, aligned_imgs, merged);

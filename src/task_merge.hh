@@ -15,6 +15,8 @@ public:
 private:
   virtual void task();
 
+  static void get_sq_absval(const cv::Mat &complex_mat, cv::Mat &absval);
+
   std::vector<std::shared_ptr<ImgTask> > m_images;
 };
 

@@ -16,7 +16,7 @@ int main(int argc, const char *argv[])
                  "  --output=output.jpg           Set output filename\n"
                  "  --reference=0                 Set index of image used as alignment reference\n"
                  "  --threads=2                   Select number of threads to use\n"
-                 "  --save_aligned                Save intermediate aligned images\n"
+                 "  --save_steps                  Save intermediate images from processing steps\n"
                  "  --verbose                     Verbose output from steps\n"
               << std::endl;
     return 1;
@@ -24,7 +24,7 @@ int main(int argc, const char *argv[])
 
   stack.set_inputs(options.get_filenames());
   stack.set_output(options.get_arg("--output", "output.jpg"));
-  stack.set_save_aligned(options.has_flag("--save_aligned"));
+  stack.set_save_steps(options.has_flag("--save_steps"));
   stack.set_verbose(options.has_flag("--verbose") or options.has_flag("-v"));
 
   if (options.has_flag("--threads"))

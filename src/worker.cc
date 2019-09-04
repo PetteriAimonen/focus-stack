@@ -26,9 +26,11 @@ bool Task::ready_to_run()
   return true;
 }
 
-void Task::run()
+void Task::run(bool verbose)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
+
+  m_verbose = verbose;
 
   if (m_done)
   {
@@ -44,6 +46,19 @@ void Task::run()
   // Mark as completed
   m_done = true;
 }
+
+std::string Task::basename() const
+{
+  // Separate filename from path
+  std::string basename = filename();
+  size_t pos = basename.find_last_of("/\\");
+  if (pos != std::string::npos)
+  {
+    basename = basename.substr(pos + 1);
+  }
+  return basename;
+}
+
 
 Worker::Worker(int max_threads, bool verbose):
   m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0)
@@ -61,9 +76,9 @@ Worker::~Worker()
   {
     std::unique_lock<std::mutex> lock(m_mutex);
     m_tasks.clear();
+    m_closed = true;
   }
 
-  m_closed = true;
   m_wakeup.notify_all();
 
   for (std::thread &thread: m_threads)
@@ -140,7 +155,7 @@ void Worker::worker(int thread_idx)
                     seconds_passed(), m_tasks_started, m_total_tasks, thread_idx, task->name().c_str());
       }
 
-      task->run();
+      task->run(m_verbose);
 
       {
         std::unique_lock<std::mutex> lock(m_mutex);
@@ -154,6 +169,12 @@ void Worker::worker(int thread_idx)
     else
     {
       std::unique_lock<std::mutex> lock(m_mutex);
+
+      if (m_closed)
+      {
+        break;
+      }
+
       m_wakeup.wait(lock);
     }
   }
