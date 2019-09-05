@@ -28,10 +28,10 @@ void FocusStack::run()
       m_reference = m_inputs.size() / 2;
 
     // Load input images
-    std::vector<std::shared_ptr<ImgTask> > input_imgs;
+    std::vector<std::shared_ptr<Task_LoadImg> > input_imgs;
     for (int i = 0; i < m_inputs.size(); i++)
     {
-      std::shared_ptr<ImgTask> task = std::make_shared<Task_LoadImg>(m_inputs.at(i));
+      std::shared_ptr<Task_LoadImg> task = std::make_shared<Task_LoadImg>(m_inputs.at(i));
       input_imgs.push_back(task);
 
       if (i == m_reference)
@@ -142,7 +142,7 @@ void FocusStack::run()
     worker.add(std::move(reassigntask));
 
     // Save result image
-    worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned));
+    worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned, input_imgs.at(m_reference)));
 
   } // Close scope to avoid holding onto the shared_ptr's in local variables
 

@@ -13,14 +13,11 @@ Task_Merge::Task_Merge(const std::vector<std::shared_ptr<ImgTask> >& images):
 
 void Task_Merge::task()
 {
-  m_result = m_images.front()->img();
-  return;
-
   int rows = m_images.front()->img().rows;
   int cols = m_images.front()->img().cols;
 
   cv::Mat max_absval(rows, cols, CV_32F);
-  max_absval = 0.0f;
+  max_absval = -1.0f;
 
   m_result.create(rows, cols, CV_32FC2);
 

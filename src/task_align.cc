@@ -1,5 +1,4 @@
 #include "task_align.hh"
-#include "task_wavelet.hh"
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/video.hpp>
@@ -51,9 +50,7 @@ void Task_Align::task()
 {
   if (m_refcolor == m_srccolor)
   {
-    // Transformation handles cropping also, so run it even though
-    // the alignment is identity matrix.
-    apply_transform(m_srccolor->img(), m_result, false);
+    m_result = m_srccolor->img();
   }
   else
   {
@@ -117,7 +114,9 @@ void Task_Align::match_contrast()
 
   if (m_verbose)
   {
-    std::printf("Contrast map: C:%0.3f, X:%0.3f, X2:%0.3f, Y:%0.3f, Y2:%0.3f\n",
+    std::string name = basename();
+    std::printf("%s contrast map: C:%0.3f, X:%0.3f, X2:%0.3f, Y:%0.3f, Y2:%0.3f\n",
+                name.c_str(),
                 m_contrast.at<float>(0), m_contrast.at<float>(1), m_contrast.at<float>(2),
                 m_contrast.at<float>(3), m_contrast.at<float>(4));
   }
@@ -128,6 +127,16 @@ void Task_Align::match_transform()
   cv::Mat tmp = m_srcgray->img();
   apply_contrast_whitebalance(tmp);
   cv::findTransformECC(m_refgray->img(), tmp, m_transformation);
+
+  if (m_verbose)
+  {
+    std::string name = basename();
+    std::printf("%s transform: [%0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f]\n",
+                name.c_str(),
+                m_transformation.at<float>(0, 0), m_transformation.at<float>(0, 1), m_transformation.at<float>(0, 2),
+                m_transformation.at<float>(1, 0), m_transformation.at<float>(1, 1), m_transformation.at<float>(1, 2),
+                m_transformation.at<float>(2, 0), m_transformation.at<float>(2, 1), m_transformation.at<float>(2, 2));
+  }
 }
 
 void Task_Align::match_whitebalance()
@@ -175,7 +184,9 @@ void Task_Align::match_whitebalance()
 
   if (m_verbose)
   {
-    std::printf("Whitebalance: R:x%0.3f%+0.1f, G:x%0.3f%+0.1f, B:x%0.3f%+0.1f\n",
+    std::string name = basename();
+    std::printf("%s whitebalance: R:x%0.3f%+0.1f, G:x%0.3f%+0.1f, B:x%0.3f%+0.1f\n",
+                name.c_str(),
                 m_whitebalance.at<float>(5), m_whitebalance.at<float>(4),
                 m_whitebalance.at<float>(3), m_whitebalance.at<float>(2),
                 m_whitebalance.at<float>(1), m_whitebalance.at<float>(0));
@@ -246,10 +257,5 @@ void Task_Align::apply_transform(const cv::Mat &src, cv::Mat &dst, bool inverse)
 {
   int invflag = (!inverse) ? cv::WARP_INVERSE_MAP : 0;
 
-  // Crop image width & height to multiple of 8 as required by wavelet decomposition
-  int factor = (2 << Task_Wavelet::levels);
-  int width = src.cols - src.cols % factor;
-  int height = src.rows - src.rows % factor;
-
-  cv::warpAffine(src, dst, m_transformation, cv::Size(width, height), cv::INTER_CUBIC | invflag, cv::BORDER_REFLECT);
+  cv::warpAffine(src, dst, m_transformation, cv::Size(src.cols, src.rows), cv::INTER_CUBIC | invflag, cv::BORDER_REFLECT);
 }

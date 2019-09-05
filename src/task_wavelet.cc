@@ -39,7 +39,7 @@ void Task_Wavelet::task()
     cv::Mat img = m_input->img();
 
     // nth level wavelet decomposition requires image width to be multiple of 2^n
-    int factor = (2 << levels);
+    int factor = (1 << levels);
     assert(img.rows % factor == 0 && img.cols % factor == 0);
 
     cv::Mat tmp(img.rows, img.cols, CV_32FC2);
@@ -54,51 +54,72 @@ void Task_Wavelet::task()
       zeros = 0;
 
       cv::Mat channels[] = {fimg, zeros};
-      cv::merge(channels, 2, m_result);
+      cv::merge(channels, 2, tmp);
     }
 
-    for (int i = 0; i < levels; i++)
-    {
-      int w = m_result.cols >> i;
-      int h = m_result.rows >> i;
-      cv::Mat srcarea = m_result(cv::Rect(0, 0, w, h));
-      cv::Mat dstarea = tmp(cv::Rect(0, 0, w, h));
-
-      decompose(srcarea, dstarea);
-
-      // Copy the result back to m_result
-      dstarea.copyTo(srcarea);
-    }
+    decompose_multilevel(tmp, m_result, levels);
   }
   else
   {
     // Perform composition from complex wavelets to real-valued image
     cv::Mat src = m_input->img();
-    cv::Mat tmp1(src.rows, src.cols, CV_32FC2);
-    cv::Mat tmp2(src.rows, src.cols, CV_32FC2);
+    cv::Mat tmp(src.rows, src.cols, CV_32FC2);
 
-    src.copyTo(tmp1);
-
-    for (int i = levels - 1; i >= 0; i--)
-    {
-      int w = tmp1.cols >> i;
-      int h = tmp1.rows >> i;
-      cv::Mat srcarea = tmp1(cv::Rect(0, 0, w, h));
-      cv::Mat dstarea = tmp2(cv::Rect(0, 0, w, h));
-
-      compose(srcarea, dstarea);
-
-      std::swap(tmp1, tmp2);
-    }
+    compose_multilevel(src, tmp, levels);
 
     cv::Mat channels[2];
-    cv::split(tmp1, channels);
+    cv::split(tmp, channels);
 
     channels[0].convertTo(m_result, CV_8U);
   }
 
   m_input.reset();
 }
+
+void Task_Wavelet::decompose_multilevel(const cv::Mat& input, cv::Mat& output, int levelcount)
+{
+  cv::Mat tmp(input.rows, input.cols, CV_32FC2);
+
+  for (int i = 0; i < levelcount; i++)
+  {
+    int w = input.cols >> i;
+    int h = input.rows >> i;
+    cv::Mat srcarea;
+    cv::Mat dstarea = output(cv::Rect(0, 0, w, h));
+
+    if (i == 0)
+    {
+      srcarea = input(cv::Rect(0, 0, w, h));
+    }
+    else
+    {
+      srcarea = tmp(cv::Rect(0, 0, w, h));
+      dstarea.copyTo(srcarea);
+    }
+
+    decompose(srcarea, dstarea);
+  }
+}
+
+void Task_Wavelet::compose_multilevel(const cv::Mat& input, cv::Mat& output, int levelcount)
+{
+  cv::Mat tmp(input.rows, input.cols, CV_32FC2);
+
+  input.copyTo(tmp);
+
+  for (int i = levelcount - 1; i >= 0; i--)
+  {
+    int w = input.cols >> i;
+    int h = input.rows >> i;
+    cv::Mat srcarea = tmp(cv::Rect(0, 0, w, h));
+    cv::Mat dstarea = output(cv::Rect(0, 0, w, h));
+
+    compose(srcarea, dstarea);
+
+    dstarea.copyTo(tmp(cv::Rect(0, 0, w, h)));
+  }
+}
+
 
 // Performs one level of decomposition.
 // Takes an input image, and outputs the complex values for downscaled / horizontal / diagonal / vertical subbands.
@@ -138,7 +159,7 @@ void Task_Wavelet::compose(const cv::Mat& input, cv::Mat &output)
 
   // Real x Imag composition
   compose_1d(tmp1, tmp2, false, true);
-  output += tmp2;
+  output -= tmp2;
 
   // Imag x Imag composition
   compose_1d(input, tmp1, true, true);
@@ -147,7 +168,7 @@ void Task_Wavelet::compose(const cv::Mat& input, cv::Mat &output)
 
   // Imag x Real composition
   compose_1d(tmp1, tmp2, false, false);
-  output += tmp2;
+  output -= tmp2;
 }
 
 // This function performs 1-dimensional complex wavelet decomposition.
@@ -175,8 +196,8 @@ void Task_Wavelet::decompose_1d(const cv::Mat &src, cv::Mat &dest, bool vertical
       for (int j = 0; j < FILTER_LEN; j++)
       {
         int pos = y + j - FILTER_LEN / 2;
-        if (pos < 0) pos = -pos;
-        if (pos >= length) pos = (length - 1) - (pos - (length - 1));
+        if (pos < 0) pos = length + pos;
+        if (pos >= length) pos = pos - length;
 
         cv::Point xy = vertical ? cv::Point(x, pos) : cv::Point(pos, x);
         cv::Vec2f val = src.at<cv::Vec2f>(xy);
@@ -230,8 +251,8 @@ void Task_Wavelet::compose_1d(const cv::Mat& src, cv::Mat& dest, bool vertical, 
       for (int j = (y + FILTER_LEN / 2) % 2; j < FILTER_LEN; j += 2)
       {
         int pos = (y - j + FILTER_LEN / 2) / 2;
-        if (pos < 0) pos = -pos;
-        if (pos >= halflen) pos = (halflen - 1) - (pos - (halflen - 1));
+        if (pos < 0) pos = halflen + pos;
+        if (pos >= halflen) pos = pos - halflen;
 
         cv::Vec2f val_lo = src.at<cv::Vec2f>(vertical ? cv::Point(x, pos) : cv::Point(pos, x));
         cv::Vec2f val_hi = src.at<cv::Vec2f>(vertical ? cv::Point(x, pos + halflen) : cv::Point(pos + halflen, x));
