@@ -5,6 +5,7 @@
 #include "task_align.hh"
 #include "task_wavelet.hh"
 #include "task_merge.hh"
+#include "task_denoise.hh"
 #include "task_reassign.hh"
 #include "task_saveimg.hh"
 #include <thread>
@@ -14,7 +15,9 @@ using namespace focusstack;
 FocusStack::FocusStack():
   m_output("output.jpg"), m_save_steps(false), m_verbose(false),
   m_threads(std::thread::hardware_concurrency()),
-  m_reference(-1)
+  m_reference(-1),
+  m_consistency(0),
+  m_denoise(0)
 {
 }
 
@@ -124,11 +127,15 @@ void FocusStack::run()
     }
 
     // Merge images
-    std::shared_ptr<ImgTask> merged_wavelet = std::make_shared<Task_Merge>(wavelets);
+    std::shared_ptr<ImgTask> merged_wavelet = std::make_shared<Task_Merge>(wavelets, m_consistency);
     worker.add(merged_wavelet);
 
+    // Denoise merged image
+    std::shared_ptr<ImgTask> denoised = std::make_shared<Task_Denoise>(merged_wavelet, m_denoise);
+    worker.add(denoised);
+
     // Inverse-transform merged image
-    std::shared_ptr<ImgTask> merged = std::make_shared<Task_Wavelet>(merged_wavelet, true);
+    std::shared_ptr<ImgTask> merged = std::make_shared<Task_Wavelet>(denoised, true);
     worker.add(merged);
 
     if (m_save_steps)

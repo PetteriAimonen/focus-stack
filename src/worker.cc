@@ -147,16 +147,25 @@ void Worker::worker(int thread_idx)
       float start = seconds_passed();
       int taskidx = 0;
 
-      if (m_verbose)
       {
         std::unique_lock<std::mutex> lock(m_mutex);
         taskidx = ++m_tasks_started;
-        std::printf("%6.3f [%3d/%3d] T%d Starting task: %s\n",
-                    seconds_passed(), m_tasks_started, m_total_tasks, thread_idx, task->name().c_str());
+
+        if (m_verbose)
+        {
+          std::printf("%6.3f [%3d/%3d] T%d Starting task: %s\n",
+                      seconds_passed(), m_tasks_started, m_total_tasks, thread_idx, task->name().c_str());
+        }
+        else
+        {
+          std::printf("[%3d/%3d] %-40.40s\r", m_tasks_started, m_total_tasks, task->name().c_str());
+          std::fflush(stdout);
+        }
       }
 
       task->run(m_verbose);
 
+      if (m_verbose)
       {
         std::unique_lock<std::mutex> lock(m_mutex);
         std::printf("%6.3f           T%d Finished task %d in %0.3f s.\n",

@@ -10,7 +10,7 @@ LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lo
 CXXSRCS += focusstack.cc worker.cc options.cc
 CXXSRCS += task_align.cc task_grayscale.cc task_loadimg.cc
 CXXSRCS += task_merge.cc task_reassign.cc task_saveimg.cc
-CXXSRCS += task_wavelet.cc
+CXXSRCS += task_wavelet.cc task_denoise.cc
 
 # Generate list of object file and dependency file names
 OBJS = $(CXXSRCS:%.cc=build/%.o)
