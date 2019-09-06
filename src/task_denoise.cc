@@ -49,8 +49,23 @@ void Task_Denoise::task()
       }
 
       cv::Vec2f v = m_result.at<cv::Vec2f>(y, x);
-      v[0] = threshold_filter(v[0], m_level);
-      v[1] = threshold_filter(v[1], m_level);
+
+      float absval = v[0] * v[0] + v[1] * v[1];
+
+      if (absval <= m_level)
+      {
+        // Cut off all wavelets below the threshold
+        v[0] = 0.0f;
+        v[1] = 0.0f;
+      }
+      else
+      {
+        // Diminish other wavelets, but don't change the phase.
+        float ratio = (absval - m_level) / absval;
+        v[0] *= ratio;
+        v[1] *= ratio;
+      }
+
       m_result.at<cv::Vec2f>(y, x) = v;
     }
   }
