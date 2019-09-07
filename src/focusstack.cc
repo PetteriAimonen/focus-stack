@@ -39,6 +39,7 @@ void FocusStack::run()
 
     // This loop goes through input images and processes them up to the merge step.
     // Merging is done in batches to reduce memory usage.
+    const int batch_size = 8;
     std::vector<std::shared_ptr<ImgTask> > input_imgs;
     std::vector<std::shared_ptr<ImgTask> > aligned_imgs;
     std::vector<std::shared_ptr<ImgTask> > aligned_grayscales;
@@ -94,7 +95,7 @@ void FocusStack::run()
       worker.add(wavelet);
       merge_batch.push_back(wavelet);
 
-      if (merge_batch.size() >= m_threads)
+      if (merge_batch.size() >= batch_size)
       {
         // Merge wavelet images accumulated so far
         std::shared_ptr<ImgTask> merged = std::make_shared<Task_Merge>(merge_batch, m_consistency);
