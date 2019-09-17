@@ -202,20 +202,19 @@ void Task_Wavelet::decompose_1d(const cv::Mat &src, cv::Mat &dest, bool vertical
         cv::Point xy = vertical ? cv::Point(x, pos) : cv::Point(pos, x);
         cv::Vec2f val = src.at<cv::Vec2f>(xy);
 
-        if (imag_filter)
-        {
-          im_lo += val[0] * lopass[j];
-          re_lo -= val[1] * lopass[j]; // imag src * imag filt = -real output
-          im_hi += val[0] * hipass[j];
-          re_hi -= val[1] * hipass[j];
-        }
-        else
-        {
-          re_lo += val[0] * lopass[j];
-          im_lo += val[1] * lopass[j];
-          re_hi += val[0] * hipass[j];
-          im_hi += val[1] * hipass[j];
-        }
+        re_lo += val[0] * lopass[j];
+        im_lo += val[1] * lopass[j];
+        re_hi += val[0] * hipass[j];
+        im_hi += val[1] * hipass[j];
+      }
+
+      if (imag_filter)
+      {
+        // When multiplying by imaginary filter, re * im => im, im * im => -re
+        std::swap(re_lo, im_lo);
+        std::swap(re_hi, im_hi);
+        re_lo = -re_lo;
+        re_hi = -re_hi;
       }
 
       if (vertical)
@@ -257,16 +256,14 @@ void Task_Wavelet::compose_1d(const cv::Mat& src, cv::Mat& dest, bool vertical, 
         cv::Vec2f val_lo = src.at<cv::Vec2f>(vertical ? cv::Point(x, pos) : cv::Point(pos, x));
         cv::Vec2f val_hi = src.at<cv::Vec2f>(vertical ? cv::Point(x, pos + halflen) : cv::Point(pos + halflen, x));
 
-        if (imag_filter)
-        {
-          im += val_lo[0] * lopass[j] + val_hi[0] * hipass[j];
-          re -= val_lo[1] * lopass[j] + val_hi[1] * hipass[j];
-        }
-        else
-        {
-          re += val_lo[0] * lopass[j] + val_hi[0] * hipass[j];
-          im += val_lo[1] * lopass[j] + val_hi[1] * hipass[j];
-        }
+        re += val_lo[0] * lopass[j] + val_hi[0] * hipass[j];
+        im += val_lo[1] * lopass[j] + val_hi[1] * hipass[j];
+      }
+
+      if (imag_filter)
+      {
+        std::swap(re, im);
+        re = -re;
       }
 
       if (vertical)
