@@ -17,6 +17,7 @@ bool Task::ready_to_run()
 {
   for (const std::shared_ptr<Task> &task: m_depends_on)
   {
+    assert(task);
     if (!task->is_completed())
     {
       return false;
@@ -61,7 +62,8 @@ std::string Task::basename() const
 
 
 Worker::Worker(int max_threads, bool verbose):
-  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0)
+  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0),
+  m_failed(false)
 {
   m_start_time = std::chrono::steady_clock::now();
 
@@ -106,7 +108,7 @@ void Worker::prepend(std::shared_ptr<Task> task)
 void Worker::wait_all()
 {
   std::unique_lock<std::mutex> lock(m_mutex);
-  while (m_tasks.size())
+  while (m_tasks.size() && !m_failed)
   {
     m_wakeup.wait(lock);
   }
@@ -163,7 +165,19 @@ void Worker::worker(int thread_idx)
         }
       }
 
-      task->run(m_verbose);
+      try
+      {
+        task->run(m_verbose);
+      }
+      catch (std::exception &e)
+      {
+        fprintf(stderr, "\n\nTask %s on thread %d failed with exception:\n%s\n",
+                task->name().c_str(), thread_idx, e.what());
+        m_error = e;
+        m_failed = true;
+        m_wakeup.notify_all();
+        return;
+      }
 
       if (m_verbose)
       {

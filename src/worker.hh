@@ -66,6 +66,10 @@ public:
   // Wait until all tasks have finished
   void wait_all();
 
+  bool failed() const { return m_failed; }
+
+  std::exception error() const { return m_error; }
+
 private:
   bool m_verbose;
   std::vector<std::thread> m_threads;
@@ -74,6 +78,9 @@ private:
   bool m_closed;
   int m_tasks_started;
   int m_total_tasks;
+
+  bool m_failed;
+  std::exception m_error;
 
   std::mutex m_mutex;
   std::condition_variable m_wakeup;

@@ -13,7 +13,10 @@
 using namespace focusstack;
 
 FocusStack::FocusStack():
-  m_output("output.jpg"), m_save_steps(false), m_verbose(false),
+  m_output("output.jpg"),
+  m_save_steps(false),
+  m_verbose(false),
+  m_align_flags(ALIGN_DEFAULT),
   m_threads(std::thread::hardware_concurrency()),
   m_reference(-1),
   m_consistency(0),
@@ -21,37 +24,52 @@ FocusStack::FocusStack():
 {
 }
 
-void FocusStack::run()
+bool FocusStack::run()
 {
   Worker worker(m_threads, m_verbose);
 
   {
+    const int count = m_inputs.size();
+    int refidx = m_reference;
+
     // Use middle image as reference if no option is given
-    if (m_reference < 0 || m_reference >= m_inputs.size())
-      m_reference = m_inputs.size() / 2;
+    if (refidx < 0 || refidx >= count)
+      refidx = count / 2;
 
     // Load the reference image
     // This is needed when processing the other images, so load it first.
-    std::shared_ptr<Task_LoadImg> refcolor = std::make_shared<Task_LoadImg>(m_inputs.at(m_reference));
+    std::shared_ptr<Task_LoadImg> refcolor = std::make_shared<Task_LoadImg>(m_inputs.at(refidx));
     std::shared_ptr<Task_Grayscale> refgray = std::make_shared<Task_Grayscale>(refcolor);
     worker.add(refcolor);
     worker.add(refgray);
 
+    // Construct list of indexes. Perform alignment from reference image outwards.
+    // In very thick stacks, it is difficult to align outermost images directly
+    // against the reference image because of heavy blurring. Instead this aligns
+    // each image with its neighbour.
+    std::vector<int> indexes;
+    indexes.push_back(refidx);
+    for (int i = 1; i < count; i++)
+    {
+      if (refidx - i >= 0) indexes.push_back(refidx - i);
+      if (refidx + i < count) indexes.push_back(refidx + i);
+    }
+
     // This loop goes through input images and processes them up to the merge step.
     // Merging is done in batches to reduce memory usage.
     const int batch_size = 8;
-    std::vector<std::shared_ptr<ImgTask> > input_imgs;
-    std::vector<std::shared_ptr<ImgTask> > aligned_imgs;
-    std::vector<std::shared_ptr<ImgTask> > aligned_grayscales;
+    std::vector<std::shared_ptr<Task_LoadImg> > input_imgs(count);
+    std::vector<std::shared_ptr<Task_Align> > aligned_imgs(count);
+    std::vector<std::shared_ptr<ImgTask> > aligned_grayscales(count);
     std::vector<std::shared_ptr<ImgTask> > merge_batch;
-    for (int i = 0; i < m_inputs.size(); i++)
+    for (int i : indexes)
     {
       std::shared_ptr<Task_LoadImg> color;
       std::shared_ptr<ImgTask> grayscale;
 
-      if (i == m_reference)
+      if (i == refidx)
       {
-        input_imgs.push_back(refcolor);
+        input_imgs.at(i) = refcolor;
         color = refcolor;
         grayscale = refgray;
       }
@@ -59,7 +77,7 @@ void FocusStack::run()
       {
         color = std::make_shared<Task_LoadImg>(m_inputs.at(i));
         worker.add(color);
-        input_imgs.push_back(color);
+        input_imgs.at(i) = color;
 
         // Convert image to grayscale
         // The reference image is used to calculate the best mapping, which is then used for all images.
@@ -72,9 +90,42 @@ void FocusStack::run()
         worker.add(std::make_shared<Task_SaveImg>("grayscale_" + grayscale->basename(), grayscale));
       }
 
-      // Align image with respect to the reference
-      std::shared_ptr<ImgTask> aligned = std::make_shared<Task_Align>(refgray, refcolor, grayscale, color);
-      aligned_imgs.push_back(aligned);
+      // Perform image alignment, using the neighbour image as initial guess or reference
+      std::shared_ptr<Task_Align> aligned;
+      int neighbour = refidx;
+      if (i < refidx) neighbour = i + 1;
+      if (i > refidx) neighbour = i - 1;
+      if (i != refidx)
+      {
+        if (m_align_flags & ALIGN_GLOBAL)
+        {
+          // Align directly against the global reference, but use neighbour as a guess.
+          // This can give slightly better alignment in shallow stacks with little blur.
+          aligned = std::make_shared<Task_Align>(aligned_grayscales.at(refidx),
+                                                 aligned_imgs.at(refidx),
+                                                 grayscale, color,
+                                                 aligned_imgs.at(neighbour),
+                                                 input_imgs.at(i));
+        }
+        else
+        {
+          // Align against the neighbour image.
+          // This usually works better on deep stacks that have blur at the extremes, and
+          // works equally well as global alignment for almost all cases.
+          aligned = std::make_shared<Task_Align>(aligned_grayscales.at(neighbour),
+                                                 aligned_imgs.at(neighbour),
+                                                 grayscale, color,
+                                                 aligned_imgs.at(neighbour),
+                                                 input_imgs.at(i));
+        }
+      }
+      else
+      {
+        // Nothing to be done for the global reference image, but we run it through Task_Align
+        // to make the types match.
+        aligned = std::make_shared<Task_Align>(refgray, refcolor, refgray, refcolor);
+      }
+      aligned_imgs.at(i) = aligned;
       worker.add(aligned);
 
       if (m_save_steps)
@@ -88,7 +139,7 @@ void FocusStack::run()
       // and results in less difference between the color and grayscale versions.
       std::shared_ptr<ImgTask> aligned_grayscale = std::make_shared<Task_Grayscale>(aligned, refgray);
       worker.add(aligned_grayscale);
-      aligned_grayscales.push_back(aligned_grayscale);
+      aligned_grayscales.at(i) = aligned_grayscale;
 
       // Wavelet transform the image
       std::shared_ptr<ImgTask> wavelet = std::make_shared<Task_Wavelet>(aligned_grayscale, false);
@@ -132,7 +183,8 @@ void FocusStack::run()
     }
 
     // Reassign pixel values
-    std::shared_ptr<ImgTask> reassigntask = std::make_shared<Task_Reassign>(aligned_grayscales, aligned_imgs, merged_gray);
+    std::vector<std::shared_ptr<ImgTask>> tmp(aligned_imgs.begin(), aligned_imgs.end()); // Convert to base class pointer
+    std::shared_ptr<ImgTask> reassigntask = std::make_shared<Task_Reassign>(aligned_grayscales, tmp, merged_gray);
     std::shared_ptr<ImgTask> reassigned = reassigntask;
     worker.add(std::move(reassigntask));
 
@@ -142,5 +194,7 @@ void FocusStack::run()
   } // Close scope to avoid holding onto the shared_ptr's in local variables
 
   worker.wait_all();
+
+  return !worker.failed();
 }
 

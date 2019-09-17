@@ -1,3 +1,4 @@
+-include Makefile.local
 
 # Compilation flags
 CXX ?= g++

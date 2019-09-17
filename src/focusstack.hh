@@ -10,6 +10,15 @@ class FocusStack {
 public:
   FocusStack();
 
+  enum align_flags_t
+  {
+    ALIGN_DEFAULT             = 0x00,
+    ALIGN_NO_WHITEBALANCE     = 0x01,
+    ALIGN_NO_CONTRAST         = 0x02,
+    ALIGN_FULL_RESOLUTION     = 0x04,
+    ALIGN_GLOBAL              = 0x08
+  };
+
   void set_inputs(const std::vector<std::string> &files) { m_inputs = files; }
   void set_output(std::string output) { m_output = output; }
   std::string get_output() const { return m_output; }
@@ -19,14 +28,17 @@ public:
   void set_reference(int refidx) { m_reference = refidx; }
   void set_consistency(int level) { m_consistency = level; }
   void set_denoise(float level) { m_denoise = level; }
+  void set_align_flags(int flags) { m_align_flags = static_cast<align_flags_t>(flags); }
 
-  void run();
+  bool run();
 
 private:
   std::vector<std::string> m_inputs;
   std::string m_output;
   bool m_save_steps;
   bool m_verbose;
+  align_flags_t m_align_flags;
+
   int m_threads;
   int m_reference;
   int m_consistency;
