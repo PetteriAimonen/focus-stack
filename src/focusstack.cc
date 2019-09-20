@@ -4,20 +4,23 @@
 #include "task_grayscale.hh"
 #include "task_align.hh"
 #include "task_wavelet.hh"
+#include "task_wavelet_opencl.hh"
 #include "task_merge.hh"
 #include "task_denoise.hh"
 #include "task_reassign.hh"
 #include "task_saveimg.hh"
 #include <thread>
+#include <opencv2/core/ocl.hpp>
 
 using namespace focusstack;
 
 FocusStack::FocusStack():
   m_output("output.jpg"),
+  m_disable_opencl(false),
   m_save_steps(false),
   m_verbose(false),
   m_align_flags(ALIGN_DEFAULT),
-  m_threads(std::thread::hardware_concurrency()),
+  m_threads(std::thread::hardware_concurrency() + 1), // +1 to have extra thread to give tasks for GPU
   m_reference(-1),
   m_consistency(0),
   m_denoise(0)
@@ -27,6 +30,39 @@ FocusStack::FocusStack():
 bool FocusStack::run()
 {
   Worker worker(m_threads, m_verbose);
+
+  bool have_opencl = false;
+  if (m_disable_opencl)
+  {
+    printf("OpenCL disabled\n");
+    cv::ocl::setUseOpenCL(false);
+  }
+  else
+  {
+    if (!cv::ocl::haveOpenCL())
+    {
+      printf("OpenCL not available\n");
+    }
+    else
+    {
+      cv::ocl::setUseOpenCL(true);
+
+      cv::ocl::Context context = cv::ocl::Context::getDefault();
+      if (context.ndevices() > 0)
+      {
+        cv::ocl::Device dev = context.device(0);
+        printf("OpenCL device: %s %s %s\n",
+              dev.vendorName().c_str(),
+              dev.name().c_str(),
+              dev.version().c_str());
+        have_opencl = true;
+      }
+      else
+      {
+        printf("OpenCL: no devices available\n");
+      }
+    }
+  }
 
   {
     const int count = m_inputs.size();
@@ -142,7 +178,15 @@ bool FocusStack::run()
       aligned_grayscales.at(i) = aligned_grayscale;
 
       // Wavelet transform the image
-      std::shared_ptr<ImgTask> wavelet = std::make_shared<Task_Wavelet>(aligned_grayscale, false);
+      std::shared_ptr<ImgTask> wavelet;
+      if (have_opencl)
+      {
+        wavelet = std::make_shared<Task_Wavelet_OpenCL>(aligned_grayscale, false);
+      }
+      else
+      {
+        wavelet = std::make_shared<Task_Wavelet>(aligned_grayscale, false);
+      }
       worker.add(wavelet);
       merge_batch.push_back(wavelet);
 
@@ -174,7 +218,15 @@ bool FocusStack::run()
     worker.add(denoised);
 
     // Inverse-transform merged image
-    std::shared_ptr<ImgTask> merged_gray = std::make_shared<Task_Wavelet>(denoised, true);
+    std::shared_ptr<ImgTask> merged_gray;
+    if (have_opencl)
+    {
+      merged_gray = std::make_shared<Task_Wavelet>(denoised, true);
+    }
+    else
+    {
+      merged_gray = std::make_shared<Task_Wavelet_OpenCL>(denoised, true);
+    }
     worker.add(merged_gray);
 
     if (m_save_steps)

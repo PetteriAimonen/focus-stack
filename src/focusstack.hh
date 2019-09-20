@@ -22,6 +22,7 @@ public:
   void set_inputs(const std::vector<std::string> &files) { m_inputs = files; }
   void set_output(std::string output) { m_output = output; }
   std::string get_output() const { return m_output; }
+  void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
   void set_verbose(bool verbose) { m_verbose = verbose; }
   void set_threads(int threads) { m_threads = threads; }
@@ -35,6 +36,7 @@ public:
 private:
   std::vector<std::string> m_inputs;
   std::string m_output;
+  bool m_disable_opencl;
   bool m_save_steps;
   bool m_verbose;
   align_flags_t m_align_flags;

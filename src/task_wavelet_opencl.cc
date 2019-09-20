@@ -1,24 +1,14 @@
-#include "task_wavelet.hh"
+#include "task_wavelet_opencl.hh"
 #include "task_wavelet_templates.hh"
 
 using namespace focusstack;
 
-Task_Wavelet::Task_Wavelet(std::shared_ptr<ImgTask> input, bool inverse)
+Task_Wavelet_OpenCL::Task_Wavelet_OpenCL(std::shared_ptr<ImgTask> input, bool inverse):
+  Task_Wavelet(input, inverse)
 {
-  m_input = input;
-  m_inverse = inverse;
-
-  m_filename = input->filename();
-
-  if (inverse)
-    m_name = "Inverse-wavelet " + m_filename;
-  else
-    m_name = "Forward-wavelet " + m_filename;
-
-  m_depends_on.push_back(input);
 }
 
-void Task_Wavelet::task()
+void Task_Wavelet_OpenCL::task()
 {
   if (!m_inverse)
   {
@@ -31,7 +21,6 @@ void Task_Wavelet::task()
     assert(img.rows % factor == 0 && img.cols % factor == 0);
 
     cv::Mat tmp(img.rows, img.cols, CV_32FC2);
-    m_result.create(img.rows, img.cols, CV_32FC2);
 
     // Convert input image to complex values
     {
@@ -45,31 +34,27 @@ void Task_Wavelet::task()
       cv::merge(channels, 2, tmp);
     }
 
-    Wavelet<cv::Mat>::decompose_multilevel(tmp, m_result, levels);
+    cv::UMat utmp(img.rows, img.cols, CV_32FC2);
+    tmp.copyTo(utmp);
+
+    cv::UMat uresult(img.rows, img.cols, CV_32FC2);
+    Wavelet<cv::UMat>::decompose_multilevel(utmp, uresult, levels);
+
+    uresult.copyTo(m_result);
   }
   else
   {
     // Perform composition from complex wavelets to real-valued image
-    cv::Mat src = m_input->img();
-    cv::Mat tmp(src.rows, src.cols, CV_32FC2);
+    cv::UMat usrc = m_input->img().getUMat(cv::ACCESS_READ);
+    cv::UMat utmp(usrc.rows, usrc.cols, CV_32FC2);
 
-    Wavelet<cv::Mat>::compose_multilevel(src, tmp, levels);
+    Wavelet<cv::UMat>::compose_multilevel(usrc, utmp, levels);
 
     cv::Mat channels[2];
-    cv::split(tmp, channels);
+    cv::split(utmp.getMat(cv::ACCESS_READ), channels);
 
     channels[0].convertTo(m_result, CV_8U);
   }
 
   m_input.reset();
 }
-
-
-
-
-
-
-
-
-
-

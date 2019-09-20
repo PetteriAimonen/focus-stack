@@ -4,6 +4,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/video.hpp>
 #include <opencv2/core/utility.hpp>
+#include <opencv2/core/ocl.hpp>
 #include <cmath>
 #include <cstdio>
 
@@ -223,11 +224,10 @@ void Task_Align::match_transform(int max_resolution, bool rough)
   if (m_verbose)
   {
     std::string name = basename();
-    std::printf("%s %s transform: [%0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f]\n",
+    std::printf("%s %s transform: [%0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f]\n",
                 name.c_str(), rough ? "rough" : "final",
                 m_transformation.at<float>(0, 0), m_transformation.at<float>(0, 1), m_transformation.at<float>(0, 2),
-                m_transformation.at<float>(1, 0), m_transformation.at<float>(1, 1), m_transformation.at<float>(1, 2),
-                m_transformation.at<float>(2, 0), m_transformation.at<float>(2, 1), m_transformation.at<float>(2, 2));
+                m_transformation.at<float>(1, 0), m_transformation.at<float>(1, 1), m_transformation.at<float>(1, 2));
   }
 }
 
@@ -349,5 +349,14 @@ void Task_Align::apply_transform(const cv::Mat &src, cv::Mat &dst, bool inverse)
 {
   int invflag = (!inverse) ? cv::WARP_INVERSE_MAP : 0;
 
-  cv::warpAffine(src, dst, m_transformation, cv::Size(src.cols, src.rows), cv::INTER_CUBIC | invflag, cv::BORDER_REFLECT);
+  dst.create(src.rows, src.cols, src.type());
+
+  cv::UMat usrc = src.getUMat(cv::ACCESS_READ);
+  cv::UMat udst = dst.getUMat(cv::ACCESS_WRITE);
+  cv::UMat utransform = m_transformation.getUMat(cv::ACCESS_READ);
+
+  std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+  cv::warpAffine(usrc, udst, utransform, cv::Size(src.cols, src.rows), cv::INTER_CUBIC | invflag, cv::BORDER_REFLECT);
+  auto delta = std::chrono::steady_clock::now() - now;
+  printf("t: %d\n", (int)std::chrono::duration_cast<std::chrono::microseconds>(delta).count());
 }

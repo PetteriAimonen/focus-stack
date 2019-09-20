@@ -1,18 +1,59 @@
 #include <gtest/gtest.h>
+#include <opencv2/core/ocl.hpp>
 #include "task_wavelet_templates.hh"
 
 namespace focusstack {
 
-TEST(Task_Wavelet, Roundtrip1D) {
+// Decompose with OpenCL, compose with CPU
+TEST(Task_Wavelet_OpenCL, Decompose1D) {
+  cv::ocl::setUseOpenCL(true);
+
   cv::Mat input(1, 16, CV_32FC2);
+  input = cv::Vec2f(0, 0);
+  input(cv::Rect(8, 0, 8, 1)) = cv::Vec2f(1.0f, 0.0f);
+
   cv::Mat wavelet(1, 16, CV_32FC2);
+
+  {
+    cv::UMat uinput(1, 16, CV_32FC2);
+    input.copyTo(uinput);
+
+    cv::UMat uwavelet(1, 16, CV_32FC2);
+    Wavelet<cv::UMat>::decompose_1d(uinput, uwavelet, false);
+    uwavelet.copyTo(wavelet);
+  }
+
+  cv::Mat composed(1, 16, CV_32FC2);
+  Wavelet<cv::Mat>::compose_1d(wavelet, composed, false);
+
+  for (int i = 0; i < 16; i++)
+  {
+    float delta_re = std::abs(input.at<cv::Vec2f>(i)[0] - composed.at<cv::Vec2f>(i)[0]);
+    float delta_im = std::abs(input.at<cv::Vec2f>(i)[1] - composed.at<cv::Vec2f>(i)[1]);
+
+    ASSERT_LE(delta_re, 0.001f);
+    ASSERT_LE(delta_im, 0.001f);
+  }
+}
+
+TEST(Task_Wavelet_OpenCL, Roundtrip1D) {
+  cv::Mat input(1, 16, CV_32FC2);
   cv::Mat composed(1, 16, CV_32FC2);
 
   input = cv::Vec2f(0, 0);
   input(cv::Rect(8, 0, 8, 1)) = cv::Vec2f(1.0f, 0.0f);
 
-  Wavelet<cv::Mat>::decompose_1d(input, wavelet, false);
-  Wavelet<cv::Mat>::compose_1d(wavelet, composed, false);
+  {
+    cv::UMat uinput(1, 16, CV_32FC2);
+    input.copyTo(uinput);
+
+    cv::UMat uwavelet(1, 16, CV_32FC2);
+    cv::UMat ucomposed(1, 16, CV_32FC2);
+    Wavelet<cv::UMat>::decompose_1d(uinput, uwavelet, false);
+    Wavelet<cv::UMat>::compose_1d(uwavelet, ucomposed, false);
+
+    ucomposed.copyTo(composed);
+  }
 
 //   printf("Real: ");
 //   for (int x = 0; x < 16; x++)
@@ -38,14 +79,21 @@ TEST(Task_Wavelet, Roundtrip1D) {
   }
 }
 
-TEST(Task_Wavelet, Decompose2D) {
+TEST(Task_Wavelet_OpenCL, Decompose2D) {
   cv::Mat input(8, 8, CV_32FC2);
   cv::Mat wavelet(8, 8, CV_32FC2);
 
   input = cv::Vec2f(0, 0);
   input(cv::Rect(0, 0, 2, 4)) = cv::Vec2f(1.0f, 0.0f);
 
-  Wavelet<cv::Mat>::decompose(input, wavelet);
+  {
+    cv::UMat uinput(8, 8, CV_32FC2);
+    input.copyTo(uinput);
+
+    cv::UMat uwavelet(8, 8, CV_32FC2);
+    Wavelet<cv::UMat>::decompose(uinput, uwavelet);
+    uwavelet.copyTo(wavelet);
+  }
 
   // These arrays were obtained by running https://github.com/fiji-BIG/wavelets/
   // implementation, to verify the algorithms behave identically.
@@ -82,16 +130,23 @@ TEST(Task_Wavelet, Decompose2D) {
   }
 }
 
-TEST(Task_Wavelet, Roundtrip2D) {
+TEST(Task_Wavelet_OpenCL, Roundtrip2D) {
   cv::Mat input(8, 8, CV_32FC2);
-  cv::Mat wavelet(8, 8, CV_32FC2);
   cv::Mat output(8, 8, CV_32FC2);
 
   input = cv::Vec2f(0, 0);
   input(cv::Rect(0, 0, 2, 4)) = cv::Vec2f(1.0f, 0.0f);
 
-  Wavelet<cv::Mat>::decompose(input, wavelet);
-  Wavelet<cv::Mat>::compose(wavelet, output);
+  {
+    cv::UMat uinput(8, 8, CV_32FC2);
+    input.copyTo(uinput);
+
+    cv::UMat uwavelet(8, 8, CV_32FC2);
+    cv::UMat uoutput(8, 8, CV_32FC2);
+    Wavelet<cv::UMat>::decompose(uinput, uwavelet);
+    Wavelet<cv::UMat>::compose(uwavelet, uoutput);
+    uoutput.copyTo(output);
+  }
 
 //   printf("Real:\n");
 //   for (int y = 0; y < 8; y++)
@@ -123,16 +178,24 @@ TEST(Task_Wavelet, Roundtrip2D) {
   }
 }
 
-TEST(Task_Wavelet, Multilevel) {
+TEST(Task_Wavelet_OpenCL, Multilevel) {
   cv::Mat input(16, 16, CV_32FC2);
-  cv::Mat wavelet(16, 16, CV_32FC2);
   cv::Mat output(16, 16, CV_32FC2);
 
   input = cv::Vec2f(0, 0);
   input(cv::Rect(0, 0, 2, 4)) = cv::Vec2f(1.0f, 0.0f);
 
-  Wavelet<cv::Mat>::decompose_multilevel(input, wavelet, 3);
-  Wavelet<cv::Mat>::compose_multilevel(wavelet, output, 3);
+  {
+    cv::UMat uinput(16, 16, CV_32FC2);
+    input.copyTo(uinput);
+
+    cv::UMat uwavelet(16, 16, CV_32FC2);
+    cv::UMat uoutput(16, 16, CV_32FC2);
+
+    Wavelet<cv::UMat>::decompose_multilevel(uinput, uwavelet, 3);
+    Wavelet<cv::UMat>::compose_multilevel(uwavelet, uoutput, 3);
+    uoutput.copyTo(output);
+  }
 
   for (int y = 0; y < 16; y++)
   {
