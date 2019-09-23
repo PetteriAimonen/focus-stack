@@ -21,11 +21,14 @@ public:
   virtual ~Task();
 
   virtual bool ready_to_run();
+  virtual bool uses_opencl() { return false; }
   bool is_completed() const { return m_done; }
   void run(bool verbose = false);
   std::string filename() const { return m_filename; }
   std::string name() const { return m_name; }
   std::string basename() const;
+
+  void wait();
 
 protected:
   virtual void task() { };
@@ -35,6 +38,8 @@ protected:
   std::string m_name;
   std::mutex m_mutex;
   std::vector<std::shared_ptr<Task> > m_depends_on; // List of tasks this task needs as inputs
+
+  std::condition_variable m_wakeup;
   bool m_done;
 };
 
@@ -78,6 +83,7 @@ private:
   bool m_closed;
   int m_tasks_started;
   int m_total_tasks;
+  int m_opencl_users;
 
   bool m_failed;
   std::exception m_error;

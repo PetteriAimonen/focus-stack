@@ -15,6 +15,7 @@ static inline float sq(float x) { return x * x; }
 Task_Align::Task_Align(std::shared_ptr<ImgTask> refgray, std::shared_ptr<ImgTask> refcolor,
                        std::shared_ptr<ImgTask> srcgray, std::shared_ptr<ImgTask> srccolor,
                        std::shared_ptr<Task_Align> initial_guess,
+                       std::shared_ptr<Task_Align> stacked_transform,
                        std::shared_ptr<Task_LoadImg> cropinfo,
                        FocusStack::align_flags_t flags)
 {
@@ -26,6 +27,7 @@ Task_Align::Task_Align(std::shared_ptr<ImgTask> refgray, std::shared_ptr<ImgTask
   m_srcgray = srcgray;
   m_srccolor = srccolor;
   m_initial_guess = initial_guess;
+  m_stacked_transform = stacked_transform;
   m_cropinfo = cropinfo;
   m_flags = flags;
 
@@ -107,10 +109,64 @@ void Task_Align::task()
       match_transform(2048, false);
     }
 
+    if (m_stacked_transform)
+    {
+      // At this point we need to know the stacked transform to apply it to the final image.
+      // Not putting this in m_depends_on gives better parallelism in the alignment phase.
+      m_stacked_transform->wait();
+      cv::Mat tmp = m_stacked_transform->m_transformation.clone();
+      tmp.resize(3, 0.0f);
+      tmp.at<float>(2, 2) = 1.0f;
+      m_transformation(cv::Rect(0, 0, 3, 2)) *= tmp;
+
+      // For contrast the stacking is not exact as x^3 and y^3 terms are not modelled,
+      // but close enough.
+      cv::Mat c = m_contrast.clone();
+      m_contrast *= m_stacked_transform->m_contrast.at<float>(0);
+      m_contrast.at<float>(1) += m_stacked_transform->m_contrast.at<float>(1) * c.at<float>(0);
+      m_contrast.at<float>(2) += m_stacked_transform->m_contrast.at<float>(2) * c.at<float>(0);
+      m_contrast.at<float>(2) += m_stacked_transform->m_contrast.at<float>(1) * c.at<float>(1);
+      m_contrast.at<float>(3) += m_stacked_transform->m_contrast.at<float>(3) * c.at<float>(0);
+      m_contrast.at<float>(4) += m_stacked_transform->m_contrast.at<float>(4) * c.at<float>(0);
+      m_contrast.at<float>(4) += m_stacked_transform->m_contrast.at<float>(3) * c.at<float>(3);
+
+      // For white balance, scale the brightness terms and multiply the contrast terms.
+      m_whitebalance.at<float>(0) += m_stacked_transform->m_whitebalance.at<float>(0) * m_whitebalance.at<float>(1);
+      m_whitebalance.at<float>(1) *= m_stacked_transform->m_whitebalance.at<float>(1);
+      m_whitebalance.at<float>(2) += m_stacked_transform->m_whitebalance.at<float>(2) * m_whitebalance.at<float>(3);
+      m_whitebalance.at<float>(3) *= m_stacked_transform->m_whitebalance.at<float>(3);
+      m_whitebalance.at<float>(4) += m_stacked_transform->m_whitebalance.at<float>(4) * m_whitebalance.at<float>(5);
+      m_whitebalance.at<float>(5) *= m_stacked_transform->m_whitebalance.at<float>(5);
+    }
+
+    if (m_verbose)
+    {
+      std::string name = basename();
+      std::printf("%s transform: [%0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f]\n",
+                  name.c_str(),
+                  m_transformation.at<float>(0, 0), m_transformation.at<float>(0, 1), m_transformation.at<float>(0, 2),
+                  m_transformation.at<float>(1, 0), m_transformation.at<float>(1, 1), m_transformation.at<float>(1, 2));
+    }
+
     apply_transform(m_srccolor->img(), m_result, false);
 
     if (!(m_flags & FocusStack::ALIGN_NO_CONTRAST) || !(m_flags & FocusStack::ALIGN_NO_WHITEBALANCE))
     {
+      if (m_verbose)
+      {
+        std::string name = basename();
+        std::printf("%s contrast map: C:%0.3f, X:%0.3f, X2:%0.3f, Y:%0.3f, Y2:%0.3f\n",
+                    name.c_str(),
+                    m_contrast.at<float>(0), m_contrast.at<float>(1), m_contrast.at<float>(2),
+                    m_contrast.at<float>(3), m_contrast.at<float>(4));
+
+        std::printf("%s whitebalance: R:x%0.3f%+0.1f, G:x%0.3f%+0.1f, B:x%0.3f%+0.1f\n",
+                    name.c_str(),
+                    m_whitebalance.at<float>(5), m_whitebalance.at<float>(4),
+                    m_whitebalance.at<float>(3), m_whitebalance.at<float>(2),
+                    m_whitebalance.at<float>(1), m_whitebalance.at<float>(0));
+      }
+
       apply_contrast_whitebalance(m_result);
     }
   }
@@ -120,6 +176,7 @@ void Task_Align::task()
   m_srcgray.reset();
   m_srccolor.reset();
   m_initial_guess.reset();
+  m_stacked_transform.reset();
   m_cropinfo.reset();
 }
 
@@ -165,15 +222,6 @@ void Task_Align::match_contrast()
   }
 
   cv::solve(positions, contrast, m_contrast, cv::DECOMP_SVD);
-
-  if (m_verbose)
-  {
-    std::string name = basename();
-    std::printf("%s contrast map: C:%0.3f, X:%0.3f, X2:%0.3f, Y:%0.3f, Y2:%0.3f\n",
-                name.c_str(),
-                m_contrast.at<float>(0), m_contrast.at<float>(1), m_contrast.at<float>(2),
-                m_contrast.at<float>(3), m_contrast.at<float>(4));
-  }
 }
 
 void Task_Align::match_transform(int max_resolution, bool rough)
@@ -206,13 +254,13 @@ void Task_Align::match_transform(int max_resolution, bool rough)
 
   if (rough)
   {
-    cv::findTransformECC(ref, src, m_transformation, cv::MOTION_AFFINE,
+    cv::findTransformECC(src, ref, m_transformation, cv::MOTION_AFFINE,
                         cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 25, 0.01),
                         mask);
   }
   else
   {
-    cv::findTransformECC(ref, src, m_transformation, cv::MOTION_AFFINE,
+    cv::findTransformECC(src, ref, m_transformation, cv::MOTION_AFFINE,
                         cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, 0.001),
                         mask);
   }
@@ -220,15 +268,6 @@ void Task_Align::match_transform(int max_resolution, bool rough)
 
   m_transformation.at<float>(0, 2) /= scale_ratio;
   m_transformation.at<float>(1, 2) /= scale_ratio;
-
-  if (m_verbose)
-  {
-    std::string name = basename();
-    std::printf("%s %s transform: [%0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f]\n",
-                name.c_str(), rough ? "rough" : "final",
-                m_transformation.at<float>(0, 0), m_transformation.at<float>(0, 1), m_transformation.at<float>(0, 2),
-                m_transformation.at<float>(1, 0), m_transformation.at<float>(1, 1), m_transformation.at<float>(1, 2));
-  }
 }
 
 void Task_Align::match_whitebalance()
@@ -273,16 +312,6 @@ void Task_Align::match_whitebalance()
   }
 
   cv::solve(factors, targets, m_whitebalance, cv::DECOMP_SVD);
-
-  if (m_verbose)
-  {
-    std::string name = basename();
-    std::printf("%s whitebalance: R:x%0.3f%+0.1f, G:x%0.3f%+0.1f, B:x%0.3f%+0.1f\n",
-                name.c_str(),
-                m_whitebalance.at<float>(5), m_whitebalance.at<float>(4),
-                m_whitebalance.at<float>(3), m_whitebalance.at<float>(2),
-                m_whitebalance.at<float>(1), m_whitebalance.at<float>(0));
-  }
 }
 
 void Task_Align::apply_contrast_whitebalance(cv::Mat& img)
@@ -347,16 +376,8 @@ void Task_Align::apply_contrast_whitebalance(cv::Mat& img)
 
 void Task_Align::apply_transform(const cv::Mat &src, cv::Mat &dst, bool inverse)
 {
-  int invflag = (!inverse) ? cv::WARP_INVERSE_MAP : 0;
+  int invflag = (!inverse) ? 0 : cv::WARP_INVERSE_MAP;
 
   dst.create(src.rows, src.cols, src.type());
-
-  cv::UMat usrc = src.getUMat(cv::ACCESS_READ);
-  cv::UMat udst = dst.getUMat(cv::ACCESS_WRITE);
-  cv::UMat utransform = m_transformation.getUMat(cv::ACCESS_READ);
-
-  std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
-  cv::warpAffine(usrc, udst, utransform, cv::Size(src.cols, src.rows), cv::INTER_CUBIC | invflag, cv::BORDER_REFLECT);
-  auto delta = std::chrono::steady_clock::now() - now;
-  printf("t: %d\n", (int)std::chrono::duration_cast<std::chrono::microseconds>(delta).count());
+  cv::warpAffine(src, dst, m_transformation, cv::Size(src.cols, src.rows), cv::INTER_CUBIC | invflag, cv::BORDER_REFLECT);
 }

@@ -29,7 +29,7 @@ bool Task::ready_to_run()
 
 void Task::run(bool verbose)
 {
-  std::lock_guard<std::mutex> lock(m_mutex);
+  std::unique_lock<std::mutex> lock(m_mutex);
 
   m_verbose = verbose;
 
@@ -38,14 +38,25 @@ void Task::run(bool verbose)
     throw std::logic_error("Task has already completed");
   }
 
-  // Run the subclass implementation
-  this->task();
+  try {
+    // Run the subclass implementation
+    this->task();
 
-  // Release memory we no longer need
-  m_depends_on.clear();
+    // Release memory we no longer need
+    m_depends_on.clear();
 
-  // Mark as completed
-  m_done = true;
+    // Mark as completed
+    m_done = true;
+    m_wakeup.notify_all();
+  }
+  catch (...)
+  {
+    // Mark as completed anyway
+    m_done = true;
+    m_wakeup.notify_all();
+
+    throw;
+  }
 }
 
 std::string Task::basename() const
@@ -60,9 +71,18 @@ std::string Task::basename() const
   return basename;
 }
 
+void Task::wait()
+{
+  std::unique_lock<std::mutex> lock(m_mutex);
+
+  while (!m_done)
+  {
+    m_wakeup.wait(lock);
+  }
+}
 
 Worker::Worker(int max_threads, bool verbose):
-  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0),
+  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0), m_opencl_users(0),
   m_failed(false)
 {
   m_start_time = std::chrono::steady_clock::now();
@@ -135,6 +155,11 @@ void Worker::worker(int thread_idx)
       // Search for next runnable task
       for (int i = 0; i < m_tasks.size(); i++)
       {
+        if (m_opencl_users > 0 && m_tasks.at(i)->uses_opencl())
+        {
+          continue;
+        }
+
         if (m_tasks.at(i)->ready_to_run())
         {
           task = m_tasks.at(i);
@@ -142,6 +167,9 @@ void Worker::worker(int thread_idx)
           break;
         }
       }
+
+      if (task && task->uses_opencl())
+        m_opencl_users++;
     }
 
     if (task)
@@ -184,6 +212,12 @@ void Worker::worker(int thread_idx)
         std::unique_lock<std::mutex> lock(m_mutex);
         std::printf("%6.3f           T%d Finished task %d in %0.3f s.\n",
                     seconds_passed(), thread_idx, taskidx, seconds_passed() - start);
+      }
+
+      if (task->uses_opencl())
+      {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_opencl_users--;
       }
 
       // Wake all threads to re-check dependencies

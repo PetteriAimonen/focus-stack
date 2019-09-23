@@ -95,6 +95,7 @@ bool FocusStack::run()
     // Merging is done in batches to reduce memory usage.
     const int batch_size = 8;
     std::vector<std::shared_ptr<Task_LoadImg> > input_imgs(count);
+    std::vector<std::shared_ptr<ImgTask> > grayscale_imgs(count);
     std::vector<std::shared_ptr<Task_Align> > aligned_imgs(count);
     std::vector<std::shared_ptr<ImgTask> > aligned_grayscales(count);
     std::vector<std::shared_ptr<ImgTask> > merge_batch;
@@ -108,6 +109,7 @@ bool FocusStack::run()
         input_imgs.at(i) = refcolor;
         color = refcolor;
         grayscale = refgray;
+        grayscale_imgs.at(i) = grayscale;
       }
       else
       {
@@ -119,6 +121,7 @@ bool FocusStack::run()
         // The reference image is used to calculate the best mapping, which is then used for all images.
         grayscale = std::make_shared<Task_Grayscale>(color, refgray);
         worker.add(grayscale);
+        grayscale_imgs.at(i) = grayscale;
       }
 
       if (m_save_steps)
@@ -141,6 +144,7 @@ bool FocusStack::run()
                                                  aligned_imgs.at(refidx),
                                                  grayscale, color,
                                                  aligned_imgs.at(neighbour),
+                                                 nullptr,
                                                  input_imgs.at(i));
         }
         else
@@ -148,9 +152,13 @@ bool FocusStack::run()
           // Align against the neighbour image.
           // This usually works better on deep stacks that have blur at the extremes, and
           // works equally well as global alignment for almost all cases.
-          aligned = std::make_shared<Task_Align>(aligned_grayscales.at(neighbour),
-                                                 aligned_imgs.at(neighbour),
+          // This also allows us to align against the original source image and stacking
+          // the transforms later, which gives better parallelism while benefiting from
+          // the similarity in alignment between neighbour images.
+          aligned = std::make_shared<Task_Align>(grayscale_imgs.at(neighbour),
+                                                 input_imgs.at(neighbour),
                                                  grayscale, color,
+                                                 nullptr,
                                                  aligned_imgs.at(neighbour),
                                                  input_imgs.at(i));
         }
