@@ -1,0 +1,125 @@
+.TH man 1 "23 Sep 2019" "focus-stack 1.0" "focus-stack man page"
+.SH NAME
+focus-stack \- combine photos to create extended depth of field image
+.SH SYNOPSIS
+focus-stack [options] file1.jpg file2.jpg ...
+.SH DESCRIPTION
+focus-stack takes a set of photos taken at different focus settings and
+combines them into one, selecting the sharpest source image for each pixel
+position. This is commonly called extended depth of field, or focus stacking.
+Typical use is for microscope photography where it is difficult to obtain
+large enough depth of field to cover the whole subject.
+.PP
+Usually good results are obtained with the default settings, but following
+options are available:
+
+.TP
+\fB\-\-output=\fI\,output.jpg\/\fR
+Set output filename. If file already exists, it will be overwritten.
+
+.TP
+\fB\-\-reference=\fI\,index\/\fR
+Select image index (starting from 0) to use as alignment reference.
+Images in a stack will usually vary in scale and position.
+All other images are resized and rotated to match with this image.
+This also determines the scale of the output image, which is important
+for performing measurements. By default middle image of the stack is
+used as reference.
+
+.TP
+\fB\-\-global-align\fR
+By default each image is aligned against its neighbour. This improves
+results in deep stacks, as blur at the extreme focus levels can make
+direct alignment to reference inaccurate. However, if the images given
+as argument are not in correct order, or if some of them are of poorer
+quality, this option can be specified to align directly against the
+reference image.
+
+.TP
+\fB\-\-full-resolution-align\fR
+By default the resolution of images used in alignment step is limited
+to 2048x2048 pixels. This improves performance, and because sub-pixel
+accuracy is used in computing the gradients, higher resolution rarely
+improves results. Specifying this option will force the use of full
+resolution images in alignment.
+
+.TP
+\fB\-\-no-whitebalance\fR
+The application tries to compensate for any white balance differences
+between photos automatically. If camera white balance is set manually,
+this option can be specified to skip the unnecessary white balance
+adjustment.
+
+.TP
+\fB\-\-no-contrast\fR
+If camera exposure is manually controlled, this option can be used to
+skip unnecessary exposure compensation.
+
+.TP
+\fB\-\-threads=\fI\,count\/\fR
+Set the number of parallel threads in use. By default uses the number
+of CPU cores detected plus one to feed possible GPU accelerator. Lower
+number of threads also reduces memory consumption.
+
+.TP
+\fB\-\-no-opencl\fR
+By default OpenCL-based GPU acceleration is used if available. This
+option can be specified to disable it.
+
+.TP
+\fB\-\-consistency=\fI\,level\/\fR
+Set the level of consistency filter applied to the depth map, in range
+0 to 2. Higher level reduces artefacts and noise in output image, but
+can also result in removing small objects that appear against a textured
+background. By default the highest filter level 2 is used.
+
+.TP
+\fB\-\-denoise=\fI\,level\/\fR
+Set level of wavelet-based denoise filter applied to the result image.
+Because focus stacking selects the largest difference from source images,
+it has a tendency to increase noise. The denoising step reduces all
+wavelet values by this amount, which corresponds directly to pixel values.
+The default value of 1.0 removes noise that is on the order of +- 1 pixel
+value.
+
+.TP
+\fB\-\-save-steps\fR
+Save intermediate images from processing steps. This includes the aligned
+images and the final grayscale image before color reassignment.
+
+.TP
+\fB\-\-verbose\fR
+Report each step as it begins and ends, and also the alignment parameters
+and other detailed information.
+
+.SH EXAMPLES
+.nf
+.B focus-stack IMG*.JPG
+.fi
+Combine all images in current directory, and write output to
+.B output.jpg
+.
+
+.nf
+.B focus-stack --verbose --output=stacked.jpg IMG*.JPG
+.fi
+Combine all images, giving detailed printout of steps and write output to
+.B stacked.jpg
+
+
+.SH GPU ACCELERATION
+This application uses OpenCV library and its OpenCL acceleration interface.
+The GPU used for acceleration can be selected by environment variable
+.B OPENCV_OPENCL_DEVICE
+which takes a value such as
+.B Intel:GPU:0
+See OpenCV documentation for details.
+
+.SH REFERENCES
+The algorithm used for combining images is described in
+.B Complex Wavelets for Extended Depth-of-Field: A New Method for the Fusion of Multichannel Microscopy Images
+by B. Forster, D. Van De Ville, J. Berent, D. Sage and M. Unser.
+
+.SH REPORTING BUGS
+Bugs can be reported at https://github.com/PetteriAimonen/focus-stack/issues
+

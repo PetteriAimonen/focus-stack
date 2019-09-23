@@ -43,6 +43,10 @@ build:
 clean:
 	rm -rf build
 
+install: all
+	install build/focus-stack /usr/bin/
+	gzip -c docs/focus-stack.1 > /usr/share/man/man1/focus-stack.1.gz
+
 -include $(DEPS)
 -include $(TESTDEPS)
 
