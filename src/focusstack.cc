@@ -34,14 +34,14 @@ bool FocusStack::run()
   bool have_opencl = false;
   if (m_disable_opencl)
   {
-    printf("OpenCL disabled\n");
+    if (m_verbose) printf("OpenCL disabled\n");
     cv::ocl::setUseOpenCL(false);
   }
   else
   {
     if (!cv::ocl::haveOpenCL())
     {
-      printf("OpenCL not available\n");
+      if (m_verbose) printf("OpenCL not available\n");
     }
     else
     {
@@ -51,15 +51,19 @@ bool FocusStack::run()
       if (context.ndevices() > 0)
       {
         cv::ocl::Device dev = context.device(0);
-        printf("OpenCL device: %s %s %s\n",
-              dev.vendorName().c_str(),
-              dev.name().c_str(),
-              dev.version().c_str());
+
+        if (m_verbose)
+        {
+          printf("OpenCL device: %s %s %s\n",
+                dev.vendorName().c_str(),
+                dev.name().c_str(),
+                dev.version().c_str());
+        }
         have_opencl = true;
       }
       else
       {
-        printf("OpenCL: no devices available\n");
+        if (m_verbose) printf("OpenCL: no devices available\n");
       }
     }
   }
