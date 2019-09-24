@@ -233,7 +233,7 @@ bool FocusStack::run()
 
     // Inverse-transform merged image
     std::shared_ptr<ImgTask> merged_gray;
-    if (have_opencl)
+    if (!have_opencl)
     {
       merged_gray = std::make_shared<Task_Wavelet>(denoised, true);
     }

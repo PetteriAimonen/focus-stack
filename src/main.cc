@@ -9,7 +9,7 @@ int main(int argc, const char *argv[])
   Options options(argc, argv);
   FocusStack stack;
 
-  if (options.has_flag("--help") or options.get_filenames().size() < 2)
+  if (options.has_flag("--help") || options.get_filenames().size() < 2)
   {
     std::cerr << "Usage: " << argv[0] << " [options] file1.jpg file2.jpg ...\n";
     std::cerr << "Options:\n"
@@ -33,7 +33,7 @@ int main(int argc, const char *argv[])
   stack.set_output(options.get_arg("--output", "output.jpg"));
   stack.set_save_steps(options.has_flag("--save-steps"));
   stack.set_disable_opencl(options.has_flag("--no-opencl"));
-  stack.set_verbose(options.has_flag("--verbose") or options.has_flag("-v"));
+  stack.set_verbose(options.has_flag("--verbose") || options.has_flag("-v"));
   stack.set_denoise(std::stof(options.get_arg("--denoise", "1.0")));
   stack.set_consistency(std::stoi(options.get_arg("--consistency", "2")));
 

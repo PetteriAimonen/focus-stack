@@ -245,7 +245,8 @@ void Task_Align::match_transform(int max_resolution, bool rough)
 
   mask.create(ref.rows, ref.cols, CV_8U);
   mask = 0;
-  mask(cv::Rect(m_roi.x * scale_ratio, m_roi.y * scale_ratio, m_roi.width * scale_ratio, m_roi.height * scale_ratio)) = 255;
+  mask(cv::Rect((int)(m_roi.x * scale_ratio), (int)(m_roi.y * scale_ratio),
+                (int)(m_roi.width * scale_ratio), (int)(m_roi.height * scale_ratio))) = 255;
 
   apply_contrast_whitebalance(src);
 

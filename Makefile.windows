@@ -1,0 +1,40 @@
+# This Makefile is for building focus-stack on Windows x64
+# using Visual C++ and nmake. Install Build Tools for Visual
+# Studio 2019 and open the build tools command prompt.
+# Also extract OpenCV 4 Windows x64 binary package.
+# By default this makefile expects that OpenCV is in path
+# ..\opencv\build, but that can be edited below.
+#
+# Finally, type nmake -f Makefile.windows
+
+CXX = cl
+CXXFLAGS = /O2 /EHsc /W2
+
+# Path to OpenCV
+OPENCV_PATH = ..\opencv\build
+CXXFLAGS = $(CXXFLAGS) /I$(OPENCV_PATH)\include
+LDFLAGS = $(OPENCV_PATH)\x64\vc14\lib\opencv_world411.lib
+
+# Required compilation options
+#CXXFLAGS += --std=c++14
+#LDFLAGS += -lpthread -lm
+#LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
+
+# List of source code files
+CXXSRCS = src/focusstack.cc src/worker.cc src/options.cc \
+          src/task_align.cc src/task_grayscale.cc src/task_loadimg.cc \
+          src/task_merge.cc src/task_reassign.cc src/task_saveimg.cc \
+          src/task_wavelet.cc src/task_wavelet_opencl.cc src/task_denoise.cc \
+          src/main.cc
+
+all: build build/focus-stack.exe
+
+build:
+	mkdir build
+
+clean:
+	deltree build
+
+build/focus-stack.exe: $(CXXSRCS)
+	$(CXX) $(CXXFLAGS) /Fe:$@ $** $(LDFLAGS)
+	copy $(OPENCV_PATH)\x64\vc14\bin\opencv_world411.dll build
