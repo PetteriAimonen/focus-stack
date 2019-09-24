@@ -4,6 +4,8 @@
 # or in environment like: CXXFLAGS=... make
 CXX ?= g++
 CXXFLAGS ?= -Og -g3 -ggdb -Wall -Wextra -Wno-sign-compare
+DESTDIR ?=
+prefix ?= /usr/local
 
 # Try to get opencv path from pkg-config
 CXXFLAGS += $(shell pkg-config --cflags-only-I opencv)
@@ -14,7 +16,7 @@ CXXFLAGS += --std=c++14
 LDFLAGS += -lpthread -lm
 LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
 
-CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty)\"
+CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty 2>/dev/null)\"
 
 # List of source code files
 CXXSRCS += focusstack.cc worker.cc options.cc
@@ -46,8 +48,9 @@ clean:
 	rm -rf build
 
 install: all
-	install build/focus-stack /usr/bin/
-	gzip -c docs/focus-stack.1 > /usr/share/man/man1/focus-stack.1.gz
+	install -D build/focus-stack $(DESTDIR)$(prefix)/bin/focus-stack
+	mkdir -p $(DESTDIR)$(prefix)/share/man/man1/
+	gzip -c docs/focus-stack.1 > $(DESTDIR)$(prefix)/share/man/man1/focus-stack.1.gz
 
 -include $(DEPS)
 -include $(TESTDEPS)

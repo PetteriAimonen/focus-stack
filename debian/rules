@@ -1,0 +1,6 @@
+#!/usr/bin/make -f
+
+
+%:
+	prefix=/usr dh $@
+
