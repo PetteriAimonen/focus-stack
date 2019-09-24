@@ -319,10 +319,9 @@ void Task_Align::apply_contrast_whitebalance(cv::Mat& img)
   if (img.channels() == 1)
   {
     // For grayscale images, apply contrast only
-    float delta = 0.0f;
-
     for (int y = 0; y < img.rows; y++)
     {
+      float delta = 0.0f;
       for (int x = 0; x < img.cols; x++)
       {
         float yd = (y - img.rows/2.0f) / (float)img.rows;
@@ -344,10 +343,10 @@ void Task_Align::apply_contrast_whitebalance(cv::Mat& img)
   else
   {
     // For RGB images, apply contrast and white balance
-
-    float delta[3] = {0.0f, 0.0f, 0.0f};
     for (int y = 0; y < img.rows; y++)
     {
+      float delta[3] = {0.0f, 0.0f, 0.0f};
+
       for (int x = 0; x < img.cols; x++)
       {
         float yd = (y - img.rows/2.0f) / (float)img.rows;

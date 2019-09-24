@@ -145,7 +145,8 @@ bool FocusStack::run()
                                                  grayscale, color,
                                                  aligned_imgs.at(neighbour),
                                                  nullptr,
-                                                 input_imgs.at(i));
+                                                 input_imgs.at(i),
+                                                 m_align_flags);
         }
         else
         {
@@ -160,7 +161,8 @@ bool FocusStack::run()
                                                  grayscale, color,
                                                  nullptr,
                                                  aligned_imgs.at(neighbour),
-                                                 input_imgs.at(i));
+                                                 input_imgs.at(i),
+                                                 m_align_flags);
         }
       }
       else

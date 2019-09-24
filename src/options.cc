@@ -19,6 +19,7 @@ bool Options::has_flag(std::string name)
     const std::string &arg = m_options.at(i);
     if (arg == name)
     {
+      m_parsed.at(i) = true;
       return true;
     }
 
