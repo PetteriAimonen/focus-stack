@@ -1,6 +1,11 @@
 #include <iostream>
 #include "options.hh"
 #include "focusstack.hh"
+#include <opencv2/core.hpp>
+
+#ifndef GIT_VERSION
+#define GIT_VERSION "unknown"
+#endif
 
 using namespace focusstack;
 
@@ -8,6 +13,39 @@ int main(int argc, const char *argv[])
 {
   Options options(argc, argv);
   FocusStack stack;
+
+  if (options.has_flag("--version"))
+  {
+    std::cerr << "focus-stack 1.0, git version " GIT_VERSION ", built " __DATE__ " " __TIME__ "\n"
+                 "Compiled with OpenCV version " CV_VERSION "\n"
+                 "Copyright (c) 2019 Petteri Aimonen\n\n"
+
+"Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+"of this software and associated documentation files (the \"Software\"), to\n"
+"deal in the Software without restriction, including without limitation the\n"
+"rights to use, copy, modify, merge, publish, distribute, sublicense, and/or\n"
+"sell copies of the Software, and to permit persons to whom the Software is\n"
+"furnished to do so, subject to the following conditions:\n\n"
+
+"The above copyright notice and this permission notice shall be included in all\n"
+"copies or substantial portions of the Software.\n\n"
+
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
+"SOFTWARE."
+              << std::endl;
+    return 0;
+  }
+
+  if (options.has_flag("--opencv-version"))
+  {
+    std::cerr << cv::getBuildInformation().c_str() << std::endl;
+    return 0;
+  }
 
   if (options.has_flag("--help") || options.get_filenames().size() < 2)
   {
@@ -25,6 +63,8 @@ int main(int argc, const char *argv[])
                  "  --denoise=1.0                 Set image denoise level (default 1.0)\n"
                  "  --save-steps                  Save intermediate images from processing steps\n"
                  "  --verbose                     Verbose output from steps\n"
+                 "  --version                     Show application version number\n"
+                 "  --opencv-version              Show OpenCV library version and build info\n"
               << std::endl;
     return 1;
   }

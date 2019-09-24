@@ -14,6 +14,8 @@ CXXFLAGS += --std=c++14
 LDFLAGS += -lpthread -lm
 LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
 
+CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty)\"
+
 # List of source code files
 CXXSRCS += focusstack.cc worker.cc options.cc
 CXXSRCS += task_align.cc task_grayscale.cc task_loadimg.cc
