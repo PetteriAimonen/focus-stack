@@ -21,6 +21,15 @@ To build the application, simply type:
 
     make
 
+Building on Windows
+-------------------
+Download OpenCV binary package for Windows from OpenCV website.
+Download Build Tools for Visual Studio 2019 from Microsoft.
+
+In Visual Studio command prompt, execute:
+
+    nmake -f Makefile.windows
+
 Basic usage
 -----------
 In most cases just passing all the images is enough:
@@ -38,6 +47,9 @@ For advanced usage, see `--help` for list of all options:
       --denoise=1.0                 Set image denoise level (default 1.0)
       --save_steps                  Save intermediate images from processing steps
       --verbose                     Verbose output from steps
+
+On Windows you can additionally just select the photos and drag them
+over `focus-stack.exe` to run with default settings.
 
 Algorithms used
 ---------------

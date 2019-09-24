@@ -15,10 +15,14 @@ OPENCV_PATH = ..\opencv\build
 CXXFLAGS = $(CXXFLAGS) /I$(OPENCV_PATH)\include
 LDFLAGS = $(OPENCV_PATH)\x64\vc14\lib\opencv_world411.lib
 
-# Required compilation options
-#CXXFLAGS += --std=c++14
-#LDFLAGS += -lpthread -lm
-#LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
+!IF [git describe --always --dirty > gitrev] == 0
+GIT_VERSION = \
+!INCLUDE gitrev
+CXXFLAGS = $(CXXFLAGS) "/DGIT_VERSION=\"$(GIT_VERSION)\""
+!ENDIF
+
+# Expand glob patterns in arguments automatically
+LDFLAGS = $(LDFLAGS) /link setargv.obj
 
 # List of source code files
 CXXSRCS = src/focusstack.cc src/worker.cc src/options.cc \
@@ -29,11 +33,21 @@ CXXSRCS = src/focusstack.cc src/worker.cc src/options.cc \
 
 all: build build/focus-stack.exe
 
+package: build/focus-stack.exe
+	del /S /q distrib || echo.
+	mkdir distrib || echo.
+	mkdir distrib\focus-stack || echo.
+	copy /Y build\focus-stack.exe distrib\focus-stack
+        copy /Y build\opencv*.dll distrib\focus-stack
+	xcopy /E examples distrib\focus-stack\examples\.
+	copy /Y README.md distrib\focus-stack\README.txt
+	copy /Y LICENSE.md distrib\focus-stack\LICENSE.txt
+
 build:
 	mkdir build
 
 clean:
-	deltree build
+	del /S /q build
 
 build/focus-stack.exe: $(CXXSRCS)
 	$(CXX) $(CXXFLAGS) /Fe:$@ $** $(LDFLAGS)
