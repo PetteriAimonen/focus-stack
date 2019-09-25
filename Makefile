@@ -63,7 +63,7 @@ builddeb: make_debuild
 	(cd DEBUILD/focus-stack && debuild -uc -us)
 
 builddeb_signed: make_debuild
-	(cd DEBUILD/focus-stack && debuild)
+	(cd DEBUILD/focus-stack && debuild -S)
 
 docs/focus-stack.html:
 	mandoc -Thtml docs/focus-stack.1 > $@
