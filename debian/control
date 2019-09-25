@@ -2,14 +2,14 @@ Source: focus-stack
 Section: graphics
 Priority: optional
 Maintainer: Petteri Aimonen <jpa@deb.mail.kapsi.fi>
-Build-Depends: debhelper (>= 10), libopencv-dev
+Build-Depends: debhelper (>= 10), libopencv-dev (>= 3.0)
 Standards-Version: 4.1.2
 Homepage: https://github.com/PetteriAimonen/focus-stack
 Vcs-Git: https://github.com/PetteriAimonen/focus-stack.git
 
 Package: focus-stack
 Architecture: any
-Depends: libopencv
+Depends: libopencv (>= 3.0), ${shlibs:Depends}, ${misc:Depends}, libgcc1, libstdc++6
 Suggests: ocl-icd-libopencl1
 Description: Fast focus stacking of photos for extended depth of field.
  focus-stack implements the complex wavelets based algorithm for

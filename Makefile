@@ -16,6 +16,7 @@ CXXFLAGS += --std=c++14
 LDFLAGS += -lpthread -lm
 LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
 
+VERSION = $(shell git describe)
 CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty 2>/dev/null)\"
 
 # List of source code files
@@ -51,6 +52,14 @@ install: all
 	install -D build/focus-stack $(DESTDIR)$(prefix)/bin/focus-stack
 	mkdir -p $(DESTDIR)$(prefix)/share/man/man1/
 	gzip -c docs/focus-stack.1 > $(DESTDIR)$(prefix)/share/man/man1/focus-stack.1.gz
+
+builddeb:
+	rm -rf DEBUILD
+	mkdir -p DEBUILD
+	git archive --prefix=focus-stack.orig/ --format=tar.gz HEAD > DEBUILD/focus-stack_$(VERSION).orig.tar.gz
+	(cd DEBUILD && tar xzf focus-stack_$(VERSION).orig.tar.gz && cp -pr focus-stack.orig focus-stack)
+	(cd DEBUILD/focus-stack && debuild)
+
 
 -include $(DEPS)
 -include $(TESTDEPS)

@@ -1,10 +1,9 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: focus-stack
-Source: <url://example.com>
+Source: https://github.com/PetteriAimonen/focus-stack
 
 Files: *
 Copyright: 2019 Petteri Aimonen
-
 License: MIT
  Permission is hereby granted, free of charge, to any person 
  obtaining a copy of this software and associated documentation files 
