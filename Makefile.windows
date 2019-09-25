@@ -42,6 +42,7 @@ package: build/focus-stack.exe
 	xcopy /E examples distrib\focus-stack\examples\.
 	copy /Y README.md distrib\focus-stack\README.txt
 	copy /Y LICENSE.md distrib\focus-stack\LICENSE.txt
+	copy /Y docs\focus-stack.html distrib\focus-stack\focus-stack.html
 
 build:
 	mkdir build

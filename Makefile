@@ -53,13 +53,20 @@ install: all
 	mkdir -p $(DESTDIR)$(prefix)/share/man/man1/
 	gzip -c docs/focus-stack.1 > $(DESTDIR)$(prefix)/share/man/man1/focus-stack.1.gz
 
-builddeb:
+make_debuild:
 	rm -rf DEBUILD
 	mkdir -p DEBUILD
 	git archive --prefix=focus-stack.orig/ --format=tar.gz HEAD > DEBUILD/focus-stack_$(VERSION).orig.tar.gz
 	(cd DEBUILD && tar xzf focus-stack_$(VERSION).orig.tar.gz && cp -pr focus-stack.orig focus-stack)
+
+builddeb: make_debuild
+	(cd DEBUILD/focus-stack && debuild -uc -us)
+
+builddeb_signed: make_debuild
 	(cd DEBUILD/focus-stack && debuild)
 
+docs/focus-stack.html:
+	mandoc -Thtml docs/focus-stack.1 > $@
 
 -include $(DEPS)
 -include $(TESTDEPS)
