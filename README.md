@@ -8,7 +8,7 @@ and combines them so that the complete subject is in focus.
 Installation
 ------------
 Binary packages for Windows 10 and Ubuntu 18.04 are available on the GitHub
-releases tab.
+releases tab. Ubuntu packages are also available from [this PPA](https://launchpad.net/~jpa-lp/+archive/ubuntu/focus-stack).
 
 Building on Ubuntu
 ------------------
@@ -34,8 +34,8 @@ Or to build a Debian/Ubuntu package and install it, type:
 
 Building on Windows
 -------------------
-Download OpenCV binary package for Windows from OpenCV website.
-Download Build Tools for Visual Studio 2019 from Microsoft.
+Download [OpenCV binary package](https://opencv.org/releases/) for Windows from OpenCV website.
+Download [Build Tools for Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) from Microsoft.
 
 In Visual Studio command prompt, execute:
 
