@@ -9,7 +9,7 @@ Vcs-Git: https://github.com/PetteriAimonen/focus-stack.git
 
 Package: focus-stack
 Architecture: any
-Depends: libopencv (>= 3.0), ${shlibs:Depends}, ${misc:Depends}, libgcc1, libstdc++6
+Depends: libopencv-core3.2, libopencv-video3.2, libopencv-imgcodecs3.2, libopencv-photo3.2, libopencv-imgproc3.2, ${shlibs:Depends}, ${misc:Depends}, libgcc1, libstdc++6
 Suggests: ocl-icd-libopencl1
 Description: Fast focus stacking of photos for extended depth of field.
  focus-stack implements the complex wavelets based algorithm for

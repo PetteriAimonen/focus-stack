@@ -17,13 +17,15 @@ GPU-specific driver:
     sudo apt install ocl-icd-opencl-dev beignet            # For Intel GPUs
     sudo apt install ocl-icd-opencl-dev nvidia-opencl-icd  # For NVidia GPUs
 
-To build the application, simply type:
+To build and install the application, simply type:
 
     make
+    make install
 
-Or to build a Debian/Ubuntu package, type:
+Or to build a Debian/Ubuntu package and install it, type:
 
     make builddeb
+    sudo dpkg -i DEBUILD/focus-stack*.deb
 
 Building on Windows
 -------------------
