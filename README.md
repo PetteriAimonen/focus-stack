@@ -5,6 +5,11 @@ This project implements a cross-platform tool for focus stacking images.
 The application takes a set of images captured at different focus distances
 and combines them so that the complete subject is in focus.
 
+Installation
+------------
+Binary packages for Windows 10 and Ubuntu 18.04 are available on the GitHub
+releases tab.
+
 Building on Ubuntu
 ------------------
 The only dependency is OpenCV, 3.0 or newer, plus the basic build tools:
