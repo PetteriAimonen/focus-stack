@@ -315,6 +315,15 @@ void Task_Align::match_whitebalance()
   cv::solve(factors, targets, m_whitebalance, cv::DECOMP_SVD);
 }
 
+// Round value to integer and add quantization error to delta for dithering.
+// Finally, clamp the result to 0..255 range
+static inline int round_and_dither(float value, float &delta)
+{
+    int intval = (int)(value + delta);
+    delta += value - intval;
+    return std::min(255, std::max(0, intval));
+}
+
 void Task_Align::apply_contrast_whitebalance(cv::Mat& img)
 {
   if (img.channels() == 1)
@@ -335,8 +344,7 @@ void Task_Align::apply_contrast_whitebalance(cv::Mat& img)
         // Simple dithering reduces banding in result image
         uint8_t v = img.at<uint8_t>(y, x);
         float f = v * c;
-        v = std::min(255, std::max(0, (int)(f + delta)));
-        delta += f - v;
+        v = round_and_dither(f, delta);
         img.at<uint8_t>(y, x) = v;
       }
     }
@@ -362,12 +370,9 @@ void Task_Align::apply_contrast_whitebalance(cv::Mat& img)
         float b = v[0] * c * m_whitebalance.at<float>(1) + m_whitebalance.at<float>(0);
         float g = v[1] * c * m_whitebalance.at<float>(3) + m_whitebalance.at<float>(2);
         float r = v[2] * c * m_whitebalance.at<float>(5) + m_whitebalance.at<float>(4);
-        v[0] = std::min(255, std::max(0, (int)(b + delta[0])));
-        v[1] = std::min(255, std::max(0, (int)(g + delta[1])));
-        v[2] = std::min(255, std::max(0, (int)(r + delta[2])));
-        delta[0] += b - v[0];
-        delta[1] += g - v[1];
-        delta[2] += r - v[2];
+        v[0] = round_and_dither(b, delta[0]);
+        v[1] = round_and_dither(g, delta[1]);
+        v[2] = round_and_dither(r, delta[2]);
         img.at<cv::Vec3b>(y, x) = v;
       }
     }
