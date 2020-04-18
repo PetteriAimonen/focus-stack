@@ -103,6 +103,9 @@ bool FocusStack::run()
     std::vector<std::shared_ptr<Task_Align> > aligned_imgs(count);
     std::vector<std::shared_ptr<ImgTask> > aligned_grayscales(count);
     std::vector<std::shared_ptr<ImgTask> > merge_batch;
+    std::vector<std::shared_ptr<ImgTask> > reassign_batch_grays;
+    std::vector<std::shared_ptr<ImgTask> > reassign_batch_colors;
+    std::shared_ptr<Task_Reassign_Map> reassign_map;
     for (int i : indexes)
     {
       std::shared_ptr<Task_LoadImg> color;
@@ -203,6 +206,8 @@ bool FocusStack::run()
       }
       worker.add(wavelet);
       merge_batch.push_back(wavelet);
+      reassign_batch_grays.push_back(aligned_grayscale);
+      reassign_batch_colors.push_back(aligned);
 
       if (merge_batch.size() >= batch_size)
       {
@@ -212,6 +217,15 @@ bool FocusStack::run()
 
         merge_batch.clear();
         merge_batch.push_back(merged);
+
+        // And update reassignment map.
+        // After this, the aligned images can be unloaded from RAM.
+        reassign_map = std::make_shared<Task_Reassign_Map>(reassign_batch_grays,
+                                                           reassign_batch_colors,
+                                                           reassign_map);
+        worker.add(reassign_map);
+        reassign_batch_colors.clear();
+        reassign_batch_grays.clear();
       }
     }
 
@@ -225,6 +239,17 @@ bool FocusStack::run()
     {
       merged_wavelet = std::make_shared<Task_Merge>(merge_batch, m_consistency);
       worker.add(merged_wavelet);
+    }
+
+    // Compute final reassignment map
+    if (reassign_batch_colors.size() > 0)
+    {
+      reassign_map = std::make_shared<Task_Reassign_Map>(reassign_batch_grays,
+                                                         reassign_batch_colors,
+                                                         reassign_map);
+      worker.add(reassign_map);
+      reassign_batch_colors.clear();
+      reassign_batch_grays.clear();
     }
 
     // Denoise merged image
@@ -249,10 +274,8 @@ bool FocusStack::run()
     }
 
     // Reassign pixel values
-    std::vector<std::shared_ptr<ImgTask>> tmp(aligned_imgs.begin(), aligned_imgs.end()); // Convert to base class pointer
-    std::shared_ptr<ImgTask> reassigntask = std::make_shared<Task_Reassign>(aligned_grayscales, tmp, merged_gray);
-    std::shared_ptr<ImgTask> reassigned = reassigntask;
-    worker.add(std::move(reassigntask));
+    std::shared_ptr<ImgTask> reassigned = std::make_shared<Task_Reassign>(reassign_map, merged_gray);
+    worker.add(reassigned);
 
     // Save result image
     worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned, refcolor));
