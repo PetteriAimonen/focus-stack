@@ -1,6 +1,10 @@
 #include "worker.hh"
 #include <cstdio>
 
+#ifdef USE_MALLINFO
+#include <malloc.h>
+#endif
+
 using namespace focusstack;
 
 Task::Task(): m_filename("unknown"), m_name("Base task"), m_done(false)
@@ -212,6 +216,11 @@ void Worker::worker(int thread_idx)
         std::unique_lock<std::mutex> lock(m_mutex);
         std::printf("%6.3f           T%d Finished task %d in %0.3f s.\n",
                     seconds_passed(), thread_idx, taskidx, seconds_passed() - start);
+
+#ifdef USE_MALLINFO
+        struct mallinfo mem = mallinfo();
+        std::printf("%6.3f           Memory use: %0.3f MB.\n", seconds_passed(), mem.uordblks / 1e6);
+#endif
       }
 
       if (task->uses_opencl())
