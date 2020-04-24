@@ -91,7 +91,14 @@ build/focus-stack.app: build/focus-stack packaging/macosx/focus-stack-gui.scpt p
 	cp "build/focus-stack" "$@/Contents/MacOS"
 	dylibbundler -x "$@/Contents/MacOS/focus-stack" -d "$@/Contents/libs" -od -b
 
-build/focus-stack_MacOSX.zip: build/focus-stack.app
-	rm -f "$@"
-	cd build; zip -r focus-stack_MacOSX.zip focus-stack.app
+distrib/focus-stack_MacOSX.zip: build/focus-stack.app
+	rm -rf distrib
+	mkdir -p distrib
+	mkdir distrib/focus-stack
+	cp build/focus-stack.app distrib/focus-stack
+	cp -pr examples distrib/focus-stack
+	cp README.md distrib/focus-stack/README.txt
+	cp LICENSE.md distrib/focus-stack/LICENSE.txt
+	cp docs/focus-stack.html distrib/focus-stack
+	cd distrib; zip -r focus-stack_MacOSX.zip focus-stack
 

@@ -10,10 +10,10 @@
 CXX = cl
 CXXFLAGS = /O2 /EHsc /W2
 
-# Path to OpenCV
+# Path to OpenCV, you may need to edit these if your version is different
 OPENCV_PATH = ..\opencv\build
 CXXFLAGS = $(CXXFLAGS) /I$(OPENCV_PATH)\include
-LDFLAGS = $(OPENCV_PATH)\x64\vc14\lib\opencv_world411.lib
+LDFLAGS = $(OPENCV_PATH)\x64\vc14\lib\opencv_world430.lib
 
 !IF [git describe --always --dirty > gitrev] == 0
 GIT_VERSION = \
@@ -43,6 +43,7 @@ package: build/focus-stack.exe
 	copy /Y README.md distrib\focus-stack\README.txt
 	copy /Y LICENSE.md distrib\focus-stack\LICENSE.txt
 	copy /Y docs\focus-stack.html distrib\focus-stack\focus-stack.html
+	cd distrib; powershell Compress-Archive focus-stack focus-stack_Windows.zip
 
 build:
 	mkdir build
@@ -52,4 +53,4 @@ clean:
 
 build/focus-stack.exe: $(CXXSRCS)
 	$(CXX) $(CXXFLAGS) /Fe:$@ $** $(LDFLAGS)
-	copy $(OPENCV_PATH)\x64\vc14\bin\opencv_world411.dll build
+	copy $(OPENCV_PATH)\x64\vc14\bin\opencv_world430.dll build
