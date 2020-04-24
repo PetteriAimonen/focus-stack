@@ -39,11 +39,11 @@ package: build/focus-stack.exe
 	mkdir distrib\focus-stack || echo.
 	copy /Y build\focus-stack.exe distrib\focus-stack
         copy /Y build\opencv*.dll distrib\focus-stack
-	xcopy /E examples distrib\focus-stack\examples\.
+	xcopy /E examples distrib\focus-stack
 	copy /Y README.md distrib\focus-stack\README.txt
 	copy /Y LICENSE.md distrib\focus-stack\LICENSE.txt
 	copy /Y docs\focus-stack.html distrib\focus-stack\focus-stack.html
-	cd distrib; powershell Compress-Archive focus-stack focus-stack_Windows.zip
+	powershell cd distrib; Compress-Archive focus-stack focus-stack_Windows.zip
 
 build:
 	mkdir build

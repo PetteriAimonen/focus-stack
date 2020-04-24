@@ -95,7 +95,7 @@ distrib/focus-stack_MacOSX.zip: build/focus-stack.app
 	rm -rf distrib
 	mkdir -p distrib
 	mkdir distrib/focus-stack
-	cp build/focus-stack.app distrib/focus-stack
+	cp -pr build/focus-stack.app distrib/focus-stack
 	cp -pr examples distrib/focus-stack
 	cp README.md distrib/focus-stack/README.txt
 	cp LICENSE.md distrib/focus-stack/LICENSE.txt
