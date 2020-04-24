@@ -10,6 +10,48 @@ Installation
 Binary packages for Windows 10 and Ubuntu 18.04 are available on the GitHub
 releases tab. Ubuntu packages are also available from [this PPA](https://launchpad.net/~jpa-lp/+archive/ubuntu/focus-stack).
 
+Basic usage
+-----------
+In most cases just passing all the images is enough:
+
+     build/focus-stack .../path/to/input/*.jpg
+
+For advanced usage, see `--help` for list of all options:
+
+    Usage: build/focus-stack [options] file1.jpg file2.jpg ...
+    Options:
+      --output=output.jpg           Set output filename
+      --reference=0                 Set index of image used as alignment reference (default middle one)
+      --global-align                Align directly against reference (default with neighbour image)
+      --full-resolution-align       Use full resolution images in alignment (default max 2048 px)
+      --no-whitebalance             Don't attempt to correct white balance differences
+      --no-contrast                 Don't attempt to correct contrast and exposure differences
+      --threads=2                   Select number of threads to use (default number of CPUs + 1)
+      --no-opencl                   Disable OpenCL GPU acceleration (default enabled)
+      --consistency=2               Set depth map consistency filter level 0..2 (default 2)
+      --denoise=1.0                 Set image denoise level (default 1.0)
+      --save-steps                  Save intermediate images from processing steps
+      --verbose                     Verbose output from steps
+      --version                     Show application version number
+      --opencv-version              Show OpenCV library version and build info
+
+On Windows you can additionally just select the photos and drag them
+over `focus-stack.exe` to run with default settings.
+
+On Mac OS X, you can start the program directly and it will ask for files.
+Alternatively you can drag the files over `focus-stack` application.
+If you want to provide command line parameters, open terminal and call the
+binary with path `focus-stack.app/Contents/MacOS/focus-stack`.
+
+Algorithms used
+---------------
+The focus stacking algorithm used was invented and first described in
+[Complex Wavelets for Extended Depth-of-Field: A New Method for the Fusion of Multichannel Microscopy Images](http://bigwww.epfl.ch/publications/forster0404.html) by B. Forster, D. Van De Ville, J. Berent, D. Sage and M. Unser.
+
+The application also uses multiple algorithms from OpenCV library.
+Most importantly, [findTransformECC](https://docs.opencv.org/3.0-beta/modules/video/doc/motion_analysis_and_object_tracking.html#findtransformecc) is used to align
+the source images.
+
 Building on Ubuntu
 ------------------
 The only dependency is OpenCV, 3.0 or newer, plus the basic build tools:
@@ -60,42 +102,4 @@ Alternatively you can build an application bundle that can be used on any machin
 and that also includes a simple GUI for selecting the files:
 
     make build/focus-stack.app
-
-Basic usage
------------
-In most cases just passing all the images is enough:
-
-     build/focus-stack .../path/to/input/*.jpg
-
-For advanced usage, see `--help` for list of all options:
-
-    Usage: build/focus-stack [options] file1.jpg file2.jpg ...
-    Options:
-      --output=output.jpg           Set output filename
-      --reference=0                 Set index of image used as alignment reference (default middle one)
-      --global-align                Align directly against reference (default with neighbour image)
-      --full-resolution-align       Use full resolution images in alignment (default max 2048 px)
-      --no-whitebalance             Don't attempt to correct white balance differences
-      --no-contrast                 Don't attempt to correct contrast and exposure differences
-      --threads=2                   Select number of threads to use (default number of CPUs + 1)
-      --no-opencl                   Disable OpenCL GPU acceleration (default enabled)
-      --consistency=2               Set depth map consistency filter level 0..2 (default 2)
-      --denoise=1.0                 Set image denoise level (default 1.0)
-      --save-steps                  Save intermediate images from processing steps
-      --verbose                     Verbose output from steps
-      --version                     Show application version number
-      --opencv-version              Show OpenCV library version and build info
-
-On Windows you can additionally just select the photos and drag them
-over `focus-stack.exe` to run with default settings.
-
-Algorithms used
----------------
-The focus stacking algorithm used was invented and first described in
-[Complex Wavelets for Extended Depth-of-Field: A New Method for the Fusion of Multichannel Microscopy Images](http://bigwww.epfl.ch/publications/forster0404.html) by B. Forster, D. Van De Ville, J. Berent, D. Sage and M. Unser.
-
-The application also uses multiple algorithms from OpenCV library.
-Most importantly, [findTransformECC](https://docs.opencv.org/3.0-beta/modules/video/doc/motion_analysis_and_object_tracking.html#findtransformecc) is used to align
-the source images.
-
 
