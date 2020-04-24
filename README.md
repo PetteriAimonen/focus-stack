@@ -41,6 +41,26 @@ In Visual Studio command prompt, execute:
 
     nmake -f Makefile.windows
 
+Building on Mac OS X
+--------------------
+Install [Homebrew](https://brew.sh/) by running this in terminal:
+
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+
+Then install build dependencies:
+
+    brew install opencv pkg-config dylibbundler
+
+Finally, build and install to `/usr/local/bin`:
+
+    make
+    make install
+
+Alternatively you can build an application bundle that can be used on any machine
+and that also includes a simple GUI for selecting the files:
+
+    make build/focus-stack.app
+
 Basic usage
 -----------
 In most cases just passing all the images is enough:

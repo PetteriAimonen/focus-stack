@@ -3,13 +3,13 @@
 # Default compilation flags, these can be overridden in Makefile.local
 # or in environment like: CXXFLAGS=... make
 CXX ?= g++
-CXXFLAGS ?= -Og -g3 -ggdb -Wall -Wextra -Wno-sign-compare
+CXXFLAGS ?= -O2 -g3 -ggdb -Wall -Wextra -Wno-sign-compare
 DESTDIR ?=
 prefix ?= /usr/local
 
 # Try to get opencv path from pkg-config
-CXXFLAGS += $(shell pkg-config --cflags-only-I opencv)
-LDFLAGS += $(shell pkg-config --libs-only-L opencv)
+CXXFLAGS += $(shell pkg-config --silence-errors --cflags-only-I opencv4 || pkg-config --cflags-only-I opencv)
+LDFLAGS += $(shell pkg-config --silence-errors --libs-only-L opencv4 || pkg-config --silence-errors --cflags-only-I opencv)
 
 # Required compilation options
 CXXFLAGS += --std=c++14
@@ -47,6 +47,7 @@ build:
 
 clean:
 	rm -rf build
+	mkdir -p build
 
 install: all
 	install -D build/focus-stack $(DESTDIR)$(prefix)/bin/focus-stack
@@ -79,3 +80,19 @@ build/%.o: src/%.cc
 
 build/unittests: src/gtest_main.cc $(OBJS) $(TESTOBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ -lgtest $(LDFLAGS)
+
+# Mac OS X application bundle
+build/focus-stack.app: build/focus-stack packaging/macosx/focus-stack-gui.scpt packaging/macosx/Info.plist
+	rm -rf "$@"
+	osacompile -o "$@" packaging/macosx/focus-stack-gui.scpt
+	mv "$@/Contents/MacOS/droplet" "$@/Contents/MacOS/focus-stack-gui"
+	mv "$@/Contents/Resources/droplet.rsrc" "$@/Contents/Resources/focus-stack-gui.rsrc"
+	sed "s/VERSION/$(VERSION)/g" <"packaging/macosx/Info.plist" >"$@/Contents/Info.plist"
+	cp "packaging/macosx/PkgInfo" "$@/Contents"
+	cp "build/focus-stack" "$@/Contents/MacOS"
+	dylibbundler -x "$@/Contents/MacOS/focus-stack" -d "$@/Contents/libs" -od -b
+
+build/focus-stack_MacOSX.zip: build/focus-stack.app
+	rm -f "$@"
+	zip -r "$@" $<
+
