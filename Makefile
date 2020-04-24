@@ -94,5 +94,5 @@ build/focus-stack.app: build/focus-stack packaging/macosx/focus-stack-gui.scpt p
 
 build/focus-stack_MacOSX.zip: build/focus-stack.app
 	rm -f "$@"
-	zip -r "$@" $<
+	cd build; zip -r focus-stack_MacOSX.zip focus-stack.app
 
