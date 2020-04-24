@@ -37,13 +37,12 @@ TESTSRCS += task_wavelet_opencl_tests.cc
 TESTOBJS = $(TESTSRCS:%.cc=build/%.o)
 TESTDEPS := $(TESTOBJS:%.o=%.d)
 
-all: build build/focus-stack
+$(shell mkdir -p build)
+
+all: build/focus-stack
 
 run_unittests: build/unittests
 	build/unittests
-
-build:
-	mkdir -p build
 
 clean:
 	rm -rf build
