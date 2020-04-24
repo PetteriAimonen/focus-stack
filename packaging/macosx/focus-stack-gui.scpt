@@ -40,6 +40,13 @@ on process(filelist)
 			set progress completed steps to (((characters 2 thru 4) of status as text) as number)
 			set progress total steps to (((characters 6 thru 8) of status as text) as number)
 		end try
+		try
+			set logtext to (read POSIX file "/tmp/focus-stack.log")
+			if (return & "[") is not in logtext and (number of logtext) > 100 then
+				display alert "Error" message logtext as critical buttons {"Ok"}
+				exit repeat
+			end if
+		end try
 		delay 0.2
 	end repeat
 	
