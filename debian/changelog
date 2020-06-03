@@ -1,3 +1,10 @@
+focus-stack (1.0) bionic; urgency=medium
+
+  * Fix color artefacts near fully white / fully black regions.
+  * Reduce memory use.
+
+ -- Petteri Aimonen <jpa@deb.mail.kapsi.fi>  Wed, 03 Jun 2020 20:35:17 +0300
+
 focus-stack (0.9.1-1) bionic; urgency=medium
 
   * Initial release
