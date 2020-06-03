@@ -71,6 +71,7 @@ To build and install the application, simply type:
 
 Or to build a Debian/Ubuntu package and install it, type:
 
+    sudo apt install debhelper devscripts
     make builddeb
     sudo dpkg -i DEBUILD/focus-stack*.deb
 
