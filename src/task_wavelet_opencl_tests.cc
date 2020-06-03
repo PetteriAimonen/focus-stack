@@ -6,6 +6,7 @@ namespace focusstack {
 
 // Decompose with OpenCL, compose with CPU
 TEST(Task_Wavelet_OpenCL, Decompose1D) {
+  if (!cv::ocl::haveOpenCL()) GTEST_SKIP();
   cv::ocl::setUseOpenCL(true);
 
   cv::Mat input(1, 16, CV_32FC2);
@@ -37,6 +38,8 @@ TEST(Task_Wavelet_OpenCL, Decompose1D) {
 }
 
 TEST(Task_Wavelet_OpenCL, Roundtrip1D) {
+  if (!cv::ocl::haveOpenCL()) GTEST_SKIP();
+
   cv::Mat input(1, 16, CV_32FC2);
   cv::Mat composed(1, 16, CV_32FC2);
 
@@ -80,6 +83,8 @@ TEST(Task_Wavelet_OpenCL, Roundtrip1D) {
 }
 
 TEST(Task_Wavelet_OpenCL, Decompose2D) {
+  if (!cv::ocl::haveOpenCL()) GTEST_SKIP();
+
   cv::Mat input(8, 8, CV_32FC2);
   cv::Mat wavelet(8, 8, CV_32FC2);
 
@@ -131,6 +136,8 @@ TEST(Task_Wavelet_OpenCL, Decompose2D) {
 }
 
 TEST(Task_Wavelet_OpenCL, Roundtrip2D) {
+  if (!cv::ocl::haveOpenCL()) GTEST_SKIP();
+
   cv::Mat input(8, 8, CV_32FC2);
   cv::Mat output(8, 8, CV_32FC2);
 
@@ -179,6 +186,8 @@ TEST(Task_Wavelet_OpenCL, Roundtrip2D) {
 }
 
 TEST(Task_Wavelet_OpenCL, Multilevel) {
+  if (!cv::ocl::haveOpenCL()) GTEST_SKIP();
+
   cv::Mat input(16, 16, CV_32FC2);
   cv::Mat output(16, 16, CV_32FC2);
 
