@@ -53,9 +53,9 @@ clean:
 	mkdir -p build
 
 install: all
-	install -D build/focus-stack $(DESTDIR)$(prefix)/bin/focus-stack
-	mkdir -p $(DESTDIR)$(prefix)/share/man/man1/
-	gzip -c docs/focus-stack.1 > $(DESTDIR)$(prefix)/share/man/man1/focus-stack.1.gz
+	install -D build/focus-stack "$(DESTDIR)$(prefix)/bin/focus-stack"
+	mkdir -p "$(DESTDIR)$(prefix)/share/man/man1/"
+	gzip -c docs/focus-stack.1 > "$(DESTDIR)$(prefix)/share/man/man1/focus-stack.1.gz"
 
 make_debuild:
 	rm -rf DEBUILD
