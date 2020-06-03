@@ -64,7 +64,7 @@ make_debuild:
 	(cd DEBUILD && tar xzf focus-stack_$(VERSION).orig.tar.gz && cp -pr focus-stack.orig focus-stack)
 
 builddeb: make_debuild
-	(cd DEBUILD/focus-stack && debuild -uc -us)
+	(cd DEBUILD/focus-stack && dch -v $(VERSION) "Git build" && debuild -uc -us -b)
 
 builddeb_signed: make_debuild
 	(cd DEBUILD/focus-stack && debuild -S)
