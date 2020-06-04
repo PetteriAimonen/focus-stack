@@ -4,6 +4,11 @@
 
 namespace focusstack {
 
+#ifndef GTEST_SKIP
+// Compatibility with old googletest versions.
+#define GTEST_SKIP() return
+#endif
+
 // Decompose with OpenCL, compose with CPU
 TEST(Task_Wavelet_OpenCL, Decompose1D) {
   if (!cv::ocl::haveOpenCL()) GTEST_SKIP();
