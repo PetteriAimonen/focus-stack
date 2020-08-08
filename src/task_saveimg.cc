@@ -1,14 +1,16 @@
 #include "task_saveimg.hh"
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace focusstack;
 
-Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, std::shared_ptr<Task_LoadImg> origsize)
+Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, int jpgquality, std::shared_ptr<Task_LoadImg> origsize)
 {
   m_filename = filename;
   m_name = "Save " + filename;
 
+  m_jpgquality = jpgquality;
   m_input = input;
   m_depends_on.push_back(input);
 
@@ -48,7 +50,11 @@ void Task_SaveImg::task()
     img = tmp;
   }
 
-  cv::imwrite(m_filename, img);
+  std::vector<int> compression_params;
+  compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+  compression_params.push_back(m_jpgquality);
+
+  cv::imwrite(m_filename, img, compression_params);
   m_input.reset();
   m_origsize.reset();
 }

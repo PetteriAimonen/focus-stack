@@ -27,6 +27,7 @@ public:
   void set_verbose(bool verbose) { m_verbose = verbose; }
   void set_threads(int threads) { m_threads = threads; }
   void set_reference(int refidx) { m_reference = refidx; }
+  void set_jpgquality(int level) { m_jpgquality = level; }
   void set_consistency(int level) { m_consistency = level; }
   void set_denoise(float level) { m_denoise = level; }
   void set_align_flags(int flags) { m_align_flags = static_cast<align_flags_t>(flags); }
@@ -44,6 +45,7 @@ private:
   int m_threads;
   int m_reference;
   int m_consistency;
+  int m_jpgquality;
   float m_denoise;
 };
 

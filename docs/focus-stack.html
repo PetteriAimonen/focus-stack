@@ -41,6 +41,12 @@ Usually good results are obtained with the default settings, but following
   </dd>
 </dl>
 <dl class="Bl-tag">
+  <dt class="It-tag"><b>--jpgquality=</b><i>95</i></dt>
+  <dd class="It-tag">Set the leve lof quality of the JGEP files (final and intermediates if asked to be writen). The value can go from 0 to 100 with a default at 95.
+    <div style="height: 1.00em;">&#x00A0;</div>
+  </dd>
+</dl>
+<dl class="Bl-tag">
   <dt class="It-tag"><b>--reference=</b><i>index</i></dt>
   <dd class="It-tag">Select image index (starting from 0) to use as alignment
       reference. Images in a stack will usually vary in scale and position. All
@@ -160,7 +166,12 @@ Combine all images in current directory, and write output to <b>output.jpg</b>
 <b>focus-stack --verbose --output=stacked.jpg IMG*.JPG</b>
 </pre>
 Combine all images, giving detailed printout of steps and write output to
-  <b>stacked.jpg</b>
+<b>stacked.jpg</b>
+<div style="height: 1.00em;">&#x00A0;</div>
+<pre>
+<b>focus-stack --jpgquality=100 IMG*.JPG</b>
+</pre>
+Generate a JPEG with the maximum level of quality (no compression).
 <div style="height: 1.00em;">&#x00A0;</div>
 <div style="height: 1.00em;">&#x00A0;</div>
 <h1 class="Sh" title="Sh" id="GPU_ACCELERATION"><a class="selflink" href="#GPU_ACCELERATION">GPU

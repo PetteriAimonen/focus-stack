@@ -9,7 +9,7 @@ namespace focusstack {
 class Task_SaveImg: public Task
 {
 public:
-  Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, std::shared_ptr<Task_LoadImg> origsize = nullptr);
+  Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, int jpgquality, std::shared_ptr<Task_LoadImg> origsize = nullptr);
 
 private:
   virtual void task();
