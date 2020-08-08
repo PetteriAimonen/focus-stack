@@ -16,6 +16,7 @@ using namespace focusstack;
 
 FocusStack::FocusStack():
   m_output("output.jpg"),
+  m_jpgquality(95),
   m_disable_opencl(false),
   m_save_steps(false),
   m_verbose(false),
@@ -133,7 +134,7 @@ bool FocusStack::run()
 
       if (m_save_steps)
       {
-        worker.add(std::make_shared<Task_SaveImg>("grayscale_" + grayscale->basename(), grayscale));
+        worker.add(std::make_shared<Task_SaveImg>("grayscale_" + grayscale->basename(), grayscale, m_jpgquality));
       }
 
       // Perform image alignment, using the neighbour image as initial guess or reference
@@ -184,7 +185,7 @@ bool FocusStack::run()
       if (m_save_steps)
       {
         // Task_Align adds "aligned_" prefix to the filename, so just use that name for saving also.
-        worker.add(std::make_shared<Task_SaveImg>(aligned->filename(), aligned));
+        worker.add(std::make_shared<Task_SaveImg>(aligned->filename(), aligned, m_jpgquality));
       }
 
       // Convert aligned image to grayscale again.
@@ -270,7 +271,7 @@ bool FocusStack::run()
 
     if (m_save_steps)
     {
-      worker.add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray));
+      worker.add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray, m_jpgquality));
     }
 
     // Reassign pixel values
@@ -278,7 +279,7 @@ bool FocusStack::run()
     worker.add(reassigned);
 
     // Save result image
-    worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned, refcolor));
+    worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned, m_jpgquality, refcolor));
 
   } // Close scope to avoid holding onto the shared_ptr's in local variables
 

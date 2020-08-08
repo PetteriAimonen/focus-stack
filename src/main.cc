@@ -52,6 +52,7 @@ int main(int argc, const char *argv[])
     std::cerr << "Usage: " << argv[0] << " [options] file1.jpg file2.jpg ...\n";
     std::cerr << "Options:\n"
                  "  --output=output.jpg           Set output filename\n"
+                 "  --jpgquality=95               Set output (JPG) quality 0..100 (default 95)\n"
                  "  --reference=0                 Set index of image used as alignment reference (default middle one)\n"
                  "  --global-align                Align directly against reference (default with neighbour image)\n"
                  "  --full-resolution-align       Use full resolution images in alignment (default max 2048 px)\n"
@@ -71,6 +72,7 @@ int main(int argc, const char *argv[])
 
   stack.set_inputs(options.get_filenames());
   stack.set_output(options.get_arg("--output", "output.jpg"));
+  stack.set_jpgquality(std::stoi(options.get_arg("--jpgquality", "95")));
   stack.set_save_steps(options.has_flag("--save-steps"));
   stack.set_disable_opencl(options.has_flag("--no-opencl"));
   stack.set_verbose(options.has_flag("--verbose") || options.has_flag("-v"));

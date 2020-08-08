@@ -35,6 +35,7 @@ protected:
 
   bool m_verbose;
   std::string m_filename;
+  int m_jpgquality;
   std::string m_name;
   std::mutex m_mutex;
   std::vector<std::shared_ptr<Task> > m_depends_on; // List of tasks this task needs as inputs
