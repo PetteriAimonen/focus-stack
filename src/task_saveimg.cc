@@ -1,7 +1,6 @@
 #include "task_saveimg.hh"
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include <opencv2/highgui/highgui.hpp>
 
 using namespace focusstack;
 
@@ -51,9 +50,8 @@ void Task_SaveImg::task()
   }
 
   std::vector<int> compression_params;
-  compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+  compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
   compression_params.push_back(m_jpgquality);
-
   cv::imwrite(m_filename, img, compression_params);
   m_input.reset();
   m_origsize.reset();

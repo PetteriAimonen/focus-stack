@@ -39,6 +39,7 @@ private:
     color_entry_t() {}
     color_entry_t(const color_entry_t& old):
       gray(old.gray), color(old.color[0], old.color[1], old.color[2]) {}
+    color_entry_t& operator=(const color_entry_t &old) = default;
   };
 
   // m_colors has color entries for all pixels, concatenated into one vector.

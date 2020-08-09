@@ -16,7 +16,6 @@ using namespace focusstack;
 
 FocusStack::FocusStack():
   m_output("output.jpg"),
-  m_jpgquality(95),
   m_disable_opencl(false),
   m_save_steps(false),
   m_verbose(false),
@@ -24,6 +23,7 @@ FocusStack::FocusStack():
   m_threads(std::thread::hardware_concurrency() + 1), // +1 to have extra thread to give tasks for GPU
   m_reference(-1),
   m_consistency(0),
+  m_jpgquality(95),
   m_denoise(0)
 {
 }
