@@ -185,7 +185,7 @@ bool FocusStack::run()
 
       if (m_align_only)
       {
-        worker.add(std::make_shared<Task_SaveImg>(m_output + color->filename(), aligned, m_jpgquality, refcolor));
+        worker.add(std::make_shared<Task_SaveImg>(m_output + color->basename(), aligned, m_jpgquality, refcolor));
         continue;
       }
 
