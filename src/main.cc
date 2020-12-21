@@ -97,6 +97,12 @@ int main(int argc, const char *argv[])
     stack.set_reference(std::stoi(options.get_arg("--reference")));
   }
 
+  if (options.has_flag("--align-only"))
+  {
+    stack.set_align_only(true);
+    stack.set_output(options.get_arg("--output", "aligned_"));
+  }
+
   std::vector<std::string> unparsed = options.get_unparsed();
   if (unparsed.size())
   {

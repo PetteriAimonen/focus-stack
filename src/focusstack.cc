@@ -18,6 +18,7 @@ FocusStack::FocusStack():
   m_output("output.jpg"),
   m_disable_opencl(false),
   m_save_steps(false),
+  m_align_only(false),
   m_verbose(false),
   m_align_flags(ALIGN_DEFAULT),
   m_threads(std::thread::hardware_concurrency() + 1), // +1 to have extra thread to give tasks for GPU
@@ -184,7 +185,7 @@ bool FocusStack::run()
 
       if (m_align_only)
       {
-        worker.add(std::make_shared<Task_SaveImg>(aligned->filename(), aligned, m_jpgquality, refcolor));
+        worker.add(std::make_shared<Task_SaveImg>(m_output + color->filename(), aligned, m_jpgquality, refcolor));
         continue;
       }
 
