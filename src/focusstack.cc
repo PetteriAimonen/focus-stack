@@ -182,6 +182,12 @@ bool FocusStack::run()
       aligned_imgs.at(i) = aligned;
       worker.add(aligned);
 
+      if (m_align_only)
+      {
+        worker.add(std::make_shared<Task_SaveImg>(aligned->filename(), aligned, m_jpgquality, refcolor));
+        continue;
+      }
+
       if (m_save_steps)
       {
         // Task_Align adds "aligned_" prefix to the filename, so just use that name for saving also.
@@ -228,6 +234,12 @@ bool FocusStack::run()
         reassign_batch_colors.clear();
         reassign_batch_grays.clear();
       }
+    }
+
+    if (m_align_only)
+    {
+      worker.wait_all();
+      return !worker.failed();
     }
 
     // Merge the final batch of images

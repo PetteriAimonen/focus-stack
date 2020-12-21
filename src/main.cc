@@ -63,6 +63,7 @@ int main(int argc, const char *argv[])
                  "  --consistency=2               Set depth map consistency filter level 0..2 (default 2)\n"
                  "  --denoise=1.0                 Set image denoise level (default 1.0)\n"
                  "  --save-steps                  Save intermediate images from processing steps\n"
+                 "  --align-only                  Only align the input image stack and exit\n"
                  "  --verbose                     Verbose output from steps\n"
                  "  --version                     Show application version number\n"
                  "  --opencv-version              Show OpenCV library version and build info\n"
