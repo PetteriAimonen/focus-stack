@@ -210,7 +210,15 @@ void Task_Align::match_contrast()
       float yd = (y - ref.rows/2.0f) / (float)ref.rows;
       float xd = (x - ref.cols/2.0f) / (float)ref.cols;
 
-      float c = (float)ref.at<uint8_t>(y, x) / (float)src.at<uint8_t>(y, x);
+      float refpix = (float)ref.at<uint8_t>(y, x);
+      float srcpix = (float)src.at<uint8_t>(y, x);
+
+      float c = 1.0;
+      if (refpix > 4 && srcpix > 4)
+      {
+        // Contrast result is only meaningful for bright enough pixels
+        c = refpix / srcpix;
+      }
 
       contrast.at<float>(idx) = c;
       positions.at<float>(idx, 0) = 1.0f;
@@ -222,6 +230,11 @@ void Task_Align::match_contrast()
   }
 
   cv::solve(positions, contrast, m_contrast, cv::DECOMP_SVD);
+
+  if (!cv::checkRange(m_contrast, true, NULL, -2.0f, 2.0f))
+  {
+    throw std::runtime_error("Contrast match result out of range, try --no-contrast");
+  }
 }
 
 void Task_Align::match_transform(int max_resolution, bool rough)
@@ -313,6 +326,11 @@ void Task_Align::match_whitebalance()
   }
 
   cv::solve(factors, targets, m_whitebalance, cv::DECOMP_SVD);
+
+  if (!cv::checkRange(m_whitebalance, true, NULL, -128, 128))
+  {
+    throw std::runtime_error("Whitebalance match result out of range, try --no-whitebalance");
+  }
 }
 
 // Round value to integer and add quantization error to delta for dithering.
