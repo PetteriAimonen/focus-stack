@@ -22,6 +22,7 @@ FocusStack::FocusStack():
   m_verbose(false),
   m_align_flags(ALIGN_DEFAULT),
   m_threads(std::thread::hardware_concurrency() + 1), // +1 to have extra thread to give tasks for GPU
+  m_batchsize(8),
   m_reference(-1),
   m_consistency(0),
   m_jpgquality(95),
@@ -99,7 +100,6 @@ bool FocusStack::run()
 
     // This loop goes through input images and processes them up to the merge step.
     // Merging is done in batches to reduce memory usage.
-    const int batch_size = 8;
     std::vector<std::shared_ptr<Task_LoadImg> > input_imgs(count);
     std::vector<std::shared_ptr<ImgTask> > grayscale_imgs(count);
     std::vector<std::shared_ptr<Task_Align> > aligned_imgs(count);
@@ -217,7 +217,7 @@ bool FocusStack::run()
       reassign_batch_grays.push_back(aligned_grayscale);
       reassign_batch_colors.push_back(aligned);
 
-      if (merge_batch.size() >= batch_size)
+      if (merge_batch.size() >= m_batchsize)
       {
         // Merge wavelet images accumulated so far
         std::shared_ptr<ImgTask> merged = std::make_shared<Task_Merge>(merge_batch, m_consistency);

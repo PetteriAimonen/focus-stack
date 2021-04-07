@@ -59,6 +59,7 @@ int main(int argc, const char *argv[])
                  "  --no-whitebalance             Don't attempt to correct white balance differences\n"
                  "  --no-contrast                 Don't attempt to correct contrast and exposure differences\n"
                  "  --threads=2                   Select number of threads to use (default number of CPUs + 1)\n"
+                 "  --batchsize=8                 Images per merge batch (default 8)\n"
                  "  --no-opencl                   Disable OpenCL GPU acceleration (default enabled)\n"
                  "  --consistency=2               Set depth map consistency filter level 0..2 (default 2)\n"
                  "  --denoise=1.0                 Set image denoise level (default 1.0)\n"
@@ -90,6 +91,11 @@ int main(int argc, const char *argv[])
   if (options.has_flag("--threads"))
   {
     stack.set_threads(std::stoi(options.get_arg("--threads")));
+  }
+
+  if (options.has_flag("--batchsize"))
+  {
+    stack.set_batchsize(std::stoi(options.get_arg("--batchsize")));
   }
 
   if (options.has_flag("--reference"))

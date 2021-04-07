@@ -27,6 +27,7 @@ public:
   void set_align_only(bool align_only) { m_align_only = align_only; }
   void set_verbose(bool verbose) { m_verbose = verbose; }
   void set_threads(int threads) { m_threads = threads; }
+  void set_batchsize(int batchsize) { m_batchsize = batchsize; }
   void set_reference(int refidx) { m_reference = refidx; }
   void set_jpgquality(int level) { m_jpgquality = level; }
   void set_consistency(int level) { m_consistency = level; }
@@ -45,6 +46,7 @@ private:
   align_flags_t m_align_flags;
 
   int m_threads;
+  int m_batchsize;
   int m_reference;
   int m_consistency;
   int m_jpgquality;

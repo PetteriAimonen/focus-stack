@@ -70,6 +70,12 @@ of CPU cores detected plus one to feed possible GPU accelerator. Lower
 number of threads also reduces memory consumption.
 
 .TP
+\fB\-\-batchsize=\fI\,count\/\fR
+Set the batch size for image merging. Larger values may give slightly
+better performance on machines with large amount of memory, while
+smaller values reduce memory usage.
+
+.TP
 \fB\-\-no-opencl\fR
 By default OpenCL-based GPU acceleration is used if available. This
 option can be specified to disable it.
