@@ -69,7 +69,7 @@ builddeb: make_debuild
 builddeb_signed: make_debuild
 	(cd DEBUILD/focus-stack && debuild -S)
 
-docs/focus-stack.html:
+docs/focus-stack.html: docs/focus-stack.1
 	mandoc -Thtml docs/focus-stack.1 > $@
 
 -include $(DEPS)

@@ -7,23 +7,29 @@
     td.head-rtitle, td.foot-os { text-align: right; }
     td.head-vol { text-align: center; }
     div.Pp { margin: 1ex 0ex; }
+    div.Nd, div.Bf, div.Op { display: inline; }
+    span.Pa, span.Ad { font-style: italic; }
+    span.Ms { font-weight: bold; }
+    dl.Bl-diag > dt { font-weight: bold; }
+    code.Nm, code.Fl, code.Cm, code.Ic, code.In, code.Fd, code.Fn,
+    code.Cd { font-weight: bold; font-family: inherit; }
   </style>
-  <title>man(1)</title>
+  <title>focus-stack(1)</title>
 </head>
 <body>
 <table class="head">
   <tr>
-    <td class="head-ltitle">man(1)</td>
+    <td class="head-ltitle">focus-stack(1)</td>
     <td class="head-vol">focus-stack man page</td>
-    <td class="head-rtitle">man(1)</td>
+    <td class="head-rtitle">focus-stack(1)</td>
   </tr>
 </table>
 <div class="manual-text">
-<h1 class="Sh" title="Sh" id="NAME"><a class="selflink" href="#NAME">NAME</a></h1>
+<h1 class="Sh" title="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
 focus-stack - combine photos to create extended depth of field image
-<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="selflink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
 focus-stack [options] file1.jpg file2.jpg ...
-<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="selflink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
 focus-stack takes a set of photos taken at different focus settings and combines
   them into one, selecting the sharpest source image for each pixel position.
   This is commonly called extended depth of field, or focus stacking. Typical
@@ -32,165 +38,173 @@ focus-stack takes a set of photos taken at different focus settings and combines
 <div class="Pp"></div>
 Usually good results are obtained with the default settings, but following
   options are available:
-<div style="height: 1.00em;">&#x00A0;</div>
+<div class="Pp"></div>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--output=</b><i>output.jpg</i></dt>
-  <dd class="It-tag">Set output filename. If file already exists, it will be
-      overwritten.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--output=</b><i>output.jpg</i></dt>
+  <dd>Set output filename. If file already exists, it will be overwritten.
+      Format is decided by file extension. The formats currently supported by
+      OpenCV are .bmp, .jpg, .jp2, .png, .webp, .ppm, .pfm, .sr, .tif, .exr and
+      .hdr.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--jpgquality=</b><i>95</i></dt>
-  <dd class="It-tag">Set the leve lof quality of the JGEP files (final and intermediates if asked to be writen). The value can go from 0 to 100 with a default at 95.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--jpgquality=</b><i>95</i></dt>
+  <dd>Set the level of quality of the JPEG files (final and intermediates if
+      asked to be written). The value can go from 0 to 100 with a default at 95.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--reference=</b><i>index</i></dt>
-  <dd class="It-tag">Select image index (starting from 0) to use as alignment
-      reference. Images in a stack will usually vary in scale and position. All
-      other images are resized and rotated to match with this image. This also
-      determines the scale of the output image, which is important for
-      performing measurements. By default middle image of the stack is used as
-      reference.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--reference=</b><i>index</i></dt>
+  <dd>Select image index (starting from 0) to use as alignment reference. Images
+      in a stack will usually vary in scale and position. All other images are
+      resized and rotated to match with this image. This also determines the
+      scale of the output image, which is important for performing measurements.
+      By default middle image of the stack is used as reference.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--global-align</b></dt>
-  <dd class="It-tag">By default each image is aligned against its neighbour.
-      This improves results in deep stacks, as blur at the extreme focus levels
-      can make direct alignment to reference inaccurate. However, if the images
-      given as argument are not in correct order, or if some of them are of
-      poorer quality, this option can be specified to align directly against the
+  <dt><b>--global-align</b></dt>
+  <dd>By default each image is aligned against its neighbour. This improves
+      results in deep stacks, as blur at the extreme focus levels can make
+      direct alignment to reference inaccurate. However, if the images given as
+      argument are not in correct order, or if some of them are of poorer
+      quality, this option can be specified to align directly against the
       reference image.
-    <div style="height: 1.00em;">&#x00A0;</div>
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--full-resolution-align</b></dt>
-  <dd class="It-tag">By default the resolution of images used in alignment step
-      is limited to 2048x2048 pixels. This improves performance, and because
-      sub-pixel accuracy is used in computing the gradients, higher resolution
-      rarely improves results. Specifying this option will force the use of full
+  <dt><b>--full-resolution-align</b></dt>
+  <dd>By default the resolution of images used in alignment step is limited to
+      2048x2048 pixels. This improves performance, and because sub-pixel
+      accuracy is used in computing the gradients, higher resolution rarely
+      improves results. Specifying this option will force the use of full
       resolution images in alignment.
-    <div style="height: 1.00em;">&#x00A0;</div>
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--no-whitebalance</b></dt>
-  <dd class="It-tag">The application tries to compensate for any white balance
-      differences between photos automatically. If camera white balance is set
-      manually, this option can be specified to skip the unnecessary white
-      balance adjustment.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--no-whitebalance</b></dt>
+  <dd>The application tries to compensate for any white balance differences
+      between photos automatically. If camera white balance is set manually,
+      this option can be specified to skip the unnecessary white balance
+      adjustment.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--no-contrast</b></dt>
-  <dd class="It-tag">If camera exposure is manually controlled, this option can
-      be used to skip unnecessary exposure compensation.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--no-contrast</b></dt>
+  <dd>If camera exposure is manually controlled, this option can be used to skip
+      unnecessary exposure compensation.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--threads=</b><i>count</i></dt>
-  <dd class="It-tag">Set the number of parallel threads in use. By default uses
-      the number of CPU cores detected plus one to feed possible GPU
-      accelerator. Lower number of threads also reduces memory consumption.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--threads=</b><i>count</i></dt>
+  <dd>Set the number of parallel threads in use. By default uses the number of
+      CPU cores detected plus one to feed possible GPU accelerator. Lower number
+      of threads also reduces memory consumption.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--no-opencl</b></dt>
-  <dd class="It-tag">By default OpenCL-based GPU acceleration is used if
-      available. This option can be specified to disable it.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--batchsize=</b><i>count</i></dt>
+  <dd>Set the batch size for image merging. Larger values may give slightly
+      better performance on machines with large amount of memory, while smaller
+      values reduce memory usage.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--consistency=</b><i>level</i></dt>
-  <dd class="It-tag">Set the level of consistency filter applied to the depth
-      map, in range 0 to 2. Higher level reduces artefacts and noise in output
-      image, but can also result in removing small objects that appear against a
-      textured background. By default the highest filter level 2 is used.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--no-opencl</b></dt>
+  <dd>By default OpenCL-based GPU acceleration is used if available. This option
+      can be specified to disable it.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--denoise=</b><i>level</i></dt>
-  <dd class="It-tag">Set level of wavelet-based denoise filter applied to the
-      result image. Because focus stacking selects the largest difference from
-      source images, it has a tendency to increase noise. The denoising step
-      reduces all wavelet values by this amount, which corresponds directly to
-      pixel values. The default value of 1.0 removes noise that is on the order
-      of +- 1 pixel value.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--consistency=</b><i>level</i></dt>
+  <dd>Set the level of consistency filter applied to the depth map, in range 0
+      to 2. Higher level reduces artefacts and noise in output image, but can
+      also result in removing small objects that appear against a textured
+      background. By default the highest filter level 2 is used.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--save-steps</b></dt>
-  <dd class="It-tag">Save intermediate images from processing steps. This
-      includes the aligned images and the final grayscale image before color
-      reassignment.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--denoise=</b><i>level</i></dt>
+  <dd>Set level of wavelet-based denoise filter applied to the result image.
+      Because focus stacking selects the largest difference from source images,
+      it has a tendency to increase noise. The denoising step reduces all
+      wavelet values by this amount, which corresponds directly to pixel values.
+      The default value of 1.0 removes noise that is on the order of +- 1 pixel
+      value.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--verbose</b></dt>
-  <dd class="It-tag">Report each step as it begins and ends, and also the
-      alignment parameters and other detailed information.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--save-steps</b></dt>
+  <dd>Save intermediate images from processing steps. This includes the aligned
+      images and the final grayscale image before color reassignment.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--version</b></dt>
-  <dd class="It-tag">Show application version number.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--verbose</b></dt>
+  <dd>Report each step as it begins and ends, and also the alignment parameters
+      and other detailed information.
+    <div class="Pp"></div>
   </dd>
 </dl>
 <dl class="Bl-tag">
-  <dt class="It-tag"><b>--opencv-version</b></dt>
-  <dd class="It-tag">Show OpenCV library build information.
-    <div style="height: 1.00em;">&#x00A0;</div>
+  <dt><b>--version</b></dt>
+  <dd>Show application version number.
+    <div class="Pp"></div>
   </dd>
 </dl>
-<h1 class="Sh" title="Sh" id="EXAMPLES"><a class="selflink" href="#EXAMPLES">EXAMPLES</a></h1>
+<dl class="Bl-tag">
+  <dt><b>--opencv-version</b></dt>
+  <dd>Show OpenCV library build information.
+    <div class="Pp"></div>
+  </dd>
+</dl>
+<h1 class="Sh" title="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
 <pre>
 <b>focus-stack IMG*.JPG</b>
 </pre>
 Combine all images in current directory, and write output to <b>output.jpg</b>
-<div style="height: 1.00em;">&#x00A0;</div>
+<div class="Pp"></div>
 <pre>
 <b>focus-stack --verbose --output=stacked.jpg IMG*.JPG</b>
 </pre>
 Combine all images, giving detailed printout of steps and write output to
-<b>stacked.jpg</b>
-<div style="height: 1.00em;">&#x00A0;</div>
+  <b>stacked.jpg</b>
+<div class="Pp"></div>
 <pre>
 <b>focus-stack --jpgquality=100 IMG*.JPG</b>
 </pre>
 Generate a JPEG with the maximum level of quality (no compression).
-<div style="height: 1.00em;">&#x00A0;</div>
-<div style="height: 1.00em;">&#x00A0;</div>
-<h1 class="Sh" title="Sh" id="GPU_ACCELERATION"><a class="selflink" href="#GPU_ACCELERATION">GPU
+<div class="Pp"></div>
+<h1 class="Sh" title="Sh" id="GPU_ACCELERATION"><a class="permalink" href="#GPU_ACCELERATION">GPU
   ACCELERATION</a></h1>
 This application uses OpenCV library and its OpenCL acceleration interface. The
   GPU used for acceleration can be selected by environment variable
   <b>OPENCV_OPENCL_DEVICE</b> which takes a value such as <b>Intel:GPU:0</b> See
   OpenCV documentation for details.
-<div style="height: 1.00em;">&#x00A0;</div>
-<h1 class="Sh" title="Sh" id="REFERENCES"><a class="selflink" href="#REFERENCES">REFERENCES</a></h1>
+<div class="Pp"></div>
+<h1 class="Sh" title="Sh" id="REFERENCES"><a class="permalink" href="#REFERENCES">REFERENCES</a></h1>
 The algorithm used for combining images is described in <b>Complex Wavelets for
   Extended Depth-of-Field: A New Method for the Fusion of Multichannel
   Microscopy Images</b> by B. Forster, D. Van De Ville, J. Berent, D. Sage and
   M. Unser.
-<div style="height: 1.00em;">&#x00A0;</div>
-<h1 class="Sh" title="Sh" id="REPORTING_BUGS"><a class="selflink" href="#REPORTING_BUGS">REPORTING
+<div class="Pp"></div>
+<h1 class="Sh" title="Sh" id="REPORTING_BUGS"><a class="permalink" href="#REPORTING_BUGS">REPORTING
   BUGS</a></h1>
 Bugs can be reported at https://github.com/PetteriAimonen/focus-stack/issues
-<div style="height: 1.00em;">&#x00A0;</div>
+<div class="Pp"></div>
 </div>
 <table class="foot">
   <tr>
