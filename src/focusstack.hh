@@ -22,6 +22,9 @@ public:
   void set_inputs(const std::vector<std::string> &files) { m_inputs = files; }
   void set_output(std::string output) { m_output = output; }
   std::string get_output() const { return m_output; }
+  void set_depthmap(std::string depthmap) { m_depthmap = depthmap; }
+  std::string get_depthmap() const { return m_depthmap; }
+  void set_depthmap_smoothing(float smoothing) { m_depthmap_smoothing = smoothing; }
   void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
   void set_align_only(bool align_only) { m_align_only = align_only; }
@@ -39,6 +42,8 @@ public:
 private:
   std::vector<std::string> m_inputs;
   std::string m_output;
+  std::string m_depthmap;
+  float m_depthmap_smoothing;
   bool m_disable_opencl;
   bool m_save_steps;
   bool m_align_only;

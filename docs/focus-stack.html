@@ -49,6 +49,14 @@ Usually good results are obtained with the default settings, but following
   </dd>
 </dl>
 <dl class="Bl-tag">
+  <dt><b>--depthmap=</b><i>depthmap.png</i></dt>
+  <dd>Also save computed depthmap image. The brightness will be scaled from 0 to
+      255, where 0 is the first image given on command line and 255 is the last
+      image.
+    <div class="Pp"></div>
+  </dd>
+</dl>
+<dl class="Bl-tag">
   <dt><b>--jpgquality=</b><i>95</i></dt>
   <dd>Set the level of quality of the JPEG files (final and intermediates if
       asked to be written). The value can go from 0 to 100 with a default at 95.
@@ -142,6 +150,14 @@ Usually good results are obtained with the default settings, but following
       wavelet values by this amount, which corresponds directly to pixel values.
       The default value of 1.0 removes noise that is on the order of +- 1 pixel
       value.
+    <div class="Pp"></div>
+  </dd>
+</dl>
+<dl class="Bl-tag">
+  <dt><b>--depthmap-smoothing=</b><i>level</i></dt>
+  <dd>Set the smoothing threshold for filtering depthmap image. Larger values
+      result in more consistent values over even-colored areas, but reduce
+      amount of details. Default value is 0.02.
     <div class="Pp"></div>
   </dd>
 </dl>

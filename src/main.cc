@@ -52,6 +52,7 @@ int main(int argc, const char *argv[])
     std::cerr << "Usage: " << argv[0] << " [options] file1.jpg file2.jpg ...\n";
     std::cerr << "Options:\n"
                  "  --output=output.jpg           Set output filename\n"
+                 "  --depthmap=depthmap.png       Write a depth map image also (default disabled)\n"
                  "  --jpgquality=95               Set output (JPG) quality 0..100 (default 95)\n"
                  "  --reference=0                 Set index of image used as alignment reference (default middle one)\n"
                  "  --global-align                Align directly against reference (default with neighbour image)\n"
@@ -63,6 +64,7 @@ int main(int argc, const char *argv[])
                  "  --no-opencl                   Disable OpenCL GPU acceleration (default enabled)\n"
                  "  --consistency=2               Set depth map consistency filter level 0..2 (default 2)\n"
                  "  --denoise=1.0                 Set image denoise level (default 1.0)\n"
+                 "  --depthmap-smoothing=0.02     Smoothing level for depthmap output (default 0.02)\n"
                  "  --save-steps                  Save intermediate images from processing steps\n"
                  "  --align-only                  Only align the input image stack and exit\n"
                  "  --verbose                     Verbose output from steps\n"
@@ -74,11 +76,13 @@ int main(int argc, const char *argv[])
 
   stack.set_inputs(options.get_filenames());
   stack.set_output(options.get_arg("--output", "output.jpg"));
+  stack.set_depthmap(options.get_arg("--depthmap", ""));
   stack.set_jpgquality(std::stoi(options.get_arg("--jpgquality", "95")));
   stack.set_save_steps(options.has_flag("--save-steps"));
   stack.set_disable_opencl(options.has_flag("--no-opencl"));
   stack.set_verbose(options.has_flag("--verbose") || options.has_flag("-v"));
   stack.set_denoise(std::stof(options.get_arg("--denoise", "1.0")));
+  stack.set_depthmap_smoothing(std::stof(options.get_arg("--depthmap-smoothing", "0.02")));
   stack.set_consistency(std::stoi(options.get_arg("--consistency", "2")));
 
   int flags = FocusStack::ALIGN_DEFAULT;
@@ -128,6 +132,11 @@ int main(int argc, const char *argv[])
   }
 
   std::printf("\rSaved to %-40s\n", stack.get_output().c_str());
+
+  if (stack.get_depthmap() != "")
+  {
+    std::printf("\rSaved depthmap to %s\n", stack.get_depthmap().c_str());
+  }
 
   return 0;
 }

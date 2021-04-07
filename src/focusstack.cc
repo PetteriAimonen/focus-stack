@@ -7,6 +7,7 @@
 #include "task_wavelet_opencl.hh"
 #include "task_merge.hh"
 #include "task_denoise.hh"
+#include "task_depthmap.hh"
 #include "task_reassign.hh"
 #include "task_saveimg.hh"
 #include <thread>
@@ -16,6 +17,7 @@ using namespace focusstack;
 
 FocusStack::FocusStack():
   m_output("output.jpg"),
+  m_depthmap_smoothing(0.02f),
   m_disable_opencl(false),
   m_save_steps(false),
   m_align_only(false),
@@ -267,6 +269,15 @@ bool FocusStack::run()
       reassign_batch_grays.clear();
     }
 
+    // Save depth map if requested
+    if (m_depthmap != "")
+    {
+      std::shared_ptr<ImgTask> depthmap = std::make_shared<Task_Depthmap>(merged_wavelet,
+                                                                          m_depthmap_smoothing,
+                                                                          m_inputs.size());
+      worker.add(depthmap);
+      worker.add(std::make_shared<Task_SaveImg>(m_depthmap, depthmap, m_jpgquality, refcolor));
+    }
 
     // Denoise merged image
     std::shared_ptr<ImgTask> denoised = merged_wavelet;
@@ -299,7 +310,6 @@ bool FocusStack::run()
 
     // Save result image
     worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned, m_jpgquality, refcolor));
-
   } // Close scope to avoid holding onto the shared_ptr's in local variables
 
   worker.wait_all();

@@ -17,10 +17,10 @@ public:
 
   const cv::Mat &depthmap() const { return m_depthmap; }
 
+  static void get_sq_absval(const cv::Mat &complex_mat, cv::Mat &absval);
+
 private:
   virtual void task();
-
-  static void get_sq_absval(const cv::Mat &complex_mat, cv::Mat &absval);
 
   cv::Mat get_source_img(int index);
   void denoise_subbands();
