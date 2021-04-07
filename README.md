@@ -23,16 +23,21 @@ For advanced usage, see `--help` for list of all options:
     Usage: build/focus-stack [options] file1.jpg file2.jpg ...
     Options:
       --output=output.jpg           Set output filename
+      --depthmap=depthmap.png       Write a depth map image also (default disabled)
+      --jpgquality=95               Set output (JPG) quality 0..100 (default 95)
       --reference=0                 Set index of image used as alignment reference (default middle one)
       --global-align                Align directly against reference (default with neighbour image)
       --full-resolution-align       Use full resolution images in alignment (default max 2048 px)
       --no-whitebalance             Don't attempt to correct white balance differences
       --no-contrast                 Don't attempt to correct contrast and exposure differences
       --threads=2                   Select number of threads to use (default number of CPUs + 1)
+      --batchsize=8                 Images per merge batch (default 8)
       --no-opencl                   Disable OpenCL GPU acceleration (default enabled)
       --consistency=2               Set depth map consistency filter level 0..2 (default 2)
       --denoise=1.0                 Set image denoise level (default 1.0)
+      --depthmap-smoothing=0.02     Smoothing level for depthmap output (default 0.02)
       --save-steps                  Save intermediate images from processing steps
+      --align-only                  Only align the input image stack and exit
       --verbose                     Verbose output from steps
       --version                     Show application version number
       --opencv-version              Show OpenCV library version and build info
