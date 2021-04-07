@@ -92,10 +92,8 @@ cv::Mat Task_Merge::get_source_img(int index)
   auto iter = m_index_map.find(index);
   if (iter != m_index_map.end())
     return iter->second->img();
-  else if (m_prev_merge)
-    return m_prev_merge->img();
   else
-    throw std::runtime_error("Task_Merge::get_source_img: Unknown index " + std::to_string(index));
+    return m_prev_merge->img();
 }
 
 void Task_Merge::denoise_subbands()
@@ -164,6 +162,14 @@ void Task_Merge::denoise_neighbours()
         // Update center pixel to match the surrounding pixels
         m_depthmap.at<uint16_t>(y, x) = top;
         m_result.at<cv::Vec2f>(y, x) = get_source_img(top).at<cv::Vec2f>(y, x);
+      }
+      else if ((center > top && center > bottom && center > left && center > right) ||
+               (center < top && center < bottom && center < left && center < right))
+      {
+        // Eliminate outlier
+        int avg = (top + bottom + left + right) / 4;
+        m_depthmap.at<uint16_t>(y, x) = avg;
+        m_result.at<cv::Vec2f>(y, x) = get_source_img(avg).at<cv::Vec2f>(y, x);
       }
     }
   }
