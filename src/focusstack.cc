@@ -267,9 +267,14 @@ bool FocusStack::run()
       reassign_batch_grays.clear();
     }
 
+
     // Denoise merged image
-    std::shared_ptr<ImgTask> denoised = std::make_shared<Task_Denoise>(merged_wavelet, m_denoise);
-    worker.add(denoised);
+    std::shared_ptr<ImgTask> denoised = merged_wavelet;
+    if (m_denoise > 0)
+    {
+      denoised = std::make_shared<Task_Denoise>(merged_wavelet, m_denoise);
+      worker.add(denoised);
+    }
 
     // Inverse-transform merged image
     std::shared_ptr<ImgTask> merged_gray;
