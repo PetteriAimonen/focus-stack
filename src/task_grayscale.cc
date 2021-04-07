@@ -8,6 +8,7 @@ Task_Grayscale::Task_Grayscale(std::shared_ptr<ImgTask> input, std::shared_ptr<T
 {
   m_filename = input->filename();
   m_name = "Grayscale " + m_filename;
+  m_index = input->index();
 
   m_input = input;
   m_reference = reference;

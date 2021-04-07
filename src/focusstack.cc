@@ -104,6 +104,7 @@ bool FocusStack::run()
     std::vector<std::shared_ptr<ImgTask> > grayscale_imgs(count);
     std::vector<std::shared_ptr<Task_Align> > aligned_imgs(count);
     std::vector<std::shared_ptr<ImgTask> > aligned_grayscales(count);
+    std::shared_ptr<Task_Merge> prev_merge;
     std::vector<std::shared_ptr<ImgTask> > merge_batch;
     std::vector<std::shared_ptr<ImgTask> > reassign_batch_grays;
     std::vector<std::shared_ptr<ImgTask> > reassign_batch_colors;
@@ -132,6 +133,9 @@ bool FocusStack::run()
         worker.add(grayscale);
         grayscale_imgs.at(i) = grayscale;
       }
+
+      color->set_index(i);
+      grayscale->set_index(i);
 
       if (m_save_steps)
       {
@@ -220,11 +224,11 @@ bool FocusStack::run()
       if (merge_batch.size() >= m_batchsize)
       {
         // Merge wavelet images accumulated so far
-        std::shared_ptr<ImgTask> merged = std::make_shared<Task_Merge>(merge_batch, m_consistency);
+        std::shared_ptr<Task_Merge> merged = std::make_shared<Task_Merge>(prev_merge, merge_batch, m_consistency);
         worker.add(merged);
+        prev_merge = merged;
 
         merge_batch.clear();
-        merge_batch.push_back(merged);
 
         // And update reassignment map.
         // After this, the aligned images can be unloaded from RAM.
@@ -244,15 +248,12 @@ bool FocusStack::run()
     }
 
     // Merge the final batch of images
-    std::shared_ptr<ImgTask> merged_wavelet;
-    if (merge_batch.size() == 1)
+    std::shared_ptr<Task_Merge> merged_wavelet = prev_merge;
+    if (merge_batch.size() > 0)
     {
-      merged_wavelet = merge_batch.front();
-    }
-    else
-    {
-      merged_wavelet = std::make_shared<Task_Merge>(merge_batch, m_consistency);
+      merged_wavelet = std::make_shared<Task_Merge>(prev_merge, merge_batch, m_consistency);
       worker.add(merged_wavelet);
+      merge_batch.clear();
     }
 
     // Compute final reassignment map

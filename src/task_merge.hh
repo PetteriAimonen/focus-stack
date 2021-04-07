@@ -4,22 +4,32 @@
 
 #pragma once
 #include "worker.hh"
+#include <unordered_map>
 
 namespace focusstack {
 
 class Task_Merge: public ImgTask
 {
 public:
-  Task_Merge(const std::vector<std::shared_ptr<ImgTask> > &images, int consistency);
+  Task_Merge(std::shared_ptr<Task_Merge> prev_merge,
+             const std::vector<std::shared_ptr<ImgTask> > &images,
+             int consistency);
+
+  const cv::Mat &depthmap() const { return m_depthmap; }
 
 private:
   virtual void task();
 
   static void get_sq_absval(const cv::Mat &complex_mat, cv::Mat &absval);
 
-  void denoise_subbands(cv::Mat &depthmap);
-  void denoise_neighbours(cv::Mat &depthmap);
+  cv::Mat get_source_img(int index);
+  void denoise_subbands();
+  void denoise_neighbours();
 
+  cv::Mat m_depthmap;
+
+  std::unordered_map<int, std::shared_ptr<ImgTask> > m_index_map;
+  std::shared_ptr<Task_Merge> m_prev_merge;
   std::vector<std::shared_ptr<ImgTask> > m_images;
   int m_consistency;
 };

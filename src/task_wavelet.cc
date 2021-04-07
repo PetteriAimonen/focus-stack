@@ -9,6 +9,7 @@ Task_Wavelet::Task_Wavelet(std::shared_ptr<ImgTask> input, bool inverse)
   m_inverse = inverse;
 
   m_filename = input->filename();
+  m_index = input->index();
 
   if (inverse)
     m_name = "Inverse-wavelet " + m_filename;

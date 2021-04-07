@@ -27,6 +27,8 @@ public:
   std::string filename() const { return m_filename; }
   std::string name() const { return m_name; }
   std::string basename() const;
+  int index() const { return m_index; }
+  void set_index(int index) { m_index = index; }
 
   void wait();
 
@@ -35,6 +37,7 @@ protected:
 
   bool m_verbose;
   std::string m_filename;
+  int m_index;
   int m_jpgquality;
   std::string m_name;
   std::mutex m_mutex;

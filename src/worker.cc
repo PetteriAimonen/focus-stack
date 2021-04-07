@@ -7,7 +7,7 @@
 
 using namespace focusstack;
 
-Task::Task(): m_filename("unknown"), m_name("Base task"), m_done(false)
+Task::Task(): m_filename("unknown"), m_index(0), m_name("Base task"), m_done(false)
 {
 
 }

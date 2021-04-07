@@ -7,6 +7,7 @@ Task_Denoise::Task_Denoise(std::shared_ptr<ImgTask> input, float level)
 {
   m_filename = "denoised_" + input->basename();
   m_name = "Denoise " + input->basename();
+  m_index = input->index();
 
   m_input = input;
   m_depends_on.push_back(input);

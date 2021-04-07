@@ -3,11 +3,16 @@
 
 using namespace focusstack;
 
-Task_Merge::Task_Merge(const std::vector<std::shared_ptr<ImgTask> >& images, int consistency):
-  m_images(images), m_consistency(consistency)
+Task_Merge::Task_Merge(std::shared_ptr<Task_Merge> prev_merge,
+                       const std::vector<std::shared_ptr<ImgTask> > &images,
+                       int consistency):
+  m_prev_merge(prev_merge), m_images(images), m_consistency(consistency)
 {
   m_filename = "merge_result.jpg";
   m_name = "Merge " + std::to_string(m_images.size()) + " images";
+
+  if (prev_merge)
+    m_depends_on.push_back(prev_merge);
 
   m_depends_on.insert(m_depends_on.begin(), images.begin(), images.end());
 }
@@ -18,12 +23,26 @@ void Task_Merge::task()
   int cols = m_images.front()->img().cols;
 
   cv::Mat max_absval(rows, cols, CV_32F);
-  max_absval = -1.0f;
 
-  cv::Mat depthmap(rows, cols, CV_16U);
-  depthmap = 0;
+  if (m_prev_merge)
+  {
+    m_result = m_prev_merge->img().clone();
+    m_depthmap = m_prev_merge->depthmap();
+    get_sq_absval(m_result, max_absval);
+  }
+  else
+  {
+    m_result.create(rows, cols, CV_32FC2);
+    m_depthmap.create(rows, cols, CV_16U);
+    m_depthmap = 0;
+    max_absval = -1.0f;
+  }
 
-  m_result.create(rows, cols, CV_32FC2);
+  // Most of the pixel copying is done in loop below using masks, as it is faster.
+  // Minor touch-ups are done per-pixel in denoise loops.
+  // Keep a map from image index to image pointer for the denoise step.
+  m_index_map.clear();
+  m_index_map.reserve(m_images.size());
 
   // For each pixel in the wavelet image, select the wavelet with highest
   // absolute value.
@@ -36,20 +55,24 @@ void Task_Merge::task()
     cv::Mat mask = (absval > max_absval);
     absval.copyTo(max_absval, mask);
     wavelet.copyTo(m_result, mask);
-    depthmap.setTo(i, mask);
+    m_depthmap.setTo(m_images.at(i)->index(), mask);
+
+    m_index_map[m_images.at(i)->index()] = m_images.at(i);
   }
 
   if (m_consistency >= 1)
   {
-    denoise_subbands(depthmap);
+    denoise_subbands();
   }
 
   if (m_consistency >= 2)
   {
-    denoise_neighbours(depthmap);
+    denoise_neighbours();
   }
 
   m_images.clear();
+  m_index_map.clear();
+  m_prev_merge.reset();
 }
 
 void Task_Merge::get_sq_absval(const cv::Mat& complex_mat, cv::Mat& absval)
@@ -64,7 +87,18 @@ void Task_Merge::get_sq_absval(const cv::Mat& complex_mat, cv::Mat& absval)
   }
 }
 
-void Task_Merge::denoise_subbands(cv::Mat& depthmap)
+cv::Mat Task_Merge::get_source_img(int index)
+{
+  auto iter = m_index_map.find(index);
+  if (iter != m_index_map.end())
+    return iter->second->img();
+  else if (m_prev_merge)
+    return m_prev_merge->img();
+  else
+    throw std::runtime_error("Task_Merge::get_source_img: Unknown index " + std::to_string(index));
+}
+
+void Task_Merge::denoise_subbands()
 {
   for (int level = 0; level < Task_Wavelet::levels; level++)
   {
@@ -73,9 +107,9 @@ void Task_Merge::denoise_subbands(cv::Mat& depthmap)
     int w2 = w / 2;
     int h2 = h / 2;
 
-    cv::Mat sub1 = depthmap(cv::Rect(w2, 0, w2, h2));
-    cv::Mat sub2 = depthmap(cv::Rect(w2, h2, w2, h2));
-    cv::Mat sub3 = depthmap(cv::Rect(0, h2, w2, h2));
+    cv::Mat sub1 = m_depthmap(cv::Rect(w2, 0, w2, h2));
+    cv::Mat sub2 = m_depthmap(cv::Rect(w2, h2, w2, h2));
+    cv::Mat sub3 = m_depthmap(cv::Rect(0, h2, w2, h2));
 
     for (int y = 0; y < h2; y++)
     {
@@ -86,44 +120,50 @@ void Task_Merge::denoise_subbands(cv::Mat& depthmap)
         uint16_t v3 = sub3.at<uint16_t>(y, x);
 
         // If two out of three subbands match, update the third one to match also.
-        if (v2 == v3 && v1 != v2)
+        if (v1 == v2 && v2 == v3)
+        {
+          // Nothing to do
+        }
+        else if (v2 == v3)
         {
           // Update sub1
           sub1.at<uint16_t>(y, x) = v2;
-          m_result.at<cv::Vec2f>(y, w2 + x) = m_images.at(v2)->img().at<cv::Vec2f>(y, w2 + x);
+          m_result.at<cv::Vec2f>(y, w2 + x) = get_source_img(v2).at<cv::Vec2f>(y, w2 + x);
         }
-        else if (v1 == v3 && v2 != v1)
+        else if (v1 == v3)
         {
           // Update sub2
           sub2.at<uint16_t>(y, x) = v1;
-          m_result.at<cv::Vec2f>(h2 + y, w2 + x) = m_images.at(v1)->img().at<cv::Vec2f>(h2 + y, w2 + x);
+          m_result.at<cv::Vec2f>(h2 + y, w2 + x) = get_source_img(v1).at<cv::Vec2f>(h2 + y, w2 + x);
         }
-        else if (v1 == v2 && v3 != v1)
+        else if (v1 == v2)
         {
           // Update sub3
           sub3.at<uint16_t>(y, x) = v1;
-          m_result.at<cv::Vec2f>(h2 + y, x) = m_images.at(v1)->img().at<cv::Vec2f>(h2 + y, x);
+          m_result.at<cv::Vec2f>(h2 + y, x) = get_source_img(v1).at<cv::Vec2f>(h2 + y, x);
         }
       }
     }
   }
 }
 
-void Task_Merge::denoise_neighbours(cv::Mat& depthmap)
+void Task_Merge::denoise_neighbours()
 {
-  for (int y = 1; y < depthmap.rows - 1; y++)
+  for (int y = 1; y < m_depthmap.rows - 1; y++)
   {
-    for (int x = 1; x < depthmap.cols - 1; x++)
+    for (int x = 1; x < m_depthmap.cols - 1; x++)
     {
-      uint16_t left = depthmap.at<uint16_t>(y, x - 1);
-      uint16_t right = depthmap.at<uint16_t>(y, x + 1);
-      uint16_t top = depthmap.at<uint16_t>(y - 1, x);
-      uint16_t bottom = depthmap.at<uint16_t>(y + 1, x);
+      uint16_t left = m_depthmap.at<uint16_t>(y, x - 1);
+      uint16_t right = m_depthmap.at<uint16_t>(y, x + 1);
+      uint16_t top = m_depthmap.at<uint16_t>(y - 1, x);
+      uint16_t bottom = m_depthmap.at<uint16_t>(y + 1, x);
+      uint16_t center = m_depthmap.at<uint16_t>(y, x);
 
-      if (top == bottom && left == right && left == top)
+      if (center != top && top == bottom && left == right && left == top)
       {
-        depthmap.at<uint16_t>(y, x) = top;
-        m_result.at<cv::Vec2f>(y, x) = m_images.at(top)->img().at<cv::Vec2f>(y, x);
+        // Update center pixel to match the surrounding pixels
+        m_depthmap.at<uint16_t>(y, x) = top;
+        m_result.at<cv::Vec2f>(y, x) = get_source_img(top).at<cv::Vec2f>(y, x);
       }
     }
   }

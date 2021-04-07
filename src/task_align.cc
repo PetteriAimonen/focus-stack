@@ -21,6 +21,7 @@ Task_Align::Task_Align(std::shared_ptr<ImgTask> refgray, std::shared_ptr<ImgTask
 {
   m_filename = "aligned_" + srccolor->basename();
   m_name = "Align " + srccolor->basename() + " to " + refcolor->basename();
+  m_index = srccolor->index();
 
   m_refgray = refgray;
   m_refcolor = refcolor;
