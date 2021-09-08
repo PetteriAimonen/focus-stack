@@ -30,13 +30,30 @@ FocusStack::FocusStack():
   m_jpgquality(95),
   m_denoise(0)
 {
+  reset();
+}
+
+FocusStack::~FocusStack()
+{
 }
 
 bool FocusStack::run()
 {
-  Worker worker(m_threads, m_verbose);
+  reset();
+  start();
+  do_final_merge();
 
-  bool have_opencl = false;
+  bool status;
+  std::string errmsg;
+  wait_done(status, errmsg);
+  return status;
+}
+
+void FocusStack::start()
+{
+  m_worker = std::make_unique<Worker>(m_threads, m_verbose);
+
+  m_have_opencl = false;
   if (m_disable_opencl)
   {
     if (m_verbose) printf("OpenCL disabled\n");
@@ -64,7 +81,7 @@ bool FocusStack::run()
                 dev.name().c_str(),
                 dev.version().c_str());
         }
-        have_opencl = true;
+        m_have_opencl = true;
       }
       else
       {
@@ -73,247 +90,339 @@ bool FocusStack::run()
     }
   }
 
+  // Add any images that have been added as filenames
+  for (const std::string &input: m_inputs)
   {
-    const int count = m_inputs.size();
-    int refidx = m_reference;
+    m_input_images.push_back(std::make_shared<Task_LoadImg>(input));
+  }
 
-    // Use middle image as reference if no option is given
-    if (refidx < 0 || refidx >= count)
-      refidx = count / 2;
+  schedule_queue_processing();
+}
 
+void FocusStack::add_image(std::string filename)
+{
+  m_input_images.push_back(std::make_shared<Task_LoadImg>(filename));
+  schedule_queue_processing();
+}
+
+void FocusStack::add_image(const cv::Mat &image)
+{
+  // FIXME: Add necessary overload to Task_LoadImg
+  //m_input_images.push_back(std::make_shared<Task_LoadImg>(image));
+  //schedule_queue_processing();
+}
+
+void FocusStack::do_final_merge()
+{
+  schedule_queue_processing();
+  schedule_final_merge();
+
+  // All temporaries except results can be released now.
+  // Anything that is needed is held on by shared_ptrs in the tasks.
+  reset(true);
+}
+
+bool FocusStack::wait_done(bool &status, std::string &errmsg, int timeout_ms)
+{
+  if (!m_worker)
+  {
+    status = false;
+    errmsg = "Process is not running";
+    return true;
+  }
+
+  if (m_worker->wait_all(timeout_ms))
+  {
+    status = !m_worker->failed();
+    if (!status)
+    {
+      errmsg = m_worker->error().what();
+    }
+    m_worker.reset();
+
+    return true;
+  }
+
+  // Not done yet
+  return false;
+}
+
+void FocusStack::reset(bool keep_results)
+{
+  m_scheduled_image_count = 0;
+  m_refidx = 0;
+  m_input_images.clear();
+  m_grayscale_imgs.clear();
+  m_aligned_imgs.clear();
+  m_aligned_grayscales.clear();
+  m_refcolor.reset();
+  m_refgray.reset();
+  m_prev_merge.reset();
+  m_merge_batch.clear();
+  m_reassign_batch_grays.clear();
+  m_reassign_batch_colors.clear();
+  m_reassign_map.reset();
+
+  if (!keep_results)
+  {
+    m_worker.reset();
+  }
+}
+
+void FocusStack::schedule_queue_processing()
+{
+  const int count = m_input_images.size();
+  if (count <= m_scheduled_image_count) return; // No new images
+
+  m_grayscale_imgs.resize(count);
+  m_aligned_imgs.resize(count);
+  m_aligned_grayscales.resize(count);
+
+  if (!m_refcolor)
+  {
     // Load the reference image
     // This is needed when processing the other images, so load it first.
-    std::shared_ptr<Task_LoadImg> refcolor = std::make_shared<Task_LoadImg>(m_inputs.at(refidx));
-    std::shared_ptr<Task_Grayscale> refgray = std::make_shared<Task_Grayscale>(refcolor);
-    worker.add(refcolor);
-    worker.add(refgray);
 
-    // Construct list of indexes. Perform alignment from reference image outwards.
-    // In very thick stacks, it is difficult to align outermost images directly
-    // against the reference image because of heavy blurring. Instead this aligns
-    // each image with its neighbour.
-    std::vector<int> indexes;
-    indexes.push_back(refidx);
-    for (int i = 1; i < count; i++)
+    // Use middle image as reference if no option is given
+    m_refidx = m_reference;
+    if (m_refidx < 0 || m_refidx >= count)
+      m_refidx = count / 2;
+
+    m_refcolor = m_input_images.at(m_refidx);
+    m_refgray = std::make_shared<Task_Grayscale>(m_refcolor);
+    m_worker->add(m_refcolor);
+    m_worker->add(m_refgray);
+
+    m_grayscale_imgs.at(m_refidx) = m_refgray;
+  }
+
+  // Construct list of indexes. Perform alignment from reference image outwards.
+  std::vector<int> indexes;
+  if (m_refidx >= m_scheduled_image_count) indexes.push_back(m_refidx);
+  for (int i = 1; i < count; i++)
+  {
+    if (m_refidx - i >= m_scheduled_image_count) indexes.push_back(m_refidx - i);
+    if (m_refidx + i < count) indexes.push_back(m_refidx + i);
+  }
+
+  for (int i : indexes)
+  {
+    if (i != m_refidx)
     {
-      if (refidx - i >= 0) indexes.push_back(refidx - i);
-      if (refidx + i < count) indexes.push_back(refidx + i);
+      // Schedule image loading
+      m_worker->add(m_input_images.at(i));
+
+      // Convert image to grayscale
+      // The reference image is used to calculate the best mapping, which is then used for all images.
+      m_grayscale_imgs.at(i) = std::make_shared<Task_Grayscale>(m_input_images.at(i), m_refgray);
+      m_worker->add(m_grayscale_imgs.at(i));
     }
 
-    // This loop goes through input images and processes them up to the merge step.
-    // Merging is done in batches to reduce memory usage.
-    std::vector<std::shared_ptr<Task_LoadImg> > input_imgs(count);
-    std::vector<std::shared_ptr<ImgTask> > grayscale_imgs(count);
-    std::vector<std::shared_ptr<Task_Align> > aligned_imgs(count);
-    std::vector<std::shared_ptr<ImgTask> > aligned_grayscales(count);
-    std::shared_ptr<Task_Merge> prev_merge;
-    std::vector<std::shared_ptr<ImgTask> > merge_batch;
-    std::vector<std::shared_ptr<ImgTask> > reassign_batch_grays;
-    std::vector<std::shared_ptr<ImgTask> > reassign_batch_colors;
-    std::shared_ptr<Task_Reassign_Map> reassign_map;
-    for (int i : indexes)
-    {
-      std::shared_ptr<Task_LoadImg> color;
-      std::shared_ptr<ImgTask> grayscale;
-
-      if (i == refidx)
-      {
-        input_imgs.at(i) = refcolor;
-        color = refcolor;
-        grayscale = refgray;
-        grayscale_imgs.at(i) = grayscale;
-      }
-      else
-      {
-        color = std::make_shared<Task_LoadImg>(m_inputs.at(i));
-        worker.add(color);
-        input_imgs.at(i) = color;
-
-        // Convert image to grayscale
-        // The reference image is used to calculate the best mapping, which is then used for all images.
-        grayscale = std::make_shared<Task_Grayscale>(color, refgray);
-        worker.add(grayscale);
-        grayscale_imgs.at(i) = grayscale;
-      }
-
-      color->set_index(i);
-      grayscale->set_index(i);
-
-      if (m_save_steps)
-      {
-        worker.add(std::make_shared<Task_SaveImg>("grayscale_" + grayscale->basename(), grayscale, m_jpgquality));
-      }
-
-      // Perform image alignment, using the neighbour image as initial guess or reference
-      std::shared_ptr<Task_Align> aligned;
-      int neighbour = refidx;
-      if (i < refidx) neighbour = i + 1;
-      if (i > refidx) neighbour = i - 1;
-      if (i != refidx)
-      {
-        if (m_align_flags & ALIGN_GLOBAL)
-        {
-          // Align directly against the global reference, but use neighbour as a guess.
-          // This can give slightly better alignment in shallow stacks with little blur.
-          aligned = std::make_shared<Task_Align>(aligned_grayscales.at(refidx),
-                                                 aligned_imgs.at(refidx),
-                                                 grayscale, color,
-                                                 aligned_imgs.at(neighbour),
-                                                 nullptr,
-                                                 input_imgs.at(i),
-                                                 m_align_flags);
-        }
-        else
-        {
-          // Align against the neighbour image.
-          // This usually works better on deep stacks that have blur at the extremes, and
-          // works equally well as global alignment for almost all cases.
-          // This also allows us to align against the original source image and stacking
-          // the transforms later, which gives better parallelism while benefiting from
-          // the similarity in alignment between neighbour images.
-          aligned = std::make_shared<Task_Align>(grayscale_imgs.at(neighbour),
-                                                 input_imgs.at(neighbour),
-                                                 grayscale, color,
-                                                 nullptr,
-                                                 aligned_imgs.at(neighbour),
-                                                 input_imgs.at(i),
-                                                 m_align_flags);
-        }
-      }
-      else
-      {
-        // Nothing to be done for the global reference image, but we run it through Task_Align
-        // to make the types match.
-        aligned = std::make_shared<Task_Align>(refgray, refcolor, refgray, refcolor);
-      }
-      aligned_imgs.at(i) = aligned;
-      worker.add(aligned);
-
-      if (m_align_only)
-      {
-        worker.add(std::make_shared<Task_SaveImg>(m_output + color->basename(), aligned, m_jpgquality, refcolor));
-        continue;
-      }
-
-      if (m_save_steps)
-      {
-        // Task_Align adds "aligned_" prefix to the filename, so just use that name for saving also.
-        worker.add(std::make_shared<Task_SaveImg>(aligned->filename(), aligned, m_jpgquality));
-      }
-
-      // Convert aligned image to grayscale again.
-      // We could also transform the grayscale images directly, but a new grayscale conversion is faster
-      // and results in less difference between the color and grayscale versions.
-      std::shared_ptr<ImgTask> aligned_grayscale = std::make_shared<Task_Grayscale>(aligned, refgray);
-      worker.add(aligned_grayscale);
-      aligned_grayscales.at(i) = aligned_grayscale;
-
-      // Wavelet transform the image
-      std::shared_ptr<ImgTask> wavelet;
-      if (have_opencl)
-      {
-        wavelet = std::make_shared<Task_Wavelet_OpenCL>(aligned_grayscale, false);
-      }
-      else
-      {
-        wavelet = std::make_shared<Task_Wavelet>(aligned_grayscale, false);
-      }
-      worker.add(wavelet);
-      merge_batch.push_back(wavelet);
-      reassign_batch_grays.push_back(aligned_grayscale);
-      reassign_batch_colors.push_back(aligned);
-
-      if (merge_batch.size() >= m_batchsize)
-      {
-        // Merge wavelet images accumulated so far
-        std::shared_ptr<Task_Merge> merged = std::make_shared<Task_Merge>(prev_merge, merge_batch, m_consistency);
-        worker.add(merged);
-        prev_merge = merged;
-
-        merge_batch.clear();
-
-        // And update reassignment map.
-        // After this, the aligned images can be unloaded from RAM.
-        reassign_map = std::make_shared<Task_Reassign_Map>(reassign_batch_grays,
-                                                           reassign_batch_colors,
-                                                           reassign_map);
-        worker.add(reassign_map);
-        reassign_batch_colors.clear();
-        reassign_batch_grays.clear();
-      }
-    }
-
-    if (m_align_only)
-    {
-      worker.wait_all();
-      return !worker.failed();
-    }
-
-    // Merge the final batch of images
-    std::shared_ptr<Task_Merge> merged_wavelet = prev_merge;
-    if (merge_batch.size() > 0)
-    {
-      merged_wavelet = std::make_shared<Task_Merge>(prev_merge, merge_batch, m_consistency);
-      worker.add(merged_wavelet);
-      merge_batch.clear();
-    }
-
-    // Compute final reassignment map
-    if (reassign_batch_colors.size() > 0)
-    {
-      reassign_map = std::make_shared<Task_Reassign_Map>(reassign_batch_grays,
-                                                         reassign_batch_colors,
-                                                         reassign_map);
-      worker.add(reassign_map);
-      reassign_batch_colors.clear();
-      reassign_batch_grays.clear();
-    }
-
-    // Save depth map if requested
-    if (m_depthmap != "")
-    {
-      std::shared_ptr<ImgTask> depthmap = std::make_shared<Task_Depthmap>(merged_wavelet,
-                                                                          m_depthmap_smoothing,
-                                                                          m_inputs.size());
-      worker.add(depthmap);
-      worker.add(std::make_shared<Task_SaveImg>(m_depthmap, depthmap, m_jpgquality, refcolor));
-    }
-
-    // Denoise merged image
-    std::shared_ptr<ImgTask> denoised = merged_wavelet;
-    if (m_denoise > 0)
-    {
-      denoised = std::make_shared<Task_Denoise>(merged_wavelet, m_denoise);
-      worker.add(denoised);
-    }
-
-    // Inverse-transform merged image
-    std::shared_ptr<ImgTask> merged_gray;
-    if (!have_opencl)
-    {
-      merged_gray = std::make_shared<Task_Wavelet>(denoised, true);
-    }
-    else
-    {
-      merged_gray = std::make_shared<Task_Wavelet_OpenCL>(denoised, true);
-    }
-    worker.add(merged_gray);
+    // Track the indexes for depthmap
+    m_input_images.at(i)->set_index(i);
+    m_grayscale_imgs.at(i)->set_index(i);
 
     if (m_save_steps)
     {
-      worker.add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray, m_jpgquality));
+      m_worker->add(std::make_shared<Task_SaveImg>("grayscale_" + m_grayscale_imgs.at(i)->basename(),
+                                                   m_grayscale_imgs.at(i), m_jpgquality));
     }
 
-    // Reassign pixel values
-    std::shared_ptr<ImgTask> reassigned = std::make_shared<Task_Reassign>(reassign_map, merged_gray);
-    worker.add(reassigned);
+    schedule_alignment(i);
 
-    // Save result image
-    worker.add(std::make_shared<Task_SaveImg>(m_output, reassigned, m_jpgquality, refcolor));
-  } // Close scope to avoid holding onto the shared_ptr's in local variables
+    if (m_align_only)
+    {
+      m_worker->add(std::make_shared<Task_SaveImg>(m_output + m_input_images.at(i)->basename(),
+                                                   m_aligned_imgs.at(i), m_jpgquality, m_refcolor));
+    }
+    else
+    {
+      if (m_save_steps)
+      {
+        // Task_Align adds "aligned_" prefix to the filename, so just use that name for saving also.
+        m_worker->add(std::make_shared<Task_SaveImg>(m_aligned_imgs.at(i)->filename(), m_aligned_imgs.at(i), m_jpgquality));
+      }
 
-  worker.wait_all();
+      schedule_single_image_processing(i);
 
-  return !worker.failed();
+      if (m_merge_batch.size() >= m_batchsize)
+      {
+        schedule_batch_merge();
+      }
+    }
+  }
+
+  m_scheduled_image_count = m_input_images.size();
+  release_temporaries();
 }
 
+void FocusStack::schedule_alignment(int i)
+{
+  // Perform image alignment, against either the reference image or the neighbor image.
+  // In very thick stacks, it is difficult to align outermost images directly
+  // against the reference image because of heavy blurring.
+  std::shared_ptr<Task_Align> aligned;
+  int neighbour = m_refidx;
+  if (i < m_refidx) neighbour = i + 1;
+  if (i > m_refidx) neighbour = i - 1;
+  if (i != m_refidx)
+  {
+    if (m_align_flags & ALIGN_GLOBAL)
+    {
+      // Align directly against the global reference, but use neighbour as a guess.
+      // This can give slightly better alignment in shallow stacks with little blur.
+      aligned = std::make_shared<Task_Align>(m_aligned_grayscales.at(m_refidx),
+                                              m_aligned_imgs.at(m_refidx),
+                                              m_grayscale_imgs.at(i),
+                                              m_input_images.at(i),
+                                              m_aligned_imgs.at(neighbour),
+                                              nullptr,
+                                              m_input_images.at(i),
+                                              m_align_flags);
+    }
+    else
+    {
+      // Align against the neighbour image.
+      // This usually works better on deep stacks that have blur at the extremes, and
+      // works equally well as global alignment for almost all cases.
+      // This also allows us to align against the original source image and stacking
+      // the transforms later, which gives better parallelism while benefiting from
+      // the similarity in alignment between neighbour images.
+      aligned = std::make_shared<Task_Align>(m_grayscale_imgs.at(neighbour),
+                                              m_input_images.at(neighbour),
+                                              m_grayscale_imgs.at(i),
+                                              m_input_images.at(i),
+                                              nullptr,
+                                              m_aligned_imgs.at(neighbour),
+                                              m_input_images.at(i),
+                                              m_align_flags);
+    }
+  }
+  else
+  {
+    // Nothing to be done for the global reference image, but we run it through Task_Align
+    // to make the types match.
+    aligned = std::make_shared<Task_Align>(m_refgray, m_refcolor, m_refgray, m_refcolor);
+  }
+
+  m_aligned_imgs.at(i) = aligned;
+  m_worker->add(aligned);
+}
+
+void FocusStack::schedule_single_image_processing(int i)
+{
+  // Convert aligned image to grayscale again.
+  // We could also transform the grayscale images directly, but a new grayscale conversion is faster
+  // and results in less difference between the color and grayscale versions.
+  m_aligned_grayscales.at(i) = std::make_shared<Task_Grayscale>(m_aligned_imgs.at(i), m_refgray);
+  m_worker->add(m_aligned_grayscales.at(i));
+  m_reassign_batch_grays.push_back(m_aligned_grayscales.at(i));
+  m_reassign_batch_colors.push_back(m_aligned_imgs.at(i));
+
+  // Wavelet transform the image
+  std::shared_ptr<ImgTask> wavelet;
+  if (m_have_opencl)
+  {
+    wavelet = std::make_shared<Task_Wavelet_OpenCL>(m_aligned_grayscales.at(i), false);
+  }
+  else
+  {
+    wavelet = std::make_shared<Task_Wavelet>(m_aligned_grayscales.at(i), false);
+  }
+  m_worker->add(wavelet);
+  m_merge_batch.push_back(wavelet);
+}
+
+void FocusStack::schedule_batch_merge()
+{
+  // Merge wavelet images accumulated so far
+  m_prev_merge = std::make_shared<Task_Merge>(m_prev_merge, m_merge_batch, m_consistency);
+  m_worker->add(m_prev_merge);
+  m_merge_batch.clear();
+
+  // And update reassignment map.
+  // After this, the aligned images can be unloaded from RAM.
+  m_reassign_map = std::make_shared<Task_Reassign_Map>(m_reassign_batch_grays,
+                                                       m_reassign_batch_colors,
+                                                       m_reassign_map);
+  m_worker->add(m_reassign_map);
+  m_reassign_batch_colors.clear();
+  m_reassign_batch_grays.clear();
+}
+
+void FocusStack::release_temporaries()
+{
+  for (int i = 0; i < m_scheduled_image_count; i++)
+  {
+    if (i == m_refidx)
+    {
+      // Need to keep the global reference
+    }
+    else if (i == m_scheduled_image_count - 1)
+    {
+      // Need to keep the latest neighbor for alignment
+    }
+    else
+    {
+      // Otherwise we can release our pointers.
+      // The image will be released by shared_ptr as soon as the tasks are done.
+      m_input_images.at(i).reset();
+      m_grayscale_imgs.at(i).reset();
+      m_aligned_imgs.at(i).reset();
+      m_aligned_grayscales.at(i).reset();
+    }
+  }
+}
+
+void FocusStack::schedule_final_merge()
+{
+  if (m_align_only) return;
+
+  // Merge the final batch of images
+  if (m_merge_batch.size() > 0 || m_reassign_batch_colors.size() > 0)
+  {
+    schedule_batch_merge();
+  }
+
+  // Save depth map if requested
+  if (m_depthmap != "")
+  {
+    std::shared_ptr<ImgTask> depthmap = std::make_shared<Task_Depthmap>(m_prev_merge,
+                                                                        m_depthmap_smoothing,
+                                                                        m_inputs.size());
+    m_worker->add(depthmap);
+    m_worker->add(std::make_shared<Task_SaveImg>(m_depthmap, depthmap, m_jpgquality, m_refcolor));
+  }
+
+  // Denoise merged image
+  std::shared_ptr<ImgTask> denoised = m_prev_merge;
+  if (m_denoise > 0)
+  {
+    denoised = std::make_shared<Task_Denoise>(m_prev_merge, m_denoise);
+    m_worker->add(denoised);
+  }
+
+  // Inverse-transform merged image
+  std::shared_ptr<ImgTask> merged_gray;
+  if (!m_have_opencl)
+  {
+    merged_gray = std::make_shared<Task_Wavelet>(denoised, true);
+  }
+  else
+  {
+    merged_gray = std::make_shared<Task_Wavelet_OpenCL>(denoised, true);
+  }
+  m_worker->add(merged_gray);
+
+  if (m_save_steps)
+  {
+    m_worker->add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray, m_jpgquality));
+  }
+
+  // Reassign pixel values
+  std::shared_ptr<ImgTask> reassigned = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
+  m_worker->add(reassigned);
+
+  // Save result image
+  m_worker->add(std::make_shared<Task_SaveImg>(m_output, reassigned, m_jpgquality, m_refcolor));
+}

@@ -133,12 +133,25 @@ void Worker::prepend(std::shared_ptr<Task> task)
   m_wakeup.notify_all();
 }
 
-void Worker::wait_all()
+bool Worker::wait_all(int timeout_ms)
 {
   std::unique_lock<std::mutex> lock(m_mutex);
+
+  auto timeout = std::chrono::system_clock::now();
+
+  if (timeout_ms >= 0)
+  {
+   timeout += std::chrono::milliseconds(timeout_ms);
+  }
+  else
+  {
+    // Check for deadlocks after every 10 seconds
+    timeout += std::chrono::seconds(10);
+  }
+
   while (m_tasks.size() && !m_failed)
   {
-    if (m_wakeup.wait_for(lock, std::chrono::seconds(10)) == std::cv_status::timeout)
+    if (m_wakeup.wait_until(lock, timeout) == std::cv_status::timeout)
     {
       // Check if we are waiting on an unscheduled task
       for (std::shared_ptr<Task> task: m_tasks)
@@ -155,8 +168,15 @@ void Worker::wait_all()
           }
         }
       }
+
+      if (timeout_ms >= 0)
+      {
+        return false; // Return with timeout
+      }
     }
   }
+
+  return true; // Everything completed
 }
 
 float Worker::seconds_passed() const

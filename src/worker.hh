@@ -76,7 +76,7 @@ public:
   void prepend(std::shared_ptr<Task> task);
 
   // Wait until all tasks have finished
-  void wait_all();
+  bool wait_all(int timeout_ms = -1);
 
   bool failed() const { return m_failed; }
 

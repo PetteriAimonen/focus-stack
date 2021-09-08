@@ -3,12 +3,23 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
+#include <opencv2/core/core.hpp>
 
 namespace focusstack {
+
+class Task_LoadImg;
+class Task_Grayscale;
+class Task_Merge;
+class Task_Align;
+class Task_Reassign_Map;
+class Worker;
+class ImgTask;
 
 class FocusStack {
 public:
   FocusStack();
+  virtual ~FocusStack();
 
   enum align_flags_t
   {
@@ -37,7 +48,26 @@ public:
   void set_denoise(float level) { m_denoise = level; }
   void set_align_flags(int flags) { m_align_flags = static_cast<align_flags_t>(flags); }
 
+  // Blocking interface, equivalent to reset(); start(); do_final_merge(); wait_done();
   bool run();
+
+  // Streaming interface, normal usage:
+  // 1. Call add_image() if you have any pre-existing images.
+  // 2. Call start() to start worker threads running.
+  // 3. Call add_image() whenever new images arrive.
+  // 4. Call do_final_merge() when all images have been added.
+  // 5. Call wait_done() to wait for completion and retrieve success/fail status.
+  //
+  // Note that this class should be accessed only from one thread at a time.
+  // With the exception of wait_done(), the functions return immediately.
+  //
+  void start(); // Start worker threads.
+  void add_image(std::string filename); // Add image from file, filename must remain valid until loading completes.
+  void add_image(const cv::Mat &image); // Add image from memory, buffer can be reused after add_image() returns.
+  void do_final_merge(); // Do final merge operations.
+  void get_status(int &total_tasks, int &completed_tasks); // Query status on running tasks
+  bool wait_done(bool &status, std::string &errmsg, int timeout_ms = -1); // Wait until all tasks have completed and retrieve status
+  void reset(bool keep_results = false); // Release memory buffers and clear state for next run.
 
 private:
   std::vector<std::string> m_inputs;
@@ -56,6 +86,36 @@ private:
   int m_consistency;
   int m_jpgquality;
   float m_denoise;
+
+  // Runtime variables
+  bool m_have_opencl;
+  int m_scheduled_image_count;
+  int m_refidx;
+  std::unique_ptr<Worker> m_worker;
+  std::vector<std::shared_ptr<Task_LoadImg> > m_input_images; // Queued input images
+  std::vector<std::shared_ptr<ImgTask> > m_grayscale_imgs;
+  std::vector<std::shared_ptr<Task_Align> > m_aligned_imgs;
+  std::vector<std::shared_ptr<ImgTask> > m_aligned_grayscales;
+  std::shared_ptr<Task_LoadImg> m_refcolor; // Alignment reference image
+  std::shared_ptr<Task_Grayscale> m_refgray; // Grayscaled reference image
+  std::shared_ptr<Task_Merge> m_prev_merge;
+
+  std::vector<std::shared_ptr<ImgTask> > m_merge_batch;
+  std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_grays;
+  std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_colors;
+  std::shared_ptr<Task_Reassign_Map> m_reassign_map;
+
+  // Queue worker tasks for new images in m_input_images
+  void schedule_queue_processing();
+  void schedule_alignment(int i);
+  void schedule_single_image_processing(int i);
+  void schedule_batch_merge();
+
+  // Release temporary images that are no longer needed
+  void release_temporaries();
+
+  // Schedule the last merge task and saving of final image
+  void schedule_final_merge();
 };
 
 }
