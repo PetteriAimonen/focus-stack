@@ -7,7 +7,7 @@
 
 using namespace focusstack;
 
-Task::Task(): m_filename("unknown"), m_index(0), m_name("Base task"), m_done(false)
+Task::Task(): m_filename("unknown"), m_index(0), m_name("Base task"), m_running(false), m_done(false)
 {
 
 }
@@ -42,6 +42,8 @@ void Task::run(bool verbose)
     throw std::logic_error("Task has already completed");
   }
 
+  m_running = true;
+
   try {
     // Run the subclass implementation
     this->task();
@@ -51,12 +53,14 @@ void Task::run(bool verbose)
 
     // Mark as completed
     m_done = true;
+    m_running = false;
     m_wakeup.notify_all();
   }
   catch (...)
   {
     // Mark as completed anyway
     m_done = true;
+    m_running = false;
     m_wakeup.notify_all();
 
     throw;
@@ -134,7 +138,24 @@ void Worker::wait_all()
   std::unique_lock<std::mutex> lock(m_mutex);
   while (m_tasks.size() && !m_failed)
   {
-    m_wakeup.wait(lock);
+    if (m_wakeup.wait_for(lock, std::chrono::seconds(10)) == std::cv_status::timeout)
+    {
+      // Check if we are waiting on an unscheduled task
+      for (std::shared_ptr<Task> task: m_tasks)
+      {
+        for (std::shared_ptr<Task> dependency: task->get_depends())
+        {
+          if (!dependency->is_completed() && !dependency->is_running())
+          {
+            if (std::find(m_tasks.begin(), m_tasks.end(), dependency) == m_tasks.end())
+            {
+              std::printf("Task %s is waiting on unscheduled task %s\n",
+                task->name().c_str(), dependency->name().c_str());
+            }
+          }
+        }
+      }
+    }
   }
 }
 
