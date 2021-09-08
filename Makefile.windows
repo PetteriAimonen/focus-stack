@@ -25,7 +25,7 @@ CXXFLAGS = $(CXXFLAGS) "/DGIT_VERSION=\"$(GIT_VERSION)\""
 LDFLAGS = $(LDFLAGS) /link setargv.obj
 
 # List of source code files
-CXXSRCS = src/focusstack.cc src/worker.cc src/options.cc \
+CXXSRCS = src/focusstack.cc src/worker.cc src/logger.cc src/options.cc \
           src/task_align.cc src/task_depthmap.cc src/task_grayscale.cc src/task_loadimg.cc \
           src/task_merge.cc src/task_reassign.cc src/task_saveimg.cc \
           src/task_wavelet.cc src/task_wavelet_opencl.cc src/task_denoise.cc \

@@ -140,10 +140,10 @@ void Task_Align::task()
       m_whitebalance.at<float>(5) *= m_stacked_transform->m_whitebalance.at<float>(5);
     }
 
-    if (m_verbose)
+    if (m_logger->get_level() <= Logger::LOG_VERBOSE)
     {
       std::string name = basename();
-      std::printf("%s transform: [%0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f]\n",
+      m_logger->verbose("%s transform: [%0.3f %0.3f %0.3f; %0.3f %0.3f %0.3f]\n",
                   name.c_str(),
                   m_transformation.at<float>(0, 0), m_transformation.at<float>(0, 1), m_transformation.at<float>(0, 2),
                   m_transformation.at<float>(1, 0), m_transformation.at<float>(1, 1), m_transformation.at<float>(1, 2));
@@ -153,15 +153,15 @@ void Task_Align::task()
 
     if (!(m_flags & FocusStack::ALIGN_NO_CONTRAST) || !(m_flags & FocusStack::ALIGN_NO_WHITEBALANCE))
     {
-      if (m_verbose)
+      if (m_logger->get_level() <= Logger::LOG_VERBOSE)
       {
         std::string name = basename();
-        std::printf("%s contrast map: C:%0.3f, X:%0.3f, X2:%0.3f, Y:%0.3f, Y2:%0.3f\n",
+        m_logger->verbose("%s contrast map: C:%0.3f, X:%0.3f, X2:%0.3f, Y:%0.3f, Y2:%0.3f\n",
                     name.c_str(),
                     m_contrast.at<float>(0), m_contrast.at<float>(1), m_contrast.at<float>(2),
                     m_contrast.at<float>(3), m_contrast.at<float>(4));
 
-        std::printf("%s whitebalance: R:x%0.3f%+0.1f, G:x%0.3f%+0.1f, B:x%0.3f%+0.1f\n",
+        m_logger->verbose("%s whitebalance: R:x%0.3f%+0.1f, G:x%0.3f%+0.1f, B:x%0.3f%+0.1f\n",
                     name.c_str(),
                     m_whitebalance.at<float>(5), m_whitebalance.at<float>(4),
                     m_whitebalance.at<float>(3), m_whitebalance.at<float>(2),

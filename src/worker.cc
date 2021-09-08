@@ -31,11 +31,11 @@ bool Task::ready_to_run()
   return true;
 }
 
-void Task::run(bool verbose)
+void Task::run(std::shared_ptr<Logger> logger)
 {
   std::unique_lock<std::mutex> lock(m_mutex);
 
-  m_verbose = verbose;
+  m_logger = logger;
 
   if (m_done)
   {
@@ -89,9 +89,9 @@ void Task::wait()
   }
 }
 
-Worker::Worker(int max_threads, bool verbose):
-  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0), m_completed_tasks(0), m_opencl_users(0),
-  m_failed(false)
+Worker::Worker(int max_threads, std::shared_ptr<Logger> logger):
+  m_logger(logger), m_closed(false), m_tasks_started(0), m_total_tasks(0),
+  m_completed_tasks(0), m_opencl_users(0), m_failed(false)
 {
   m_start_time = std::chrono::steady_clock::now();
 
@@ -162,8 +162,8 @@ bool Worker::wait_all(int timeout_ms)
           {
             if (std::find(m_tasks.begin(), m_tasks.end(), dependency) == m_tasks.end())
             {
-              std::printf("Task %s is waiting on unscheduled task %s\n",
-                task->name().c_str(), dependency->name().c_str());
+              m_logger->error("Task %s is waiting on unscheduled task %s\n",
+                              task->name().c_str(), dependency->name().c_str());
             }
           }
         }
@@ -233,41 +233,40 @@ void Worker::worker(int thread_idx)
         std::unique_lock<std::mutex> lock(m_mutex);
         taskidx = ++m_tasks_started;
 
-        if (m_verbose)
+        if (m_logger->get_level() <= Logger::LOG_VERBOSE)
         {
-          std::printf("%6.3f [%3d/%3d] T%d Starting task: %s\n",
+          m_logger->verbose("%6.3f [%3d/%3d] T%d Starting task: %s\n",
                       seconds_passed(), m_tasks_started, m_total_tasks, thread_idx, task->name().c_str());
         }
         else
         {
-          std::printf("[%3d/%3d] %-40.40s\r", m_tasks_started, m_total_tasks, task->name().c_str());
-          std::fflush(stdout);
+          m_logger->progress("[%3d/%3d] %-40.40s\r", m_tasks_started, m_total_tasks, task->name().c_str());
         }
       }
 
       try
       {
-        task->run(m_verbose);
+        task->run(m_logger);
       }
       catch (std::exception &e)
       {
-        fprintf(stderr, "\n\nTask %s on thread %d failed with exception:\n%s\n",
-                task->name().c_str(), thread_idx, e.what());
+        m_logger->error("\n\nTask %s on thread %d failed with exception:\n%s\n",
+                        task->name().c_str(), thread_idx, e.what());
         m_error = e;
         m_failed = true;
         m_wakeup.notify_all();
         return;
       }
 
-      if (m_verbose)
+      if (m_logger->get_level() <= Logger::LOG_VERBOSE)
       {
         std::unique_lock<std::mutex> lock(m_mutex);
-        std::printf("%6.3f           T%d Finished task %d in %0.3f s.\n",
-                    seconds_passed(), thread_idx, taskidx, seconds_passed() - start);
+        m_logger->verbose("%6.3f           T%d Finished task %d in %0.3f s.\n",
+                          seconds_passed(), thread_idx, taskidx, seconds_passed() - start);
 
 #ifdef USE_MALLINFO
         struct mallinfo mem = mallinfo();
-        std::printf("%6.3f           Memory use: %0.3f MB.\n", seconds_passed(), mem.uordblks / 1e6);
+        m_logger->verbose("%6.3f           Memory use: %0.3f MB.\n", seconds_passed(), mem.uordblks / 1e6);
 #endif
       }
 

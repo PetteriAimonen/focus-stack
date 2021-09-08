@@ -80,10 +80,7 @@ void Task_Grayscale::do_pca()
 
   m_weights /= cv::sum(m_weights)[0];
 
-  if (m_verbose)
-  {
-    printf("Using grayscale weights R:%0.3f, G:%0.3f, B:%0.3f\n",
+  m_logger->verbose("Using grayscale weights R:%0.3f, G:%0.3f, B:%0.3f\n",
            m_weights.at<float>(2), m_weights.at<float>(1), m_weights.at<float>(0));
-  }
 }
 

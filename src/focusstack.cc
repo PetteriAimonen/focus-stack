@@ -1,5 +1,6 @@
 #include "focusstack.hh"
 #include "worker.hh"
+#include "logger.hh"
 #include "task_loadimg.hh"
 #include "task_grayscale.hh"
 #include "task_align.hh"
@@ -21,7 +22,6 @@ FocusStack::FocusStack():
   m_disable_opencl(false),
   m_save_steps(false),
   m_align_only(false),
-  m_verbose(false),
   m_align_flags(ALIGN_DEFAULT),
   m_threads(std::thread::hardware_concurrency() + 1), // +1 to have extra thread to give tasks for GPU
   m_batchsize(8),
@@ -30,11 +30,23 @@ FocusStack::FocusStack():
   m_jpgquality(95),
   m_denoise(0)
 {
+  m_logger = std::make_shared<Logger>();
+
   reset();
 }
 
 FocusStack::~FocusStack()
 {
+}
+
+void FocusStack::set_verbose(bool verbose)
+{
+  m_logger->set_level(verbose ? LOG_VERBOSE : LOG_INFO);
+}
+
+void FocusStack::set_log_callback(std::function<void(log_level_t level, std::string)> callback)
+{
+  m_logger->set_callback(callback);
 }
 
 bool FocusStack::run()
@@ -51,19 +63,19 @@ bool FocusStack::run()
 
 void FocusStack::start()
 {
-  m_worker = std::make_unique<Worker>(m_threads, m_verbose);
+  m_worker = std::make_unique<Worker>(m_threads, m_logger);
 
   m_have_opencl = false;
   if (m_disable_opencl)
   {
-    if (m_verbose) printf("OpenCL disabled\n");
+    m_logger->verbose("OpenCL disabled\n");
     cv::ocl::setUseOpenCL(false);
   }
   else
   {
     if (!cv::ocl::haveOpenCL())
     {
-      if (m_verbose) printf("OpenCL not available\n");
+      m_logger->verbose("OpenCL not available\n");
     }
     else
     {
@@ -74,18 +86,15 @@ void FocusStack::start()
       {
         cv::ocl::Device dev = context.device(0);
 
-        if (m_verbose)
-        {
-          printf("OpenCL device: %s %s %s\n",
-                dev.vendorName().c_str(),
-                dev.name().c_str(),
-                dev.version().c_str());
-        }
+        m_logger->verbose("OpenCL device: %s %s %s\n",
+                          dev.vendorName().c_str(),
+                          dev.name().c_str(),
+                          dev.version().c_str());
         m_have_opencl = true;
       }
       else
       {
-        if (m_verbose) printf("OpenCL: no devices available\n");
+        m_logger->verbose("OpenCL: no devices available\n");
       }
     }
   }

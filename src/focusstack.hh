@@ -15,6 +15,7 @@ class Task_Align;
 class Task_Reassign_Map;
 class Worker;
 class ImgTask;
+class Logger;
 
 class FocusStack {
 public:
@@ -30,6 +31,14 @@ public:
     ALIGN_GLOBAL              = 0x08
   };
 
+  enum log_level_t
+  {
+      LOG_VERBOSE = 10,
+      LOG_PROGRESS = 20,
+      LOG_INFO = 30,
+      LOG_ERROR = 40
+  };
+
   void set_inputs(const std::vector<std::string> &files) { m_inputs = files; }
   void set_output(std::string output) { m_output = output; }
   std::string get_output() const { return m_output; }
@@ -39,7 +48,7 @@ public:
   void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
   void set_align_only(bool align_only) { m_align_only = align_only; }
-  void set_verbose(bool verbose) { m_verbose = verbose; }
+  void set_verbose(bool verbose);
   void set_threads(int threads) { m_threads = threads; }
   void set_batchsize(int batchsize) { m_batchsize = batchsize; }
   void set_reference(int refidx) { m_reference = refidx; }
@@ -47,6 +56,10 @@ public:
   void set_consistency(int level) { m_consistency = level; }
   void set_denoise(float level) { m_denoise = level; }
   void set_align_flags(int flags) { m_align_flags = static_cast<align_flags_t>(flags); }
+
+  // Set callback function to use for log messages.
+  // Note that callbacks may come from any thread, but only one at a time.
+  void set_log_callback(std::function<void(log_level_t level, std::string)> callback);
 
   // Blocking interface, equivalent to reset(); start(); do_final_merge(); wait_done();
   bool run();
@@ -79,7 +92,7 @@ private:
   bool m_disable_opencl;
   bool m_save_steps;
   bool m_align_only;
-  bool m_verbose;
+  std::shared_ptr<Logger> m_logger;
   align_flags_t m_align_flags;
 
   int m_threads;

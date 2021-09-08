@@ -10,6 +10,7 @@
 #include <chrono>
 #include <exception>
 #include <opencv2/core/core.hpp>
+#include "logger.hh"
 
 namespace focusstack {
 
@@ -24,7 +25,7 @@ public:
   virtual bool uses_opencl() { return false; }
   bool is_running() const { return m_running; }
   bool is_completed() const { return m_done; }
-  void run(bool verbose = false);
+  void run(std::shared_ptr<Logger> logger);
   std::string filename() const { return m_filename; }
   std::string name() const { return m_name; }
   std::string basename() const;
@@ -37,7 +38,7 @@ public:
 protected:
   virtual void task() { };
 
-  bool m_verbose;
+  std::shared_ptr<Logger> m_logger;
   std::string m_filename;
   int m_index;
   int m_jpgquality;
@@ -66,7 +67,7 @@ protected:
 class Worker
 {
 public:
-  Worker(int max_threads, bool verbose);
+  Worker(int max_threads, std::shared_ptr<Logger> logger);
   ~Worker();
 
   // Add task to the end of the queue
@@ -85,7 +86,7 @@ public:
   void get_status(int &total_tasks, int &completed_tasks);
 
 private:
-  bool m_verbose;
+  std::shared_ptr<Logger> m_logger;
   std::vector<std::thread> m_threads;
   std::deque<std::shared_ptr<Task> > m_tasks;
 
