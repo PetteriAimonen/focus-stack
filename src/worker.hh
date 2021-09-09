@@ -82,6 +82,8 @@ public:
 
   std::exception error() const { return m_error; }
 
+  void get_status(int &total_tasks, int &completed_tasks);
+
 private:
   bool m_verbose;
   std::vector<std::thread> m_threads;
@@ -90,6 +92,7 @@ private:
   bool m_closed;
   int m_tasks_started;
   int m_total_tasks;
+  int m_completed_tasks;
   int m_opencl_users;
 
   bool m_failed;

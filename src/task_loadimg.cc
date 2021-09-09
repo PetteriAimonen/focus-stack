@@ -11,9 +11,19 @@ Task_LoadImg::Task_LoadImg(std::string filename)
   m_name = "Load " + filename;
 }
 
+Task_LoadImg::Task_LoadImg(std::string name, const cv::Mat &img)
+{
+  m_filename = name;
+  m_name = "Memory image " + name;
+  m_result = img.clone();
+}
+
 void Task_LoadImg::task()
 {
-  m_result = cv::imread(m_filename, cv::IMREAD_COLOR);
+  if (!m_result.data)
+  {
+    m_result = cv::imread(m_filename, cv::IMREAD_COLOR);
+  }
 
   if (!m_result.data)
   {

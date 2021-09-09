@@ -16,7 +16,7 @@
 using namespace focusstack;
 
 FocusStack::FocusStack():
-  m_output("output.jpg"),
+  m_output(""),
   m_depthmap_smoothing(0.02f),
   m_disable_opencl(false),
   m_save_steps(false),
@@ -102,14 +102,22 @@ void FocusStack::start()
 void FocusStack::add_image(std::string filename)
 {
   m_input_images.push_back(std::make_shared<Task_LoadImg>(filename));
-  schedule_queue_processing();
+
+  if (m_worker)
+  {
+    schedule_queue_processing();
+  }
 }
 
 void FocusStack::add_image(const cv::Mat &image)
 {
-  // FIXME: Add necessary overload to Task_LoadImg
-  //m_input_images.push_back(std::make_shared<Task_LoadImg>(image));
-  //schedule_queue_processing();
+  std::string name = "memimg-" + std::to_string(m_input_images.size()) + ".jpg";
+  m_input_images.push_back(std::make_shared<Task_LoadImg>(name, image));
+
+  if (m_worker)
+  {
+    schedule_queue_processing();
+  }
 }
 
 void FocusStack::do_final_merge()
@@ -120,6 +128,18 @@ void FocusStack::do_final_merge()
   // All temporaries except results can be released now.
   // Anything that is needed is held on by shared_ptrs in the tasks.
   reset(true);
+}
+
+void FocusStack::get_status(int &total_tasks, int &completed_tasks)
+{
+  if (!m_worker)
+  {
+    completed_tasks = total_tasks = 0;
+  }
+  else
+  {
+    m_worker->get_status(total_tasks, completed_tasks);
+  }
 }
 
 bool FocusStack::wait_done(bool &status, std::string &errmsg, int timeout_ms)
@@ -166,6 +186,19 @@ void FocusStack::reset(bool keep_results)
   if (!keep_results)
   {
     m_worker.reset();
+    m_result_image.reset();
+  }
+}
+
+const cv::Mat &FocusStack::get_result_image() const
+{
+  if (m_result_image)
+  {
+    return m_result_image->img();
+  }
+  else
+  {
+    throw std::runtime_error("No result image available");
   }
 }
 
@@ -201,8 +234,8 @@ void FocusStack::schedule_queue_processing()
   if (m_refidx >= m_scheduled_image_count) indexes.push_back(m_refidx);
   for (int i = 1; i < count; i++)
   {
-    if (m_refidx - i >= m_scheduled_image_count) indexes.push_back(m_refidx - i);
-    if (m_refidx + i < count) indexes.push_back(m_refidx + i);
+    if (m_refidx - i >= m_scheduled_image_count && m_refidx - i < count) indexes.push_back(m_refidx - i);
+    if (m_refidx + i >= m_scheduled_image_count && m_refidx + i < count) indexes.push_back(m_refidx + i);
   }
 
   for (int i : indexes)
@@ -420,9 +453,12 @@ void FocusStack::schedule_final_merge()
   }
 
   // Reassign pixel values
-  std::shared_ptr<ImgTask> reassigned = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
-  m_worker->add(reassigned);
+  m_result_image = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
+  m_worker->add(m_result_image);
 
   // Save result image
-  m_worker->add(std::make_shared<Task_SaveImg>(m_output, reassigned, m_jpgquality, m_refcolor));
+  if (m_output != "")
+  {
+    m_worker->add(std::make_shared<Task_SaveImg>(m_output, m_result_image, m_jpgquality, m_refcolor));
+  }
 }

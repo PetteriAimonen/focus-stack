@@ -69,6 +69,8 @@ public:
   bool wait_done(bool &status, std::string &errmsg, int timeout_ms = -1); // Wait until all tasks have completed and retrieve status
   void reset(bool keep_results = false); // Release memory buffers and clear state for next run.
 
+  const cv::Mat &get_result_image() const;
+
 private:
   std::vector<std::string> m_inputs;
   std::string m_output;
@@ -104,6 +106,9 @@ private:
   std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_grays;
   std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_colors;
   std::shared_ptr<Task_Reassign_Map> m_reassign_map;
+
+  // Result variables
+  std::shared_ptr<ImgTask> m_result_image;
 
   // Queue worker tasks for new images in m_input_images
   void schedule_queue_processing();

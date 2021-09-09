@@ -90,7 +90,7 @@ void Task::wait()
 }
 
 Worker::Worker(int max_threads, bool verbose):
-  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0), m_opencl_users(0),
+  m_verbose(verbose), m_closed(false), m_tasks_started(0), m_total_tasks(0), m_completed_tasks(0), m_opencl_users(0),
   m_failed(false)
 {
   m_start_time = std::chrono::steady_clock::now();
@@ -177,6 +177,13 @@ bool Worker::wait_all(int timeout_ms)
   }
 
   return true; // Everything completed
+}
+
+void Worker::get_status(int &total_tasks, int &completed_tasks)
+{
+  std::unique_lock<std::mutex> lock(m_mutex);
+  total_tasks = m_total_tasks;
+  completed_tasks = m_completed_tasks;
 }
 
 float Worker::seconds_passed() const
@@ -268,6 +275,11 @@ void Worker::worker(int thread_idx)
       {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_opencl_users--;
+      }
+
+      {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        m_completed_tasks++;
       }
 
       // Wake all threads to re-check dependencies
