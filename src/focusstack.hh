@@ -82,7 +82,10 @@ public:
   bool wait_done(bool &status, std::string &errmsg, int timeout_ms = -1); // Wait until all tasks have completed and retrieve status
   void reset(bool keep_results = false); // Release memory buffers and clear state for next run.
 
+  // Access result images in memory (without saving to files)
+  // To enable generation of depthmap, call set_depthmap(":memory:");
   const cv::Mat &get_result_image() const;
+  const cv::Mat &get_result_depthmap() const;
 
 private:
   std::vector<std::string> m_inputs;
@@ -122,6 +125,7 @@ private:
 
   // Result variables
   std::shared_ptr<ImgTask> m_result_image;
+  std::shared_ptr<ImgTask> m_result_depthmap;
 
   // Queue worker tasks for new images in m_input_images
   void schedule_queue_processing();

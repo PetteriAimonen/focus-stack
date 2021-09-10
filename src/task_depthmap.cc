@@ -7,6 +7,7 @@ using namespace focusstack;
 
 Task_Depthmap::Task_Depthmap(std::shared_ptr<Task_Merge> merged_wavelet, float smoothing, int max_depth)
 {
+  m_filename = "depthmap.png";
   m_name = "Construct depthmap";
   m_merged_wavelet = merged_wavelet;
   m_smoothing = smoothing;

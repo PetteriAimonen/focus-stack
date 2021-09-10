@@ -196,6 +196,7 @@ void FocusStack::reset(bool keep_results)
   {
     m_worker.reset();
     m_result_image.reset();
+    m_result_depthmap.reset();
   }
 }
 
@@ -208,6 +209,18 @@ const cv::Mat &FocusStack::get_result_image() const
   else
   {
     throw std::runtime_error("No result image available");
+  }
+}
+
+const cv::Mat &FocusStack::get_result_depthmap() const
+{
+  if (m_result_depthmap)
+  {
+    return m_result_depthmap->img();
+  }
+  else
+  {
+    throw std::runtime_error("No result depthmap available");
   }
 }
 
@@ -429,11 +442,13 @@ void FocusStack::schedule_final_merge()
   // Save depth map if requested
   if (m_depthmap != "")
   {
-    std::shared_ptr<ImgTask> depthmap = std::make_shared<Task_Depthmap>(m_prev_merge,
-                                                                        m_depthmap_smoothing,
-                                                                        m_inputs.size());
+    std::shared_ptr<Task_Depthmap> depthmap = std::make_shared<Task_Depthmap>(m_prev_merge,
+                                                                              m_depthmap_smoothing,
+                                                                              m_input_images.size());
     m_worker->add(depthmap);
-    m_worker->add(std::make_shared<Task_SaveImg>(m_depthmap, depthmap, m_jpgquality, m_refcolor));
+
+    m_result_depthmap = std::make_shared<Task_SaveImg>(m_depthmap, depthmap, m_jpgquality, m_refcolor);
+    m_worker->add(m_result_depthmap);
   }
 
   // Denoise merged image
@@ -462,12 +477,10 @@ void FocusStack::schedule_final_merge()
   }
 
   // Reassign pixel values
-  m_result_image = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
-  m_worker->add(m_result_image);
+  std::shared_ptr<Task_Reassign> colored = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
+  m_worker->add(colored);
 
   // Save result image
-  if (m_output != "")
-  {
-    m_worker->add(std::make_shared<Task_SaveImg>(m_output, m_result_image, m_jpgquality, m_refcolor));
-  }
+  m_result_image = std::make_shared<Task_SaveImg>(m_output, colored, m_jpgquality, m_refcolor);
+  m_worker->add(m_result_image);
 }

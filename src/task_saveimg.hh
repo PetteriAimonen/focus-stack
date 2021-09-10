@@ -1,4 +1,4 @@
-// Handles saving of images
+// Handles cropping and conversion of images for saving
 
 #pragma once
 #include "worker.hh"
@@ -6,7 +6,7 @@
 
 namespace focusstack {
 
-class Task_SaveImg: public Task
+class Task_SaveImg: public ImgTask
 {
 public:
   Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, int jpgquality, std::shared_ptr<Task_LoadImg> origsize = nullptr);
