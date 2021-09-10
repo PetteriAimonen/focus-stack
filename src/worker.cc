@@ -250,9 +250,9 @@ void Worker::worker(int thread_idx)
       }
       catch (std::exception &e)
       {
-        m_logger->error("\n\nTask %s on thread %d failed with exception:\n%s\n",
-                        task->name().c_str(), thread_idx, e.what());
-        m_error = e;
+        m_error = "Task " + task->name() + " on thread " + std::to_string(thread_idx)
+                  + " failed with exception:\n" + e.what();
+        m_logger->error("\n\n%s\n", m_error.c_str());
         m_failed = true;
         m_wakeup.notify_all();
         return;

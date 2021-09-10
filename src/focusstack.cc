@@ -165,7 +165,7 @@ bool FocusStack::wait_done(bool &status, std::string &errmsg, int timeout_ms)
     status = !m_worker->failed();
     if (!status)
     {
-      errmsg = m_worker->error().what();
+      errmsg = m_worker->error();
     }
     m_worker.reset();
 

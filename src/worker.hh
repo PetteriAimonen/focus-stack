@@ -81,7 +81,7 @@ public:
 
   bool failed() const { return m_failed; }
 
-  std::exception error() const { return m_error; }
+  std::string error() const { return m_error; }
 
   void get_status(int &total_tasks, int &completed_tasks);
 
@@ -97,7 +97,7 @@ private:
   int m_opencl_users;
 
   bool m_failed;
-  std::exception m_error;
+  std::string m_error;
 
   std::mutex m_mutex;
   std::condition_variable m_wakeup;
