@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <functional>
 #include <opencv2/core/core.hpp>
 
 namespace focusstack {
