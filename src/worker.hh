@@ -4,6 +4,7 @@
 #include <thread>
 #include <deque>
 #include <vector>
+#include <unordered_set>
 #include <memory>
 #include <mutex>
 #include <condition_variable>
@@ -89,6 +90,7 @@ private:
   std::shared_ptr<Logger> m_logger;
   std::vector<std::thread> m_threads;
   std::deque<std::shared_ptr<Task> > m_tasks;
+  std::unordered_set<std::shared_ptr<Task> > m_running;
 
   bool m_closed;
   int m_tasks_started;

@@ -165,7 +165,7 @@ bool Worker::wait_all(int timeout_ms)
       {
         for (std::shared_ptr<Task> dependency: task->get_depends())
         {
-          if (!dependency->is_completed() && !dependency->is_running())
+          if (!dependency->is_completed() && !m_running.count(dependency))
           {
             if (std::find(m_tasks.begin(), m_tasks.end(), dependency) == m_tasks.end())
             {
@@ -223,6 +223,7 @@ void Worker::worker(int thread_idx)
         {
           task = m_tasks.at(i);
           m_tasks.erase(m_tasks.begin() + i);
+          m_running.insert(task);
           break;
         }
       }
@@ -286,6 +287,7 @@ void Worker::worker(int thread_idx)
       {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_completed_tasks++;
+        m_running.erase(task);
       }
 
       // Wake all threads to re-check dependencies
