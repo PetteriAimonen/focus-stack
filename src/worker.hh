@@ -25,7 +25,7 @@ public:
   virtual bool uses_opencl() { return false; }
   bool is_running() const { return m_running; }
   bool is_completed() const { return m_done; }
-  void run(std::shared_ptr<Logger> logger);
+  void run(std::shared_ptr<Logger> logger = nullptr);
   std::string filename() const { return m_filename; }
   std::string name() const { return m_name; }
   std::string basename() const;

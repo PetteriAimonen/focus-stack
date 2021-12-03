@@ -35,7 +35,14 @@ void Task::run(std::shared_ptr<Logger> logger)
 {
   std::unique_lock<std::mutex> lock(m_mutex);
 
-  m_logger = logger;
+  if (logger)
+  {
+    m_logger = logger;
+  }
+  else
+  {
+    m_logger = std::make_shared<Logger>();
+  }
 
   if (m_done)
   {

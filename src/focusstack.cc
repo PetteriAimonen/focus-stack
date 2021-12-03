@@ -41,7 +41,7 @@ FocusStack::~FocusStack()
 
 void FocusStack::set_verbose(bool verbose)
 {
-  m_logger->set_level(verbose ? LOG_VERBOSE : LOG_INFO);
+  m_logger->set_level(verbose ? LOG_VERBOSE : LOG_PROGRESS);
 }
 
 void FocusStack::set_log_callback(std::function<void(log_level_t level, std::string)> callback)
