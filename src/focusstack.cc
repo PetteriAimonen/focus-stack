@@ -10,6 +10,7 @@
 #include "task_denoise.hh"
 #include "task_depthmap.hh"
 #include "task_reassign.hh"
+#include "task_3dpreview.hh"
 #include "task_saveimg.hh"
 #include <thread>
 #include <opencv2/core/ocl.hpp>
@@ -23,6 +24,8 @@ FocusStack::FocusStack():
   m_save_steps(false),
   m_align_only(false),
   m_align_flags(ALIGN_DEFAULT),
+  m_3dviewpoint(1,1,1),
+  m_3dzscale(1),
   m_threads(std::thread::hardware_concurrency() + 1), // +1 to have extra thread to give tasks for GPU
   m_batchsize(8),
   m_reference(-1),
@@ -179,7 +182,7 @@ bool FocusStack::wait_done(bool &status, std::string &errmsg, int timeout_ms)
 void FocusStack::reset(bool keep_results)
 {
   m_scheduled_image_count = 0;
-  m_refidx = 0;
+  m_refidx = -1;
   m_input_images.clear();
   m_grayscale_imgs.clear();
   m_aligned_imgs.clear();
@@ -197,6 +200,7 @@ void FocusStack::reset(bool keep_results)
     m_worker.reset();
     m_result_image.reset();
     m_result_depthmap.reset();
+    m_result_3dview.reset();
   }
 }
 
@@ -221,6 +225,18 @@ const cv::Mat &FocusStack::get_result_depthmap() const
   else
   {
     throw std::runtime_error("No result depthmap available");
+  }
+}
+
+const cv::Mat &FocusStack::get_result_3dview() const
+{
+  if (m_result_3dview)
+  {
+    return m_result_3dview->img();
+  }
+  else
+  {
+    throw std::runtime_error("No result 3dview available");
   }
 }
 
@@ -440,7 +456,7 @@ void FocusStack::schedule_final_merge()
   }
 
   // Save depth map if requested
-  if (m_depthmap != "")
+  if (m_depthmap != "" || m_filename_3dview != "")
   {
     std::shared_ptr<Task_Depthmap> depthmap = std::make_shared<Task_Depthmap>(m_prev_merge,
                                                                               m_depthmap_smoothing,
@@ -483,4 +499,15 @@ void FocusStack::schedule_final_merge()
   // Save result image
   m_result_image = std::make_shared<Task_SaveImg>(m_output, colored, m_jpgquality, m_refcolor);
   m_worker->add(m_result_image);
+
+  // Save 3D preview
+  if (m_filename_3dview != "")
+  {
+    std::shared_ptr<Task_3DPreview> preview = std::make_shared<Task_3DPreview>(
+      m_result_depthmap, nullptr, m_result_image,
+      m_3dviewpoint, m_3dzscale);
+    m_worker->add(preview);
+    m_result_3dview = std::make_shared<Task_SaveImg>(m_filename_3dview, preview, m_jpgquality);
+    m_worker->add(m_result_3dview);
+  }
 }

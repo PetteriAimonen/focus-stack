@@ -1,6 +1,7 @@
 // Constructs and starts the various tasks involved in the stacking process.
 
 #pragma once
+#include <sstream>
 #include <string>
 #include <vector>
 #include <memory>
@@ -45,6 +46,8 @@ public:
   std::string get_output() const { return m_output; }
   void set_depthmap(std::string depthmap) { m_depthmap = depthmap; }
   std::string get_depthmap() const { return m_depthmap; }
+  void set_3dview(std::string filename_3dview) { m_filename_3dview = filename_3dview; }
+  std::string get_3dview() const { return m_filename_3dview; }
   void set_depthmap_smoothing(float smoothing) { m_depthmap_smoothing = smoothing; }
   void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
@@ -57,6 +60,17 @@ public:
   void set_consistency(int level) { m_consistency = level; }
   void set_denoise(float level) { m_denoise = level; }
   void set_align_flags(int flags) { m_align_flags = static_cast<align_flags_t>(flags); }
+  void set_3dviewpoint(float x, float y, float z, float zscale) { m_3dviewpoint = cv::Vec3f(x,y,z); m_3dzscale = zscale; }
+  void set_3dviewpoint(std::string value) {
+    std::istringstream is(value);
+    is >> m_3dviewpoint[0];
+    is.ignore(1,':');
+    is >> m_3dviewpoint[1];
+    is.ignore(1,':');
+    is >> m_3dviewpoint[2];
+    is.ignore(1,':');
+    is >> m_3dzscale;
+  }
 
   // Set callback function to use for log messages.
   // Note that callbacks may come from any thread, but only one at a time.
@@ -87,17 +101,22 @@ public:
   // To enable generation of depthmap, call set_depthmap(":memory:");
   const cv::Mat &get_result_image() const;
   const cv::Mat &get_result_depthmap() const;
+  const cv::Mat &get_result_3dview() const;
 
 private:
   std::vector<std::string> m_inputs;
   std::string m_output;
   std::string m_depthmap;
+  std::string m_filename_3dview;
   float m_depthmap_smoothing;
   bool m_disable_opencl;
   bool m_save_steps;
   bool m_align_only;
   std::shared_ptr<Logger> m_logger;
   align_flags_t m_align_flags;
+
+  cv::Vec3f m_3dviewpoint;
+  float m_3dzscale;
 
   int m_threads;
   int m_batchsize;
@@ -127,6 +146,7 @@ private:
   // Result variables
   std::shared_ptr<ImgTask> m_result_image;
   std::shared_ptr<ImgTask> m_result_depthmap;
+  std::shared_ptr<ImgTask> m_result_3dview;
 
   // Queue worker tasks for new images in m_input_images
   void schedule_queue_processing();

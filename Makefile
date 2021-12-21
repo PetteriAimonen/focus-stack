@@ -21,9 +21,11 @@ CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty 2>/dev/null)\"
 
 # List of source code files
 CXXSRCS += focusstack.cc worker.cc options.cc logger.cc
-CXXSRCS += task_align.cc task_depthmap.cc task_grayscale.cc task_loadimg.cc
+CXXSRCS += task_3dpreview.cc
+CXXSRCS += task_align.cc task_denoise.cc task_depthmap.cc
+CXXSRCS += task_grayscale.cc task_loadimg.cc
 CXXSRCS += task_merge.cc task_reassign.cc task_saveimg.cc
-CXXSRCS += task_wavelet.cc task_wavelet_opencl.cc task_denoise.cc
+CXXSRCS += task_wavelet.cc task_wavelet_opencl.cc
 
 # Generate list of object file and dependency file names
 OBJS = $(CXXSRCS:%.cc=build/%.o)
