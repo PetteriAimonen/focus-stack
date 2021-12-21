@@ -56,7 +56,7 @@ int main(int argc, const char *argv[])
                  "  --depthmap=depthmap.png       Write a depth map image (default disabled)\n"
                  "  --3dview=3dview.png           Write a 3D preview image (default disabled)\n"
                  "  --save-steps                  Save intermediate images from processing steps\n"
-                 "  --jpgquality=95               Set quality for saving in JPG format, 0..100 (default 95)\n";
+                 "  --jpgquality=95               Quality for saving in JPG format (0-100, default 95)\n";
     std::cerr << "\n";
     std::cerr << "Image alignment options:\n"
                  "  --reference=0                 Set index of image used as alignment reference (default middle one)\n"
@@ -71,7 +71,9 @@ int main(int argc, const char *argv[])
                  "  --denoise=1.0                 Merged image denoise level (default 1.0)\n";
     std::cerr << "\n";
     std::cerr << "Depth map generation options:\n"
-                 "  --depthmap-smoothing=0.02     Smoothing level for depthmap output (default 0.02)\n"
+                 "  --depthmap-threshold=16       Threshold to accept depth points (0-255, default 16)\n"
+                 "  --depthmap-smooth-xy=16       Smoothing of depthmap in X and Y directions (default 16)\n"
+                 "  --depthmap-smooth-z=32        Smoothing of depthmap in Z direction (default 32)\n"
                  "  --3dviewpoint=x:y:z:zscale    Viewpoint for 3D view (default 0.5:1.0:0.5:2.0)\n";
     std::cerr << "\n";
     std::cerr << "Performance options:\n"
@@ -118,7 +120,8 @@ int main(int argc, const char *argv[])
   stack.set_denoise(std::stof(options.get_arg("--denoise", "1.0")));
 
   // Depth map generation options
-  stack.set_depthmap_smoothing(std::stof(options.get_arg("--depthmap-smoothing", "0.02")));
+  stack.set_depthmap_smooth_xy(std::stof(options.get_arg("--depthmap-smooth-xy", "16")));
+  stack.set_depthmap_smooth_z(std::stof(options.get_arg("--depthmap-smooth-z", "32")));
   stack.set_3dviewpoint(options.get_arg("--3dviewpoint", "0.5:1.0:0.5:2.0"));
 
   // Performance options

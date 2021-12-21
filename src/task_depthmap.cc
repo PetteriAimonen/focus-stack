@@ -2,107 +2,93 @@
 #include "task_wavelet.hh"
 #include "task_wavelet_templates.hh"
 #include "task_merge.hh"
+#include "histogrampercentile.hh"
+#include <opencv2/imgcodecs.hpp>
 
 using namespace focusstack;
 
-Task_Depthmap::Task_Depthmap(std::shared_ptr<Task_Merge> merged_wavelet, float smoothing, int max_depth)
+Task_Depthmap::Task_Depthmap(std::shared_ptr<ImgTask> input,
+                std::vector<std::shared_ptr<ImgTask> > neighbours,
+                int depth,
+                std::shared_ptr<Task_Depthmap> previous):
+  m_input(input), m_neighbours(neighbours), m_depth(depth), m_previous(previous)
 {
   m_filename = "depthmap.png";
-  m_name = "Construct depthmap";
-  m_merged_wavelet = merged_wavelet;
-  m_smoothing = smoothing;
-  m_max_depth = max_depth;
+  m_name = "Construct depthmap layer " + std::to_string(depth);
 
-  m_depends_on.push_back(merged_wavelet);
+  m_depends_on.push_back(m_input);
+  m_depends_on.insert(m_depends_on.begin(), m_neighbours.begin(), m_neighbours.end());
+
+  if (m_previous)
+    m_depends_on.push_back(m_previous);
 }
 
 void Task_Depthmap::task()
 {
-  // The depthmap from Task_Merge is in wavelet format.
-  // The absolute value of the merged wavelet image at each level tells the contrast.
-  // Take the depth reading from the level with the best contrast information.
-  cv::Mat depthmap = m_merged_wavelet->depthmap();
-  cv::Mat merged = m_merged_wavelet->img();
-  
-  // Precalculate squared absolute values of the wavelets.
-  cv::Mat absval(depthmap.rows, depthmap.cols, CV_32F);
-  Task_Merge::get_sq_absval(merged, absval);
+  cv::Mat input = m_input->img().clone();
+  int rows = input.rows;
+  int cols = input.cols;
 
-  cv::Mat result_depth;
-  cv::Mat result_absval;
-
-  bool first = true;
-  for (int level = Task_Wavelet::levels - 1; level >= 0; level--)
+  // Continue from previous layer or start afresh?
+  if (m_previous)
   {
-    // Calculate size of the wavelet subband regions
-    int w = depthmap.cols >> level;
-    int h = depthmap.rows >> level;
-    int w2 = w / 2;
-    int h2 = h / 2;
+    m_depthmap = m_previous->m_depthmap;
+    m_largest_delta = m_previous->m_largest_delta;
+    m_largest_focusmeasure = m_previous->m_largest_focusmeasure;
+  }
+  else
+  {
+    m_depthmap.create(rows, cols, CV_16UC1);
+    m_largest_delta.create(rows, cols, CV_32FC1);
+    m_largest_focusmeasure.create(rows, cols, CV_32FC1);
+    m_depthmap = 0;
+    m_largest_delta = 1;
+    m_largest_focusmeasure = -INFINITY;
+  }
+  m_previous.reset();
 
-    // First take the diagonal subband and scale absolute values by 4.
-    // This is because every lowpass step doubles the strength, and the
-    // absolute values are squared.
-    cv::Mat max_absval = absval(cv::Rect(w2, h2, w2, h2)) * 4.0f;
-    cv::Mat combined = depthmap(cv::Rect(w2, h2, w2, h2)).clone();
+  // Calculate delta between this layer and each of the neighbours.
+  // The layer at focus should have a highest difference in focus measure compared to neighbours.
+  for (auto neighbour: m_neighbours)
+  {
+    cv::Mat delta = input - neighbour->img();
+    cv::Mat mask = (delta > m_largest_delta);
 
-    // Then find the subband with the largest absolute value at each pixel.
-    cv::Rect subbands[2] = { {w2, 0, w2, h2}, {0, h2, w2, h2} };
-    for (cv::Rect subband: subbands)
-    {
-      cv::Mat subband_absval = absval(subband);
-      cv::Mat subband_depthmap = depthmap(subband);
-
-      cv::Mat mask = (subband_absval > max_absval);
-      subband_absval.copyTo(max_absval, mask);
-      subband_depthmap.copyTo(combined, mask);
-    }
-
-    // Combine depth information from other levels
-    if (first)
-    {
-      combined.convertTo(result_depth, CV_32F);
-      result_absval = max_absval;
-    }
-    else
-    {
-      // There are two thresholds: per-pixel and global.
-      // The larger the threshold, the lower weight will each update get.
-      float threshold = m_smoothing * cv::mean(result_absval).val[0];
-
-      for (int y = 0; y < h2; y++)
-      {
-        for (int x = 0; x < w2; x++)
-        {
-          float weight = max_absval.at<float>(y, x) / std::min(threshold, result_absval.at<float>(y, x));
-          if (weight > 1.0f)
-          {
-            result_depth.at<float>(y, x) = combined.at<uint16_t>(y, x);
-            result_absval.at<float>(y, x) = max_absval.at<float>(y, x);
-          }
-          else if (weight > 0.25f)
-          {
-            result_depth.at<float>(y, x) = combined.at<uint16_t>(y, x) * weight
-                                         + result_depth.at<float>(y, x) * (1 - weight);
-            result_absval.at<float>(y, x) = max_absval.at<float>(y, x) * weight
-                                         + result_absval.at<float>(y, x) * (1 - weight);
-          }
-          else
-          {
-            // Ignore small noise values
-          }
-        }
-      }
-    }
-
-    // Upscale by 2x for the next level.
-    cv::resize(result_depth, result_depth, cv::Size(w, h), 0, 0, cv::INTER_LINEAR);
-    cv::resize(result_absval, result_absval, cv::Size(w, h), 0, 0, cv::INTER_LINEAR);
-
-    first = false;
+    m_depthmap.setTo(m_depth, mask);
+    delta.copyTo(m_largest_delta, mask);
+    input.copyTo(m_largest_focusmeasure, mask);
   }
 
-  result_depth.convertTo(m_result, CV_8U, 256.0 / m_max_depth);
+  m_input.reset();
+  m_neighbours.clear();
+  m_result = m_depthmap;
+}
+
+cv::Mat Task_Depthmap::mask(int halo_radius) const
+{
+  cv::Mat alpha = m_largest_delta.clone();
+  if (halo_radius > 0)
+  {
+    // Subtract a dilated version of the delta map.
+    // This helps eliminate halos around sharp brightness transitions.
+    cv::Mat dilated;
+    int ksize = halo_radius * 2 + 1;
+    cv::dilate(alpha, dilated, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(ksize, ksize)));
+    alpha -= dilated * 0.5f;
+  }
+
+  // Values from Task_Focusmeasure are squared, sqrt() them now to get better dynamic range.
+  alpha.setTo(0, alpha < 0);
+  cv::sqrt(alpha, alpha);
+
+  // Select scaling levels using histogram and percentile points
+  HistogramPercentile hist(alpha, 1024);
+  float high = hist.percentile(0.99) * 2.0f;
+  float low = hist.percentile(0.25);
   
-  m_merged_wavelet.reset();
+  // Convert to 8-bit range
+  cv::Mat result;
+  float scale = 255.0f / (high - low);
+  alpha.convertTo(result, CV_8UC1, scale, -scale * low);
+  return result;
 }

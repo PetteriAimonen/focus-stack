@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <memory>
 #include <functional>
 #include <opencv2/core/core.hpp>
@@ -15,6 +16,7 @@ class Task_Grayscale;
 class Task_Merge;
 class Task_Align;
 class Task_Reassign_Map;
+class Task_Depthmap;
 class Worker;
 class ImgTask;
 class Logger;
@@ -48,7 +50,9 @@ public:
   std::string get_depthmap() const { return m_depthmap; }
   void set_3dview(std::string filename_3dview) { m_filename_3dview = filename_3dview; }
   std::string get_3dview() const { return m_filename_3dview; }
-  void set_depthmap_smoothing(float smoothing) { m_depthmap_smoothing = smoothing; }
+  void set_depthmap_threshold(int threshold) { m_depthmap_threshold = threshold; }
+  void set_depthmap_smooth_xy(int smoothing) { m_depthmap_smooth_xy = smoothing; }
+  void set_depthmap_smooth_z(int smoothing)  { m_depthmap_smooth_z = smoothing; }
   void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
   void set_align_only(bool align_only) { m_align_only = align_only; }
@@ -108,7 +112,9 @@ private:
   std::string m_output;
   std::string m_depthmap;
   std::string m_filename_3dview;
-  float m_depthmap_smoothing;
+  int m_depthmap_threshold;
+  int m_depthmap_smooth_xy;
+  int m_depthmap_smooth_z;
   bool m_disable_opencl;
   bool m_save_steps;
   bool m_align_only;
@@ -138,6 +144,12 @@ private:
   std::shared_ptr<Task_Grayscale> m_refgray; // Grayscaled reference image
   std::shared_ptr<Task_Merge> m_prev_merge;
 
+  // Depthmap building
+  std::vector<std::shared_ptr<ImgTask> > m_focusmeasures;
+  std::shared_ptr<Task_Depthmap> m_latest_depthmap;
+  std::unordered_set<int> m_depthmap_processed;
+
+  // Final image merging
   std::vector<std::shared_ptr<ImgTask> > m_merge_batch;
   std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_grays;
   std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_colors;
@@ -153,6 +165,7 @@ private:
   void schedule_alignment(int i);
   void schedule_single_image_processing(int i);
   void schedule_batch_merge();
+  void schedule_depthmap_processing(int i, bool is_final);
 
   // Release temporary images that are no longer needed
   void release_temporaries();

@@ -26,12 +26,13 @@ LDFLAGS = $(LDFLAGS) /link setargv.obj
 
 # List of source code files
 CXXSRCS = src/focusstack.cc src/worker.cc src/logger.cc src/options.cc \
-          src/task_3dpreview.cc \
-          src/task_align.cc src/task_denoise.cc src/task_depthmap.cc \
+					src/task_3dpreview.cc \
+					src/task_align.cc src/task_denoise.cc \
+					src/task_depthmap.cc src/task_depthmap_inpaint.cc src/task_focusmeasure.cc \
 					src/task_grayscale.cc src/task_loadimg.cc \
-          src/task_merge.cc src/task_reassign.cc src/task_saveimg.cc \
-          src/task_wavelet.cc src/task_wavelet_opencl.cc \
-          src/main.cc
+					src/task_merge.cc src/task_reassign.cc src/task_saveimg.cc \
+					src/task_wavelet.cc src/task_wavelet_opencl.cc \
+					src/main.cc
 
 all: build build/focus-stack.exe
 

@@ -96,7 +96,7 @@ void Task_3DPreview::task()
 
       if (cam_x >= 0 && cam_x < cols - 1)
       {
-        for (float d = depth; d <= depth_back; d += 0.9f / camera_z)
+        for (float d = depth; d <= depth_back; d += 0.9f / std::abs(camera_z))
         {
           float cam_y_d = cam_y - camera_z * (d - 128);
 

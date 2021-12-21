@@ -21,7 +21,11 @@ bool Task::ready_to_run()
 {
   for (const std::shared_ptr<Task> &task: m_depends_on)
   {
-    assert(task);
+    if (!task)
+    {
+      throw std::logic_error("Task " + m_name + " depends on nullptr");
+    }
+
     if (!task->is_completed())
     {
       return false;
@@ -46,7 +50,7 @@ void Task::run(std::shared_ptr<Logger> logger)
 
   if (m_done)
   {
-    throw std::logic_error("Task has already completed");
+    throw std::logic_error("Task " + m_name + " has already completed but run() called");
   }
 
   m_running = true;
