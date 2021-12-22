@@ -21,26 +21,44 @@ In most cases just passing all the images is enough:
 For advanced usage, see `--help` for list of all options:
 
     Usage: build/focus-stack [options] file1.jpg file2.jpg ...
-    Options:
+
+    Output file options:
       --output=output.jpg           Set output filename
-      --depthmap=depthmap.png       Write a depth map image also (default disabled)
-      --jpgquality=95               Set output (JPG) quality 0..100 (default 95)
+      --depthmap=depthmap.png       Write a depth map image (default disabled)
+      --3dview=3dview.png           Write a 3D preview image (default disabled)
+      --save-steps                  Save intermediate images from processing steps
+      --jpgquality=95               Quality for saving in JPG format (0-100, default 95)
+      --nocrop                      Save full image, including borders with partial data
+
+    Image alignment options:
       --reference=0                 Set index of image used as alignment reference (default middle one)
       --global-align                Align directly against reference (default with neighbour image)
       --full-resolution-align       Use full resolution images in alignment (default max 2048 px)
       --no-whitebalance             Don't attempt to correct white balance differences
       --no-contrast                 Don't attempt to correct contrast and exposure differences
+      --align-only                  Only align the input image stack and exit
+
+    Image merge options:
+      --consistency=2               Neighbour pixel consistency filter level 0..2 (default 2)
+      --denoise=1.0                 Merged image denoise level (default 1.0)
+
+    Depth map generation options:
+      --depthmap-threshold=16       Threshold to accept depth points (0-255, default 16)
+      --depthmap-smooth-xy=16       Smoothing of depthmap in X and Y directions (default 16)
+      --depthmap-smooth-z=32        Smoothing of depthmap in Z direction (default 32)
+      --halo-radius=20              Radius of halo effects to remove from depthmap
+      --3dviewpoint=x:y:z:zscale    Viewpoint for 3D view (default 0.5:1.0:0.5:2.0)
+
+    Performance options:
       --threads=2                   Select number of threads to use (default number of CPUs + 1)
       --batchsize=8                 Images per merge batch (default 8)
       --no-opencl                   Disable OpenCL GPU acceleration (default enabled)
-      --consistency=2               Set depth map consistency filter level 0..2 (default 2)
-      --denoise=1.0                 Set image denoise level (default 1.0)
-      --depthmap-smoothing=0.02     Smoothing level for depthmap output (default 0.02)
-      --save-steps                  Save intermediate images from processing steps
-      --align-only                  Only align the input image stack and exit
+
+    Information options:
       --verbose                     Verbose output from steps
       --version                     Show application version number
       --opencv-version              Show OpenCV library version and build info
+
 
 On Windows you can additionally just select the photos and drag them
 over `focus-stack.exe` to run with default settings.
