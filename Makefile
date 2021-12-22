@@ -50,7 +50,7 @@ run_unittests: build/unittests
 	build/unittests
 
 run_tests: build/focus-stack
-	build/focus-stack --output=build/pcb.jpg examples/pcb/pcb*.jpg
+	build/focus-stack --nocrop --output=build/pcb.jpg examples/pcb/pcb*.jpg
 	idiff -fail 0.1 -failpercent 1 -warnpercent 100 build/pcb.jpg examples/pcb/expected.jpg
 
 clean:
