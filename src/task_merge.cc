@@ -103,6 +103,8 @@ cv::Mat Task_Merge::get_source_img(int index)
     return m_prev_merge->img();
 }
 
+// Compare the horizontal / vertical / diagonal subbands at each level
+// and perform two-out-of-three voting filter.
 void Task_Merge::denoise_subbands()
 {
   for (int level = 0; level < Task_Wavelet::levels; level++)
@@ -152,6 +154,8 @@ void Task_Merge::denoise_subbands()
   }
 }
 
+// Compare the four neighbours of each pixel and if they all match
+// or are above/below, eliminate the center outlier.
 void Task_Merge::denoise_neighbours()
 {
   for (int y = 1; y < m_depthmap.rows - 1; y++)
