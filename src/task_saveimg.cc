@@ -42,7 +42,7 @@ void Task_SaveImg::task()
   if (!m_nocrop)
   {
     cv::Rect croparea = m_input->valid_area();
-    if (!croparea.empty() && croparea.size() != m_result.size())
+    if (croparea.width != 0 && croparea.height != 0 && croparea.size() != m_result.size())
     {
       m_logger->verbose("%s cropping from (%d, %d) to (%d, %d)\n",
         m_filename.c_str(), m_result.cols, m_result.rows, croparea.width, croparea.height);
