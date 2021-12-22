@@ -156,6 +156,7 @@ void Task_Reassign::task()
     }
   }
 
+  m_valid_area = m_merged->valid_area();
   m_map.reset();
   m_merged.reset();
 }

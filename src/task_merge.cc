@@ -70,6 +70,13 @@ void Task_Merge::task()
     denoise_neighbours();
   }
 
+  // Find out the intersection of input image valid areas.
+  m_valid_area = m_images.at(0)->valid_area();
+  for (int i = 1; i < m_images.size(); i++)
+  {
+    limit_valid_area(m_images.at(i)->valid_area());
+  }
+
   m_images.clear();
   m_index_map.clear();
   m_prev_merge.reset();

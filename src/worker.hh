@@ -59,9 +59,31 @@ public:
   ImgTask() {};
   ImgTask(cv::Mat result): m_result(result) {}
   virtual const cv::Mat &img() const { return m_result; }
+  cv::Rect valid_area() const {
+    if (m_valid_area.empty())
+    {
+      if (m_logger) m_logger->verbose("Valid area not defined for %s, using default.\n", m_filename.c_str());
+      return cv::Rect(0, 0, m_result.cols, m_result.rows);
+    }
+    else
+    {
+      return m_valid_area;
+    }
+  }
 
 protected:
   cv::Mat m_result;
+  cv::Rect m_valid_area;
+
+  // Limit valid area by intersection
+  void limit_valid_area(cv::Rect other)
+  {
+    int x0 = std::max(m_valid_area.x, other.x);
+    int y0 = std::max(m_valid_area.y, other.y);
+    int x1 = std::min(m_valid_area.x + m_valid_area.width, other.x + other.width);
+    int y1 = std::min(m_valid_area.y + m_valid_area.height, other.y + other.height);
+    m_valid_area = cv::Rect(x0, y0, x1 - x0, y1 - y0);
+  }
 };
 
 // Work queue class that distributes tasks to threads.

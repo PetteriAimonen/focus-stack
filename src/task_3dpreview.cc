@@ -42,6 +42,7 @@ void Task_3DPreview::task()
   int cols = merged.cols;
   m_result.create(rows, cols, CV_8UC4);
   m_result = 0;
+  m_valid_area = cv::Rect(0, 0, cols, rows);
 
   // Calculate camera plane base vectors
   cv::Vec3f view_vector = v3f_normalize(m_view_vector);

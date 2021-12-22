@@ -31,6 +31,7 @@ void Task_LoadImg::task()
   }
 
   m_orig_size = m_result.size();
+  m_valid_area = cv::Rect(0, 0, m_result.cols, m_result.rows);
 
   // Expand image width & height to multiple of 8 as required by wavelet decomposition
   int factor = (1 << Task_Wavelet::levels);
@@ -48,5 +49,6 @@ void Task_LoadImg::task()
                        cv::BORDER_REFLECT);
 
     m_result = tmp;
+    m_valid_area = cv::Rect(cv::Point(expand_x / 2, expand_y / 2), m_orig_size);
   }
 }

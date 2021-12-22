@@ -55,6 +55,7 @@ public:
   void set_depthmap_smooth_z(int smoothing)  { m_depthmap_smooth_z = smoothing; }
   void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
+  void set_nocrop(bool nocrop) { m_nocrop = nocrop; }
   void set_align_only(bool align_only) { m_align_only = align_only; }
   void set_verbose(bool verbose);
   void set_threads(int threads) { m_threads = threads; }
@@ -117,6 +118,7 @@ private:
   int m_depthmap_smooth_z;
   bool m_disable_opencl;
   bool m_save_steps;
+  bool m_nocrop;
   bool m_align_only;
   std::shared_ptr<Logger> m_logger;
   align_flags_t m_align_flags;

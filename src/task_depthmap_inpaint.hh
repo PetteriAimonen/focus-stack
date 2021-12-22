@@ -18,10 +18,10 @@ private:
   virtual void task();
 
   std::shared_ptr<Task_Depthmap> m_depthmap;
-  bool m_save_steps;
   int m_threshold;
   int m_smooth_xy;
   int m_smooth_z;
+  bool m_save_steps;
 };
 
 

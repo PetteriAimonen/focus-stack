@@ -56,7 +56,8 @@ int main(int argc, const char *argv[])
                  "  --depthmap=depthmap.png       Write a depth map image (default disabled)\n"
                  "  --3dview=3dview.png           Write a 3D preview image (default disabled)\n"
                  "  --save-steps                  Save intermediate images from processing steps\n"
-                 "  --jpgquality=95               Quality for saving in JPG format (0-100, default 95)\n";
+                 "  --jpgquality=95               Quality for saving in JPG format (0-100, default 95)\n"
+                 "  --nocrop                      Save full image, including borders with partial data\n";
     std::cerr << "\n";
     std::cerr << "Image alignment options:\n"
                  "  --reference=0                 Set index of image used as alignment reference (default middle one)\n"
@@ -95,6 +96,7 @@ int main(int argc, const char *argv[])
   stack.set_3dview(options.get_arg("--3dview", ""));
   stack.set_jpgquality(std::stoi(options.get_arg("--jpgquality", "95")));
   stack.set_save_steps(options.has_flag("--save-steps"));
+  stack.set_nocrop(options.has_flag("--nocrop"));
 
   // Image alignment options
   int flags = FocusStack::ALIGN_DEFAULT;

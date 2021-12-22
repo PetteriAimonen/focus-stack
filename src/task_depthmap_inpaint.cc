@@ -7,7 +7,9 @@
 using namespace focusstack;
 
 Task_Depthmap_Inpaint::Task_Depthmap_Inpaint(std::shared_ptr<Task_Depthmap> depthmap, int threshold, int smooth_xy, int smooth_z, bool save_steps):
-  m_depthmap(depthmap), m_threshold(threshold), m_smooth_xy(smooth_xy), m_smooth_z(smooth_z), m_save_steps(save_steps)
+  m_depthmap(depthmap), m_threshold(threshold),
+  m_smooth_xy(smooth_xy), m_smooth_z(smooth_z),
+  m_save_steps(save_steps)
 {
   m_filename = "filtered_depthmap.png";
   m_name = "Inpaint depthmap";
@@ -17,8 +19,14 @@ Task_Depthmap_Inpaint::Task_Depthmap_Inpaint(std::shared_ptr<Task_Depthmap> dept
 
 void Task_Depthmap_Inpaint::task()
 {
-  cv::Mat depth = m_depthmap->depthmap().clone();
+  cv::Mat depth = m_depthmap->depthmap();
   cv::Mat mask = m_depthmap->mask(20);
+
+  // Make editable copy and set to zero outside the valid area
+  m_valid_area = m_depthmap->valid_area();
+  cv::Mat tmp(depth.size(), depth.type(), cv::Scalar(0));
+  depth(m_valid_area).copyTo(tmp(m_valid_area));
+  depth = tmp;
 
   m_depthmap.reset();
 

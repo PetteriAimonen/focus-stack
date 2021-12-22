@@ -23,7 +23,6 @@ public:
              std::shared_ptr<ImgTask> srcgray, std::shared_ptr<ImgTask> srccolor,
              std::shared_ptr<Task_Align> initial_guess = nullptr,
              std::shared_ptr<Task_Align> stacked_transform = nullptr,
-             std::shared_ptr<Task_LoadImg> cropinfo = nullptr,
              FocusStack::align_flags_t flags = FocusStack::ALIGN_DEFAULT
             );
 
@@ -36,6 +35,8 @@ private:
 
   void apply_contrast_whitebalance(cv::Mat &img);
   void apply_transform(const cv::Mat &src, cv::Mat &dst, bool inverse);
+  cv::Point2f transform_point(cv::Point2f point);
+  void compute_valid_area();
 
   std::shared_ptr<ImgTask> m_refgray;
   std::shared_ptr<ImgTask> m_refcolor;
@@ -43,7 +44,6 @@ private:
   std::shared_ptr<ImgTask> m_srccolor;
   std::shared_ptr<Task_Align> m_initial_guess;
   std::shared_ptr<Task_Align> m_stacked_transform;
-  std::shared_ptr<Task_LoadImg> m_cropinfo;
 
   FocusStack::align_flags_t m_flags;
   cv::Rect m_roi;

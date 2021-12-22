@@ -28,6 +28,7 @@ void Task_Depthmap::task()
   cv::Mat input = m_input->img().clone();
   int rows = input.rows;
   int cols = input.cols;
+  m_valid_area = m_input->valid_area();
 
   // Continue from previous layer or start afresh?
   if (m_previous)
@@ -35,6 +36,7 @@ void Task_Depthmap::task()
     m_depthmap = m_previous->m_depthmap;
     m_largest_delta = m_previous->m_largest_delta;
     m_largest_focusmeasure = m_previous->m_largest_focusmeasure;
+    limit_valid_area(m_previous->valid_area());
   }
   else
   {
@@ -57,6 +59,8 @@ void Task_Depthmap::task()
     m_depthmap.setTo(m_depth, mask);
     delta.copyTo(m_largest_delta, mask);
     input.copyTo(m_largest_focusmeasure, mask);
+
+    limit_valid_area(neighbour->valid_area());
   }
 
   m_input.reset();

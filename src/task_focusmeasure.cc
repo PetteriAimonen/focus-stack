@@ -22,6 +22,7 @@ void Task_FocusMeasure::task()
     const cv::Mat &input = m_input->img();
     int rows = input.rows;
     int cols = input.cols;
+    m_valid_area = m_input->valid_area();
 
     // Calculate squared gradient magnitude by calculating
     // horizontal and vertical Sobel operator.

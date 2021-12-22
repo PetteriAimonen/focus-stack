@@ -38,6 +38,8 @@ void Task_Grayscale::task()
   m_result += channels[1] * m_weights.at<float>(1);
   m_result += channels[2] * m_weights.at<float>(2);
 
+  m_valid_area = m_input->valid_area();
+
   m_input.reset();
   m_reference.reset();
 }

@@ -301,7 +301,7 @@ void FocusStack::schedule_queue_processing()
     if (m_save_steps)
     {
       m_worker->add(std::make_shared<Task_SaveImg>("grayscale_" + m_grayscale_imgs.at(i)->basename(),
-                                                   m_grayscale_imgs.at(i), m_jpgquality));
+                                                   m_grayscale_imgs.at(i), m_jpgquality, true));
     }
 
     schedule_alignment(i);
@@ -309,14 +309,15 @@ void FocusStack::schedule_queue_processing()
     if (m_align_only)
     {
       m_worker->add(std::make_shared<Task_SaveImg>(m_output + m_input_images.at(i)->basename(),
-                                                   m_aligned_imgs.at(i), m_jpgquality, m_refcolor));
+                                                   m_aligned_imgs.at(i), m_jpgquality, true));
     }
     else
     {
       if (m_save_steps)
       {
         // Task_Align adds "aligned_" prefix to the filename, so just use that name for saving also.
-        m_worker->add(std::make_shared<Task_SaveImg>(m_aligned_imgs.at(i)->filename(), m_aligned_imgs.at(i), m_jpgquality));
+        m_worker->add(std::make_shared<Task_SaveImg>(m_aligned_imgs.at(i)->filename(),
+                                                     m_aligned_imgs.at(i), m_jpgquality, true));
       }
 
       schedule_single_image_processing(i);
@@ -354,7 +355,6 @@ void FocusStack::schedule_alignment(int i)
                                               m_input_images.at(i),
                                               m_aligned_imgs.at(neighbour),
                                               nullptr,
-                                              m_input_images.at(i),
                                               m_align_flags);
     }
     else
@@ -371,7 +371,6 @@ void FocusStack::schedule_alignment(int i)
                                               m_input_images.at(i),
                                               nullptr,
                                               m_aligned_imgs.at(neighbour),
-                                              m_input_images.at(i),
                                               m_align_flags);
     }
   }
@@ -438,7 +437,8 @@ void FocusStack::schedule_depthmap_processing(int i, bool is_final)
 
       if (m_save_steps)
       {
-        m_worker->add(std::make_shared<Task_SaveImg>(m_focusmeasures.at(i)->filename(), m_focusmeasures.at(i), m_jpgquality, m_refcolor));
+        m_worker->add(std::make_shared<Task_SaveImg>(m_focusmeasures.at(i)->filename(),
+                              m_focusmeasures.at(i), m_jpgquality, true));
       }
     }
 
@@ -537,7 +537,7 @@ void FocusStack::schedule_final_merge()
       m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_save_steps);
     m_worker->add(inpainted);
 
-    m_result_depthmap = std::make_shared<Task_SaveImg>(m_depthmap, inpainted, m_jpgquality, m_refcolor);
+    m_result_depthmap = std::make_shared<Task_SaveImg>(m_depthmap, inpainted, m_jpgquality, m_nocrop);
     m_worker->add(m_result_depthmap);
   }
 
@@ -563,7 +563,7 @@ void FocusStack::schedule_final_merge()
 
   if (m_save_steps)
   {
-    m_worker->add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray, m_jpgquality));
+    m_worker->add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray, m_jpgquality, m_nocrop));
   }
 
   // Reassign pixel values
@@ -571,7 +571,7 @@ void FocusStack::schedule_final_merge()
   m_worker->add(colored);
 
   // Save result image
-  m_result_image = std::make_shared<Task_SaveImg>(m_output, colored, m_jpgquality, m_refcolor);
+  m_result_image = std::make_shared<Task_SaveImg>(m_output, colored, m_jpgquality, m_nocrop);
   m_worker->add(m_result_image);
 
   // Save 3D preview
@@ -581,7 +581,7 @@ void FocusStack::schedule_final_merge()
       m_result_depthmap, nullptr, m_result_image,
       m_3dviewpoint, m_3dzscale);
     m_worker->add(preview);
-    m_result_3dview = std::make_shared<Task_SaveImg>(m_filename_3dview, preview, m_jpgquality);
+    m_result_3dview = std::make_shared<Task_SaveImg>(m_filename_3dview, preview, m_jpgquality, m_nocrop);
     m_worker->add(m_result_3dview);
   }
 }

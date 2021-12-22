@@ -71,6 +71,7 @@ void Task_Denoise::task()
     }
   }
 
+  m_valid_area = m_input->valid_area();
   m_input.reset();
 }
 

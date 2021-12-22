@@ -4,7 +4,7 @@
 
 using namespace focusstack;
 
-Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, int jpgquality, std::shared_ptr<Task_LoadImg> origsize)
+Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, int jpgquality, bool nocrop)
 {
   m_filename = filename;
 
@@ -18,14 +18,9 @@ Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input,
   }
 
   m_jpgquality = jpgquality;
+  m_nocrop= nocrop;
   m_input = input;
   m_depends_on.push_back(input);
-
-  m_origsize = origsize;
-  if (m_origsize)
-  {
-    m_depends_on.push_back(m_origsize);
-  }
 }
 
 void Task_SaveImg::task()
@@ -44,22 +39,23 @@ void Task_SaveImg::task()
     cv::merge(channels, 3, m_result);
   }
 
-  if (m_origsize)
+  if (!m_nocrop)
   {
-    // Crop to original size
-    cv::Size orig_size = m_origsize->orig_size();
-    cv::Mat tmp(orig_size, m_result.type());
+    cv::Rect croparea = m_input->valid_area();
+    if (!croparea.empty() && croparea.size() != m_result.size())
+    {
+      m_logger->verbose("%s cropping from (%d, %d) to (%d, %d)\n",
+        m_filename.c_str(), m_result.cols, m_result.rows, croparea.width, croparea.height);
 
-    int crop_x = m_result.cols - orig_size.width;
-    int crop_y = m_result.rows - orig_size.height;
-
-    m_result(cv::Rect(crop_x / 2, crop_y / 2, orig_size.width, orig_size.height)).copyTo(tmp);
-    m_result = tmp;
+      // Crop to original size
+      cv::Mat tmp(croparea.size(), m_result.type());
+      m_result(croparea).copyTo(tmp);
+      m_result = tmp;
+    }
   }
 
-  // Input images can be released now
+  // Input image can be released now
   m_input.reset();
-  m_origsize.reset();
 
   if (m_filename != "" && m_filename != ":memory:")
   {
