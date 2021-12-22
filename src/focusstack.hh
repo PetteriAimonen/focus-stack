@@ -53,6 +53,7 @@ public:
   void set_depthmap_threshold(int threshold) { m_depthmap_threshold = threshold; }
   void set_depthmap_smooth_xy(int smoothing) { m_depthmap_smooth_xy = smoothing; }
   void set_depthmap_smooth_z(int smoothing)  { m_depthmap_smooth_z = smoothing; }
+  void set_halo_radius(int halo_radius) { m_halo_radius = halo_radius; }
   void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
   void set_nocrop(bool nocrop) { m_nocrop = nocrop; }
@@ -116,6 +117,7 @@ private:
   int m_depthmap_threshold;
   int m_depthmap_smooth_xy;
   int m_depthmap_smooth_z;
+  int m_halo_radius;
   bool m_disable_opencl;
   bool m_save_steps;
   bool m_nocrop;

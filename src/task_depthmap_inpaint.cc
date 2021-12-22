@@ -6,9 +6,11 @@
 
 using namespace focusstack;
 
-Task_Depthmap_Inpaint::Task_Depthmap_Inpaint(std::shared_ptr<Task_Depthmap> depthmap, int threshold, int smooth_xy, int smooth_z, bool save_steps):
+Task_Depthmap_Inpaint::Task_Depthmap_Inpaint(std::shared_ptr<Task_Depthmap> depthmap,
+    int threshold, int smooth_xy, int smooth_z, int halo_radius, bool save_steps):
   m_depthmap(depthmap), m_threshold(threshold),
   m_smooth_xy(smooth_xy), m_smooth_z(smooth_z),
+  m_halo_radius(halo_radius),
   m_save_steps(save_steps)
 {
   m_filename = "filtered_depthmap.png";
@@ -19,14 +21,14 @@ Task_Depthmap_Inpaint::Task_Depthmap_Inpaint(std::shared_ptr<Task_Depthmap> dept
 
 void Task_Depthmap_Inpaint::task()
 {
-  cv::Mat depth = m_depthmap->depthmap();
-  cv::Mat mask = m_depthmap->mask(20);
+  cv::Mat depth = m_depthmap->depthmap().clone();
+  cv::Mat mask = m_depthmap->mask(m_halo_radius);
 
-  // Make editable copy and set to zero outside the valid area
+  // Set mask to zero outside the valid area
   m_valid_area = m_depthmap->valid_area();
-  cv::Mat tmp(depth.size(), depth.type(), cv::Scalar(0));
-  depth(m_valid_area).copyTo(tmp(m_valid_area));
-  depth = tmp;
+  cv::Mat tmp(mask.size(), mask.type(), cv::Scalar(0));
+  mask(m_valid_area).copyTo(tmp(m_valid_area));
+  mask = tmp;
 
   m_depthmap.reset();
 
@@ -46,8 +48,6 @@ void Task_Depthmap_Inpaint::task()
   }
   depth.convertTo(depth, CV_8UC1, scaler, offset);
 
-  // cv::imwrite("depth_mask.png", mask);
-
   depth.setTo(0, mask < m_threshold);
 
   if (m_save_steps)
@@ -57,6 +57,11 @@ void Task_Depthmap_Inpaint::task()
 
   // Fill in any zero areas by averaging from closest points
   depth = RadialFilter::average(depth);
+
+  if (m_save_steps)
+  {
+    cv::imwrite("depth_before_filter.png", depth);
+  }
 
   // Some final averaging to smooth the result and remove outliers
   int medsize = 2 * (m_smooth_xy / 8) + 3;

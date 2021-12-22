@@ -11,7 +11,7 @@ class Task_Depthmap_Inpaint: public ImgTask
 {
 public:
   Task_Depthmap_Inpaint(std::shared_ptr<Task_Depthmap> depthmap,
-    int threshold = 16, int smooth_xy = 32, int smooth_z = 64,
+    int threshold = 16, int smooth_xy = 32, int smooth_z = 64, int halo_radius = 30,
     bool save_steps = false);
 
 private:
@@ -21,6 +21,7 @@ private:
   int m_threshold;
   int m_smooth_xy;
   int m_smooth_z;
+  int m_halo_radius;
   bool m_save_steps;
 };
 

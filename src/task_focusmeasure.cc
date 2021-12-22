@@ -3,7 +3,7 @@
 
 using namespace focusstack;
 
-Task_FocusMeasure::Task_FocusMeasure(std::shared_ptr<ImgTask> input, float radius)
+Task_FocusMeasure::Task_FocusMeasure(std::shared_ptr<ImgTask> input, float radius, float threshold)
 {
     m_filename = "focusmeasure_" + input->basename();
     m_name = "Focus measure for " + input->basename();
@@ -12,6 +12,7 @@ Task_FocusMeasure::Task_FocusMeasure(std::shared_ptr<ImgTask> input, float radiu
     m_input = input;
     m_depends_on.push_back(input);
     m_radius = radius;
+    m_threshold = threshold;
 }
 
 void Task_FocusMeasure::task()
@@ -34,6 +35,8 @@ void Task_FocusMeasure::task()
     cv::accumulateSquare(sobel, magnitude);
     sobel.release();
     m_input.reset();
+
+    magnitude.setTo(0, magnitude < m_threshold);
 
     if (m_radius > 0)
     {

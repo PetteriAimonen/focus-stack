@@ -75,6 +75,7 @@ int main(int argc, const char *argv[])
                  "  --depthmap-threshold=16       Threshold to accept depth points (0-255, default 16)\n"
                  "  --depthmap-smooth-xy=16       Smoothing of depthmap in X and Y directions (default 16)\n"
                  "  --depthmap-smooth-z=32        Smoothing of depthmap in Z direction (default 32)\n"
+                 "  --halo-radius=20              Radius of halo effects to remove from depthmap\n"
                  "  --3dviewpoint=x:y:z:zscale    Viewpoint for 3D view (default 0.5:1.0:0.5:2.0)\n";
     std::cerr << "\n";
     std::cerr << "Performance options:\n"
@@ -124,6 +125,8 @@ int main(int argc, const char *argv[])
   // Depth map generation options
   stack.set_depthmap_smooth_xy(std::stof(options.get_arg("--depthmap-smooth-xy", "16")));
   stack.set_depthmap_smooth_z(std::stof(options.get_arg("--depthmap-smooth-z", "32")));
+  stack.set_depthmap_threshold(std::stoi(options.get_arg("--depthmap-threshold", "16")));
+  stack.set_halo_radius(std::stof(options.get_arg("--halo-radius", "20")));
   stack.set_3dviewpoint(options.get_arg("--3dviewpoint", "0.5:1.0:0.5:2.0"));
 
   // Performance options

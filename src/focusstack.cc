@@ -534,7 +534,7 @@ void FocusStack::schedule_final_merge()
     schedule_depthmap_processing(-1, true);
 
     std::shared_ptr<ImgTask> inpainted = std::make_shared<Task_Depthmap_Inpaint>(
-      m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_save_steps);
+      m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_halo_radius, m_save_steps);
     m_worker->add(inpainted);
 
     m_result_depthmap = std::make_shared<Task_SaveImg>(m_depthmap, inpainted, m_jpgquality, m_nocrop);
