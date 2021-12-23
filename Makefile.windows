@@ -8,7 +8,7 @@
 # Finally, type nmake -f Makefile.windows
 
 CXX = cl
-CXXFLAGS = /O2 /EHsc /W2
+CXXFLAGS = /O2 /EHsc /W2 /D_USE_MATH_DEFINES
 
 # Path to OpenCV, you may need to edit these if your version is different
 OPENCV_PATH = ..\opencv\build
