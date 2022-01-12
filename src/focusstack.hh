@@ -110,6 +110,10 @@ public:
   const cv::Mat &get_result_depthmap() const;
   const cv::Mat &get_result_3dview() const;
 
+  // Regenerate some of the results with altered settings
+  void regenerate_depthmap();
+  void regenerate_3dview();
+
 private:
   std::vector<std::string> m_inputs;
   std::string m_output;

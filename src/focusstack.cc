@@ -175,7 +175,6 @@ bool FocusStack::wait_done(bool &status, std::string &errmsg, int timeout_ms)
     {
       errmsg = m_worker->error();
     }
-    m_worker.reset();
 
     return true;
   }
@@ -195,6 +194,9 @@ void FocusStack::reset(bool keep_results)
   m_refcolor.reset();
   m_refgray.reset();
   m_prev_merge.reset();
+  m_focusmeasures.clear();
+  m_latest_depthmap.reset();
+  m_depthmap_processed.clear();
   m_merge_batch.clear();
   m_reassign_batch_grays.clear();
   m_reassign_batch_colors.clear();
@@ -205,6 +207,7 @@ void FocusStack::reset(bool keep_results)
     m_worker.reset();
     m_result_image.reset();
     m_result_depthmap.reset();
+    m_result_fg_mask.reset();
     m_result_3dview.reset();
   }
 }
@@ -528,9 +531,7 @@ void FocusStack::schedule_final_merge()
   {
     schedule_depthmap_processing(-1, true);
 
-    m_result_depthmap = std::make_shared<Task_Depthmap_Inpaint>(
-      m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_halo_radius, m_save_steps);
-    m_worker->add(m_result_depthmap);
+    regenerate_depthmap();
   }
 
   // Merge the final batch of images
@@ -588,13 +589,25 @@ void FocusStack::schedule_final_merge()
   // Save 3D preview
   if (m_filename_3dview != "")
   {
-    m_result_3dview = std::make_shared<Task_3DPreview>(
-      m_result_depthmap, m_result_fg_mask, m_result_image,
-      m_3dviewpoint, m_3dzscale);
-    m_worker->add(m_result_3dview);
+    regenerate_3dview();
     m_worker->add(std::make_shared<Task_SaveImg>(m_filename_3dview, m_result_3dview, m_jpgquality, m_nocrop));
   }
 
   // Save result image
   m_worker->add(std::make_shared<Task_SaveImg>(m_output, m_result_image, m_result_fg_mask, m_jpgquality, m_nocrop));
+}
+
+void FocusStack::regenerate_depthmap()
+{
+  m_result_depthmap = std::make_shared<Task_Depthmap_Inpaint>(
+      m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_halo_radius, m_save_steps);
+  m_worker->add(m_result_depthmap);
+}
+
+void FocusStack::regenerate_3dview()
+{
+  m_result_3dview = std::make_shared<Task_3DPreview>(
+      m_result_depthmap, m_result_fg_mask, m_result_image,
+      m_3dviewpoint, m_3dzscale);
+  m_worker->add(m_result_3dview);
 }
