@@ -296,6 +296,15 @@ void Worker::worker(int thread_idx)
         m_running.erase(task);
       }
 
+      if (m_running.size())
+      {
+        // Report one of the remaining running tasks
+        if (m_logger->get_level() > Logger::LOG_VERBOSE)
+        {
+          m_logger->progress("[%3d/%3d] %-40.40s\r", m_tasks_started, m_total_tasks, (*m_running.begin())->name().c_str());
+        }
+      }
+
       // Wake all threads to re-check dependencies
       m_wakeup.notify_all();
     }
