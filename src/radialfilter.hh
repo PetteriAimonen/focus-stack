@@ -14,11 +14,16 @@ class RadialFilter
 {
 public:
   // Average all neighbour pixels for each output pixel.
+  // Optionally segment labels can be specified to average only inside same segment.
   static cv::Mat average(cv::Mat input, int raycount = 64);
 
-  // Connect two pixels with a line if they are close together
-  // Result matrix is a count of lines crossing each output point.
-  static cv::Mat connect(cv::Mat input, int distance_limit, int raycount = 64);
+  // Connect two pixels with a line if they are close together in space and value.
+  // If value limit is > 255, result matrix is a count of lines crossing each output point.
+  // If value limit is smaller, result matrix is connected with the color of the points.
+  static cv::Mat connect(cv::Mat input, int distance_limit, int value_limit = 256, int raycount = 64);
+
+  // Connect two pixels with a line indicating the blob density
+  static cv::Mat blobdistance(cv::Mat input, int raycount = 64);
 
   template <typename F>
   static inline void walk_at_angle(F callback, cv::Size imgsize, float angle);

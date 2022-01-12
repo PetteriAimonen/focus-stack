@@ -54,6 +54,7 @@ public:
   void set_depthmap_smooth_xy(int smoothing) { m_depthmap_smooth_xy = smoothing; }
   void set_depthmap_smooth_z(int smoothing)  { m_depthmap_smooth_z = smoothing; }
   void set_halo_radius(int halo_radius) { m_halo_radius = halo_radius; }
+  void set_remove_bg(int remove_bg) { m_remove_bg = remove_bg; }
   void set_disable_opencl(bool disable) { m_disable_opencl = disable; }
   void set_save_steps(bool save) { m_save_steps = save; }
   void set_nocrop(bool nocrop) { m_nocrop = nocrop; }
@@ -118,6 +119,7 @@ private:
   int m_depthmap_smooth_xy;
   int m_depthmap_smooth_z;
   int m_halo_radius;
+  int m_remove_bg;
   bool m_disable_opencl;
   bool m_save_steps;
   bool m_nocrop;
@@ -162,6 +164,7 @@ private:
   // Result variables
   std::shared_ptr<ImgTask> m_result_image;
   std::shared_ptr<ImgTask> m_result_depthmap;
+  std::shared_ptr<ImgTask> m_result_fg_mask;
   std::shared_ptr<ImgTask> m_result_3dview;
 
   // Queue worker tasks for new images in m_input_images

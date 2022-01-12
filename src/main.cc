@@ -72,11 +72,12 @@ int main(int argc, const char *argv[])
                  "  --denoise=1.0                 Merged image denoise level (default 1.0)\n";
     std::cerr << "\n";
     std::cerr << "Depth map generation options:\n"
-                 "  --depthmap-threshold=16       Threshold to accept depth points (0-255, default 16)\n"
-                 "  --depthmap-smooth-xy=16       Smoothing of depthmap in X and Y directions (default 16)\n"
-                 "  --depthmap-smooth-z=32        Smoothing of depthmap in Z direction (default 32)\n"
+                 "  --depthmap-threshold=10       Threshold to accept depth points (0-255, default 10)\n"
+                 "  --depthmap-smooth-xy=20       Smoothing of depthmap in X and Y directions (default 20)\n"
+                 "  --depthmap-smooth-z=40        Smoothing of depthmap in Z direction (default 40)\n"
+                 "  --remove-bg=0                 Positive value removes black background, negative white\n"
                  "  --halo-radius=20              Radius of halo effects to remove from depthmap\n"
-                 "  --3dviewpoint=x:y:z:zscale    Viewpoint for 3D view (default 0.5:1.0:0.5:2.0)\n";
+                 "  --3dviewpoint=x:y:z:zscale    Viewpoint for 3D view (default 1:1:1:2)\n";
     std::cerr << "\n";
     std::cerr << "Performance options:\n"
                  "  --threads=2                   Select number of threads to use (default number of CPUs + 1)\n"
@@ -123,11 +124,12 @@ int main(int argc, const char *argv[])
   stack.set_denoise(std::stof(options.get_arg("--denoise", "1.0")));
 
   // Depth map generation options
-  stack.set_depthmap_smooth_xy(std::stof(options.get_arg("--depthmap-smooth-xy", "16")));
-  stack.set_depthmap_smooth_z(std::stof(options.get_arg("--depthmap-smooth-z", "32")));
-  stack.set_depthmap_threshold(std::stoi(options.get_arg("--depthmap-threshold", "16")));
+  stack.set_depthmap_smooth_xy(std::stof(options.get_arg("--depthmap-smooth-xy", "20")));
+  stack.set_depthmap_smooth_z(std::stof(options.get_arg("--depthmap-smooth-z", "40")));
+  stack.set_depthmap_threshold(std::stoi(options.get_arg("--depthmap-threshold", "10")));
   stack.set_halo_radius(std::stof(options.get_arg("--halo-radius", "20")));
-  stack.set_3dviewpoint(options.get_arg("--3dviewpoint", "0.5:1.0:0.5:2.0"));
+  stack.set_remove_bg(std::stoi(options.get_arg("--remove-bg", "0")));
+  stack.set_3dviewpoint(options.get_arg("--3dviewpoint", "1:1:1:2"));
 
   // Performance options
   if (options.has_flag("--threads"))

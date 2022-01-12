@@ -2,6 +2,7 @@
 
 #pragma once
 #include <opencv2/core.hpp>
+#include <vector>
 
 namespace focusstack {
 
@@ -19,6 +20,13 @@ public:
 
   // Find value below which given ratio of pixels are. Ratio is 0 to 1.
   float percentile(float ratio) const;
+
+  // Calculate ratio of pixels that are brighter than threshold
+  float brighter_than(float threshold) const;
+
+  // Find local minimums of the histogram.
+  // These can be used as segmentation points
+  std::vector<int> local_minimums() const;
 
 private:
   cv::Mat m_histogram;

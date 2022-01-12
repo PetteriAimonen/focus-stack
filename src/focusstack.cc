@@ -13,6 +13,7 @@
 #include "task_focusmeasure.hh"
 #include "task_depthmap.hh"
 #include "task_depthmap_inpaint.hh"
+#include "task_background_removal.hh"
 #include "task_3dpreview.hh"
 #include <thread>
 #include <opencv2/core/ocl.hpp>
@@ -522,23 +523,20 @@ void FocusStack::schedule_final_merge()
 {
   if (m_align_only) return;
 
-  // Merge the final batch of images
-  if (m_merge_batch.size() > 0 || m_reassign_batch_colors.size() > 0)
-  {
-    schedule_batch_merge();
-  }
-
-  // Save depth map if requested
+  // Generate depth map if requested
   if (m_depthmap != "" || m_filename_3dview != "")
   {
     schedule_depthmap_processing(-1, true);
 
-    std::shared_ptr<ImgTask> inpainted = std::make_shared<Task_Depthmap_Inpaint>(
+    m_result_depthmap = std::make_shared<Task_Depthmap_Inpaint>(
       m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_halo_radius, m_save_steps);
-    m_worker->add(inpainted);
-
-    m_result_depthmap = std::make_shared<Task_SaveImg>(m_depthmap, inpainted, m_jpgquality, m_nocrop);
     m_worker->add(m_result_depthmap);
+  }
+
+  // Merge the final batch of images
+  if (m_merge_batch.size() > 0 || m_reassign_batch_colors.size() > 0)
+  {
+    schedule_batch_merge();
   }
 
   // Denoise merged image
@@ -566,22 +564,37 @@ void FocusStack::schedule_final_merge()
     m_worker->add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray, m_jpgquality, m_nocrop));
   }
 
-  // Reassign pixel values
-  std::shared_ptr<Task_Reassign> colored = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
-  m_worker->add(colored);
+  if (m_remove_bg != 0)
+  {
+    m_result_fg_mask = std::make_shared<Task_BackgroundRemoval>(merged_gray, m_remove_bg);
+    m_worker->add(m_result_fg_mask);
 
-  // Save result image
-  m_result_image = std::make_shared<Task_SaveImg>(m_output, colored, m_jpgquality, m_nocrop);
+    if (m_save_steps)
+    {
+      m_worker->add(std::make_shared<Task_SaveImg>("fg_mask.png", m_result_fg_mask, m_jpgquality, m_nocrop));
+    }
+  }
+
+  // Save depthmap
+  if (m_depthmap != "")
+  {
+    m_worker->add(std::make_shared<Task_SaveImg>(m_depthmap, m_result_depthmap, m_result_fg_mask, m_jpgquality, m_nocrop));
+  }
+
+  // Reassign pixel values
+  m_result_image = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
   m_worker->add(m_result_image);
 
   // Save 3D preview
   if (m_filename_3dview != "")
   {
-    std::shared_ptr<Task_3DPreview> preview = std::make_shared<Task_3DPreview>(
-      m_result_depthmap, nullptr, m_result_image,
+    m_result_3dview = std::make_shared<Task_3DPreview>(
+      m_result_depthmap, m_result_fg_mask, m_result_image,
       m_3dviewpoint, m_3dzscale);
-    m_worker->add(preview);
-    m_result_3dview = std::make_shared<Task_SaveImg>(m_filename_3dview, preview, m_jpgquality, m_nocrop);
     m_worker->add(m_result_3dview);
+    m_worker->add(std::make_shared<Task_SaveImg>(m_filename_3dview, m_result_3dview, m_jpgquality, m_nocrop));
   }
+
+  // Save result image
+  m_worker->add(std::make_shared<Task_SaveImg>(m_output, m_result_image, m_result_fg_mask, m_jpgquality, m_nocrop));
 }

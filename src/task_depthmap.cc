@@ -44,7 +44,7 @@ void Task_Depthmap::task()
     m_largest_delta.create(rows, cols, CV_32FC1);
     m_largest_focusmeasure.create(rows, cols, CV_32FC1);
     m_depthmap = 0;
-    m_largest_delta = 1;
+    m_largest_delta = 0;
     m_largest_focusmeasure = -INFINITY;
   }
   m_previous.reset();
@@ -87,8 +87,8 @@ cv::Mat Task_Depthmap::mask(int halo_radius) const
 
   // Select scaling levels using histogram and percentile points
   HistogramPercentile hist(alpha, 1024);
-  float high = hist.percentile(0.99) * 2.0f;
-  float low = hist.percentile(0.25);
+  float high = hist.percentile(0.999);
+  float low = 0.0;
   
   // Convert to 8-bit range
   cv::Mat result;

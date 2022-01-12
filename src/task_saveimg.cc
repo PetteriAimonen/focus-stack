@@ -4,7 +4,8 @@
 
 using namespace focusstack;
 
-Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, int jpgquality, bool nocrop)
+Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input, std::shared_ptr<ImgTask> alphamask,
+  int jpgquality, bool nocrop)
 {
   m_filename = filename;
 
@@ -21,11 +22,33 @@ Task_SaveImg::Task_SaveImg(std::string filename, std::shared_ptr<ImgTask> input,
   m_nocrop= nocrop;
   m_input = input;
   m_depends_on.push_back(input);
+
+  if (alphamask)
+  {
+    m_alphamask = alphamask;
+    m_depends_on.push_back(alphamask);
+  }
 }
 
 void Task_SaveImg::task()
 {
-  m_result = m_input->img();
+  if (m_nocrop)
+  {
+    m_result = m_input->img_cropped();
+    m_valid_area = m_input->valid_area();
+  }
+  else
+  {
+    cv::Size origsize = m_input->img().size();
+    m_result = m_input->img_cropped();
+    m_valid_area = cv::Rect(0, 0, m_result.cols, m_result.rows);
+
+    if (origsize != m_result.size())
+    {
+      m_logger->verbose("%s cropped from (%d, %d) to (%d, %d)\n",
+            m_filename.c_str(), origsize.width, origsize.height, m_result.cols, m_result.rows);
+    }
+  }
 
   if (m_result.channels() == 2)
   {
@@ -39,23 +62,35 @@ void Task_SaveImg::task()
     cv::merge(channels, 3, m_result);
   }
 
-  if (!m_nocrop)
+  // Add alpha channel if given
+  if (m_alphamask)
   {
-    cv::Rect croparea = m_input->valid_area();
-    if (croparea.width != 0 && croparea.height != 0 && croparea.size() != m_result.size())
-    {
-      m_logger->verbose("%s cropping from (%d, %d) to (%d, %d)\n",
-        m_filename.c_str(), m_result.cols, m_result.rows, croparea.width, croparea.height);
+    cv::Mat channels[4];
 
-      // Crop to original size
-      cv::Mat tmp(croparea.size(), m_result.type());
-      m_result(croparea).copyTo(tmp);
-      m_result = tmp;
+    if (m_result.channels() == 1)
+    {
+      channels[0] = channels[1] = channels[2] = m_result;
     }
+    else
+    {
+      cv::split(m_result, channels);
+    }
+
+    if (m_nocrop)
+    {
+      channels[3] = m_alphamask->img();
+    }
+    else
+    {
+      channels[3] = m_alphamask->img_cropped();
+    }
+
+    cv::merge(channels, 4, m_result);
   }
 
   // Input image can be released now
   m_input.reset();
+  m_alphamask.reset();
 
   if (m_filename != "" && m_filename != ":memory:")
   {

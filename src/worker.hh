@@ -60,7 +60,7 @@ public:
   ImgTask(cv::Mat result): m_result(result) {}
   virtual const cv::Mat &img() const { return m_result; }
   cv::Rect valid_area() const {
-    if (m_valid_area.width == 0 || m_valid_area.height == 0)
+    if (m_valid_area.empty())
     {
       if (m_logger) m_logger->verbose("Valid area not defined for %s, using default.\n", m_filename.c_str());
       return cv::Rect(0, 0, m_result.cols, m_result.rows);
@@ -69,6 +69,17 @@ public:
     {
       return m_valid_area;
     }
+  }
+
+  cv::Mat img_cropped() const {
+    cv::Mat result = img();
+    if (!m_valid_area.empty() && m_valid_area.size() != result.size())
+    {
+      cv::Mat tmp(m_valid_area.size(), result.type());
+      result(m_valid_area).copyTo(tmp);
+      result = tmp;
+    }
+    return result;
   }
 
 protected:

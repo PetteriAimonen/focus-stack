@@ -23,7 +23,7 @@ CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty 2>/dev/null)\"
 CXXSRCS += focusstack.cc worker.cc options.cc logger.cc
 CXXSRCS += radialfilter.cc histogrampercentile.cc
 CXXSRCS += task_3dpreview.cc
-CXXSRCS += task_align.cc task_denoise.cc
+CXXSRCS += task_align.cc task_background_removal.cc task_denoise.cc
 CXXSRCS += task_depthmap.cc task_depthmap_inpaint.cc task_focusmeasure.cc
 CXXSRCS += task_grayscale.cc task_loadimg.cc
 CXXSRCS += task_merge.cc task_reassign.cc task_saveimg.cc

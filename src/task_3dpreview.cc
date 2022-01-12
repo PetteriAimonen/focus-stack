@@ -36,6 +36,18 @@ void Task_3DPreview::task()
 {
   cv::Mat depthmap = m_depthmap->img();
   cv::Mat merged = m_merged->img();
+  cv::Mat mask;
+
+  if (m_depthmap_mask)
+  {
+    mask = m_depthmap_mask->img();
+    depthmap = depthmap.clone();
+    depthmap.setTo(0, mask == 0);
+  }
+  else
+  {
+    mask = cv::Mat(depthmap.rows, depthmap.cols, CV_8UC1, cv::Scalar(255));
+  }
 
   // Output image size is same as merged image size
   int rows = merged.rows;
@@ -80,6 +92,11 @@ void Task_3DPreview::task()
     int x_prev = x_start;
     for (int x = x_start; x < x_end; x += x_step)
     {
+      if (mask.at<uint8_t>(y, x) == 0)
+      {
+        continue;
+      }
+
       uint8_t depth = depthmap.at<uint8_t>(y, x);
       uint8_t depth_back = std::max({
         depth,

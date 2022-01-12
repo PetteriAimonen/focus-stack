@@ -56,3 +56,33 @@ float HistogramPercentile::percentile(float ratio) const
 
   return m_maximum;
 }
+
+float HistogramPercentile::brighter_than(float threshold) const
+{
+  int start_i = std::round((threshold - m_minimum) * m_histogram.rows / (m_maximum - m_minimum));
+  float sum = 0;
+  for (int i = start_i; i < m_histogram.rows; i++)
+  {
+    sum += m_histogram.at<float>(i, 0);
+  }
+  return sum / m_total_pixels;
+}
+
+std::vector<int> HistogramPercentile::local_minimums() const
+{
+  std::vector<int> result;
+
+  for (int i = 1; i < m_histogram.rows - 1; i++)
+  {
+    int v0 = m_histogram.at<float>(i - 1, 0);
+    int v1 = m_histogram.at<float>(i, 0);
+    int v2 = m_histogram.at<float>(i + 1, 0);
+
+    if (v1 <= v0 && v1 < v2)
+    {
+      result.push_back(m_minimum + (m_maximum - m_minimum) * i / m_histogram.rows);
+    }
+  }
+
+  return result;
+}

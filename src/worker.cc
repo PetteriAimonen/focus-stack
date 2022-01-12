@@ -131,6 +131,7 @@ Worker::~Worker()
 void Worker::add(std::shared_ptr<Task> task)
 {
   std::unique_lock<std::mutex> lock(m_mutex);
+  assert(task);
   m_tasks.emplace_back(task);
   m_total_tasks++;
   m_wakeup.notify_all();
@@ -169,6 +170,7 @@ bool Worker::wait_all(int timeout_ms)
       {
         for (std::shared_ptr<Task> dependency: task->get_depends())
         {
+          assert(dependency);
           if (!dependency->is_completed() && !m_running.count(dependency))
           {
             if (std::find(m_tasks.begin(), m_tasks.end(), dependency) == m_tasks.end())

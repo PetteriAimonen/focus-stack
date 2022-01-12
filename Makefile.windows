@@ -28,7 +28,7 @@ LDFLAGS = $(LDFLAGS) /link setargv.obj
 CXXSRCS = src/focusstack.cc src/worker.cc src/logger.cc src/options.cc \
 					src/radialfilter.cc src/histogrampercentile.cc \
 					src/task_3dpreview.cc \
-					src/task_align.cc src/task_denoise.cc \
+					src/task_align.cc src/task_background_removal.cc src/task_denoise.cc \
 					src/task_depthmap.cc src/task_depthmap_inpaint.cc src/task_focusmeasure.cc \
 					src/task_grayscale.cc src/task_loadimg.cc \
 					src/task_merge.cc src/task_reassign.cc src/task_saveimg.cc \
