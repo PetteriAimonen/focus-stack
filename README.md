@@ -43,11 +43,12 @@ For advanced usage, see `--help` for list of all options:
       --denoise=1.0                 Merged image denoise level (default 1.0)
 
     Depth map generation options:
-      --depthmap-threshold=16       Threshold to accept depth points (0-255, default 16)
-      --depthmap-smooth-xy=16       Smoothing of depthmap in X and Y directions (default 16)
-      --depthmap-smooth-z=32        Smoothing of depthmap in Z direction (default 32)
+      --depthmap-threshold=10       Threshold to accept depth points (0-255, default 10)
+      --depthmap-smooth-xy=20       Smoothing of depthmap in X and Y directions (default 20)
+      --depthmap-smooth-z=40        Smoothing of depthmap in Z direction (default 40)
+      --remove-bg=0                 Positive value removes black background, negative white
       --halo-radius=20              Radius of halo effects to remove from depthmap
-      --3dviewpoint=x:y:z:zscale    Viewpoint for 3D view (default 0.5:1.0:0.5:2.0)
+      --3dviewpoint=x:y:z:zscale    Viewpoint for 3D view (default 1:1:1:2)
 
     Performance options:
       --threads=2                   Select number of threads to use (default number of CPUs + 1)
@@ -58,7 +59,6 @@ For advanced usage, see `--help` for list of all options:
       --verbose                     Verbose output from steps
       --version                     Show application version number
       --opencv-version              Show OpenCV library version and build info
-
 
 On Windows you can additionally just select the photos and drag them
 over `focus-stack.exe` to run with default settings.
