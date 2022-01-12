@@ -22,11 +22,14 @@ using namespace focusstack;
 
 FocusStack::FocusStack():
   m_output(""),
-  m_depthmap_threshold(16),
-  m_depthmap_smooth_xy(32),
-  m_depthmap_smooth_z(64),
+  m_depthmap_threshold(10),
+  m_depthmap_smooth_xy(20),
+  m_depthmap_smooth_z(40),
+  m_halo_radius(20),
+  m_remove_bg(0),
   m_disable_opencl(false),
   m_save_steps(false),
+  m_nocrop(false),
   m_align_only(false),
   m_align_flags(ALIGN_DEFAULT),
   m_3dviewpoint(1,1,1),
