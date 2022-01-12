@@ -16,6 +16,8 @@ Task_Depthmap_Inpaint::Task_Depthmap_Inpaint(std::shared_ptr<Task_Depthmap> dept
   m_filename = "filtered_depthmap.png";
   m_name = "Inpaint depthmap";
 
+  if (m_threshold < 1) m_threshold = 1;
+
   m_depends_on.push_back(m_depthmap);
 }
 
@@ -122,8 +124,20 @@ void Task_Depthmap_Inpaint::task()
   }
 
   // Some final averaging to smooth the result and remove outliers
-  int medsize = 2 * (m_smooth_xy / 8) + 3;
-  cv::medianBlur(depth, depth, medsize);
-  cv_extend::bilateralFilter(depth, m_result, m_smooth_z, m_smooth_xy);
-  cv::medianBlur(m_result, m_result, medsize);
+  m_result = depth;
+  if (m_smooth_xy > 0)
+  {
+    int medsize = 2 * (m_smooth_xy / 8) + 3;
+    cv::medianBlur(m_result, m_result, medsize);
+
+    // Bilateral filter gets very slow if smoothing parameters are too small
+    if (m_smooth_xy >= 8 && m_smooth_z > 4)
+    {
+      cv::Mat tmp;
+      cv_extend::bilateralFilter(m_result, tmp, m_smooth_z, m_smooth_xy);
+      m_result = tmp;
+    }
+
+    cv::medianBlur(m_result, m_result, medsize);
+  }
 }

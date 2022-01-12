@@ -66,6 +66,10 @@ bool FocusStack::run()
   start();
   do_final_merge();
 
+  // All temporaries except results can be released now.
+  // Anything that is needed is held on by shared_ptrs in the tasks.
+  reset(true);
+
   bool status;
   std::string errmsg;
   wait_done(status, errmsg);
@@ -144,21 +148,18 @@ void FocusStack::do_final_merge()
 {
   schedule_queue_processing();
   schedule_final_merge();
-
-  // All temporaries except results can be released now.
-  // Anything that is needed is held on by shared_ptrs in the tasks.
-  reset(true);
 }
 
-void FocusStack::get_status(int &total_tasks, int &completed_tasks)
+void FocusStack::get_status(int &total_tasks, int &completed_tasks, std::string &running_task_name)
 {
   if (!m_worker)
   {
     completed_tasks = total_tasks = 0;
+    running_task_name = "";
   }
   else
   {
-    m_worker->get_status(total_tasks, completed_tasks);
+    m_worker->get_status(total_tasks, completed_tasks, running_task_name);
   }
 }
 
@@ -204,6 +205,7 @@ void FocusStack::reset(bool keep_results)
   m_reassign_batch_grays.clear();
   m_reassign_batch_colors.clear();
   m_reassign_map.reset();
+  m_merged_gray.reset();
 
   if (!keep_results)
   {
@@ -564,26 +566,25 @@ void FocusStack::schedule_final_merge()
   }
 
   // Inverse-transform merged image
-  std::shared_ptr<ImgTask> merged_gray;
   if (!m_have_opencl)
   {
-    merged_gray = std::make_shared<Task_Wavelet>(denoised, true);
+    m_merged_gray = std::make_shared<Task_Wavelet>(denoised, true);
   }
   else
   {
-    merged_gray = std::make_shared<Task_Wavelet_OpenCL>(denoised, true);
+    m_merged_gray = std::make_shared<Task_Wavelet_OpenCL>(denoised, true);
   }
-  m_worker->add(merged_gray);
+  m_worker->add(m_merged_gray);
 
   if (m_save_steps)
   {
-    m_worker->add(std::make_shared<Task_SaveImg>(merged_gray->filename(), merged_gray, m_jpgquality, m_nocrop));
+    m_worker->add(std::make_shared<Task_SaveImg>(m_merged_gray->filename(), m_merged_gray, m_jpgquality, m_nocrop));
   }
 
+  // Generate foreground mask
   if (m_remove_bg != 0)
   {
-    m_result_fg_mask = std::make_shared<Task_BackgroundRemoval>(merged_gray, m_remove_bg);
-    m_worker->add(m_result_fg_mask);
+    regenerate_mask();
 
     if (m_save_steps)
     {
@@ -598,7 +599,7 @@ void FocusStack::schedule_final_merge()
   }
 
   // Reassign pixel values
-  m_result_image = std::make_shared<Task_Reassign>(m_reassign_map, merged_gray);
+  m_result_image = std::make_shared<Task_Reassign>(m_reassign_map, m_merged_gray);
   m_worker->add(m_result_image);
 
   // Save 3D preview
@@ -614,15 +615,30 @@ void FocusStack::schedule_final_merge()
 
 void FocusStack::regenerate_depthmap()
 {
-  m_result_depthmap = std::make_shared<Task_Depthmap_Inpaint>(
-      m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_halo_radius, m_save_steps);
-  m_worker->add(m_result_depthmap);
+  if (m_latest_depthmap)
+  {
+    m_result_depthmap = std::make_shared<Task_Depthmap_Inpaint>(
+        m_latest_depthmap, m_depthmap_threshold, m_depthmap_smooth_xy, m_depthmap_smooth_z, m_halo_radius, m_save_steps);
+    m_worker->add(m_result_depthmap);
+  }
+}
+
+void FocusStack::regenerate_mask()
+{
+  if (m_merged_gray)
+  {
+    m_result_fg_mask = std::make_shared<Task_BackgroundRemoval>(m_merged_gray, m_remove_bg);
+    m_worker->add(m_result_fg_mask);
+  }
 }
 
 void FocusStack::regenerate_3dview()
 {
-  m_result_3dview = std::make_shared<Task_3DPreview>(
-      m_result_depthmap, m_result_fg_mask, m_result_image,
-      m_3dviewpoint, m_3dzscale);
-  m_worker->add(m_result_3dview);
+  if (m_result_depthmap)
+  {
+    m_result_3dview = std::make_shared<Task_3DPreview>(
+        m_result_depthmap, m_result_fg_mask, m_result_image,
+        m_3dviewpoint, m_3dzscale);
+    m_worker->add(m_result_3dview);
+  }
 }

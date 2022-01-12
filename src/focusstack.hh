@@ -100,7 +100,7 @@ public:
   void add_image(std::string filename); // Add image from file, filename must remain valid until loading completes.
   void add_image(const cv::Mat &image); // Add image from memory, buffer can be reused after add_image() returns.
   void do_final_merge(); // Do final merge operations.
-  void get_status(int &total_tasks, int &completed_tasks); // Query status on running tasks
+  void get_status(int &total_tasks, int &completed_tasks, std::string &running_task_name); // Query status on running tasks
   bool wait_done(bool &status, std::string &errmsg, int timeout_ms = -1); // Wait until all tasks have completed and retrieve status
   void reset(bool keep_results = false); // Release memory buffers and clear state for next run.
 
@@ -113,6 +113,7 @@ public:
 
   // Regenerate some of the results with altered settings
   void regenerate_depthmap();
+  void regenerate_mask();
   void regenerate_3dview();
 
 private:
@@ -165,6 +166,7 @@ private:
   std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_grays;
   std::vector<std::shared_ptr<ImgTask> > m_reassign_batch_colors;
   std::shared_ptr<Task_Reassign_Map> m_reassign_map;
+  std::shared_ptr<ImgTask> m_merged_gray;
 
   // Result variables
   std::shared_ptr<ImgTask> m_result_image;

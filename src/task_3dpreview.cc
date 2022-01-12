@@ -34,13 +34,13 @@ static inline cv::Vec3f v3f_normalize(cv::Vec3f v)
 
 void Task_3DPreview::task()
 {
-  cv::Mat depthmap = m_depthmap->img();
-  cv::Mat merged = m_merged->img();
+  cv::Mat depthmap = m_depthmap->img_cropped();
+  cv::Mat merged = m_merged->img_cropped();
   cv::Mat mask;
 
   if (m_depthmap_mask)
   {
-    mask = m_depthmap_mask->img();
+    mask = m_depthmap_mask->img_cropped();
     depthmap = depthmap.clone();
     depthmap.setTo(0, mask == 0);
   }
@@ -87,10 +87,10 @@ void Task_3DPreview::task()
 
   // Render pixel by pixel from back to front
   int y_prev = y_start;
-  for (int y = y_start; y < y_end; y += y_step)
+  for (int y = y_start; y != y_end; y += y_step)
   {
     int x_prev = x_start;
-    for (int x = x_start; x < x_end; x += x_step)
+    for (int x = x_start; x != x_end; x += x_step)
     {
       if (mask.at<uint8_t>(y, x) == 0)
       {
@@ -102,7 +102,7 @@ void Task_3DPreview::task()
         depth,
         depthmap.at<uint8_t>(y_prev, x),
         depthmap.at<uint8_t>(y_prev, x_prev),
-        depthmap.at<uint8_t>(y, std::max(x_start, x - x_step)),
+        depthmap.at<uint8_t>(y, x_prev),
       });
 
       // Project the depthmap point to camera plane

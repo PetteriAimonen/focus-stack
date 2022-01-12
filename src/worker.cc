@@ -161,7 +161,7 @@ bool Worker::wait_all(int timeout_ms)
     timeout += std::chrono::seconds(10);
   }
 
-  while (m_tasks.size() && !m_failed)
+  while ((m_tasks.size() || m_running.size()) && !m_failed)
   {
     if (m_wakeup.wait_until(lock, timeout) == std::cv_status::timeout)
     {
@@ -192,11 +192,20 @@ bool Worker::wait_all(int timeout_ms)
   return true; // Everything completed
 }
 
-void Worker::get_status(int &total_tasks, int &completed_tasks)
+void Worker::get_status(int &total_tasks, int &completed_tasks, std::string &running_task_name)
 {
   std::unique_lock<std::mutex> lock(m_mutex);
   total_tasks = m_total_tasks;
   completed_tasks = m_completed_tasks;
+
+  if (m_running.size())
+  {
+    running_task_name = (*m_running.begin())->name();
+  }
+  else
+  {
+    running_task_name = "";
+  }
 }
 
 float Worker::seconds_passed() const

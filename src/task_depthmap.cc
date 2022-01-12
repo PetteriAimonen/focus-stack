@@ -87,7 +87,7 @@ cv::Mat Task_Depthmap::mask(int halo_radius) const
 
   // Select scaling levels using histogram and percentile points
   HistogramPercentile hist(alpha, 1024);
-  float high = hist.percentile(0.999);
+  float high = hist.percentile(0.999f);
   float low = 0.0;
   
   // Convert to 8-bit range

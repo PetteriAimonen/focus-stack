@@ -119,7 +119,7 @@ public:
 
   std::string error() const { return m_error; }
 
-  void get_status(int &total_tasks, int &completed_tasks);
+  void get_status(int &total_tasks, int &completed_tasks, std::string &running_task_name);
 
 private:
   std::shared_ptr<Logger> m_logger;
