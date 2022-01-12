@@ -34,7 +34,7 @@ void Task_SaveImg::task()
 {
   if (m_nocrop)
   {
-    m_result = m_input->img_cropped();
+    m_result = m_input->img();
     m_valid_area = m_input->valid_area();
   }
   else
