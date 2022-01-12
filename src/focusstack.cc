@@ -236,6 +236,18 @@ const cv::Mat &FocusStack::get_result_depthmap() const
   }
 }
 
+const cv::Mat &FocusStack::get_result_mask() const
+{
+  if (m_result_fg_mask)
+  {
+    return m_result_fg_mask->img();
+  }
+  else
+  {
+    throw std::runtime_error("No result mask available");
+  }
+}
+
 const cv::Mat &FocusStack::get_result_3dview() const
 {
   if (m_result_3dview)

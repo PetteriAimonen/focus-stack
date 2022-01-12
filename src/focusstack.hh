@@ -108,6 +108,7 @@ public:
   // To enable generation of depthmap, call set_depthmap(":memory:");
   const cv::Mat &get_result_image() const;
   const cv::Mat &get_result_depthmap() const;
+  const cv::Mat &get_result_mask() const;
   const cv::Mat &get_result_3dview() const;
 
   // Regenerate some of the results with altered settings
