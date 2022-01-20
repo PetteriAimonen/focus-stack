@@ -77,6 +77,8 @@ The application also uses multiple algorithms from OpenCV library.
 Most importantly, [findTransformECC](https://docs.opencv.org/3.0-beta/modules/video/doc/motion_analysis_and_object_tracking.html#findtransformecc) is used to align
 the source images.
 
+For more information, see the [detailed explanation of algorithms](docs/Algorithms.md).
+
 Building on Ubuntu
 ------------------
 The only dependency is OpenCV, 3.0 or newer, plus the basic build tools:
