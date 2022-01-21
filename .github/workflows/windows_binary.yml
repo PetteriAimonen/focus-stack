@@ -44,7 +44,8 @@ jobs:
       - name: Install OpenCV dependency
         shell: cmd
         run: |
-          cd C:\vcpkg
+          C:
+          cd C:\vcpkg\installed
           tree /F
           vcpkg install opencv:x64-windows
           tree /F
@@ -54,11 +55,11 @@ jobs:
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cd focus-stack
-          nmake -f Makefile.windows OPENCV_PATH=C:\vcpkg\installed\x64-windows\include OPENCV_LIB=C:\vcpkg\installed\x64-windows\lib\opencv*world*.lib
+          nmake -f Makefile.windows OPENCV_INC=C:\vcpkg\installed\x64-windows\include OPENCV_LIB=C:\vcpkg\installed\x64-windows\lib\opencv*.lib OPENCV_DLL=C:\vcpkg\installed\x64-windows\bin\*.dll
           nmake -f Makefile.windows package
     
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          path: focus-stack/dist/*.zip
+          path: focus-stack/distrib/*.zip
           name: Focus-stack Windows binary
