@@ -9,9 +9,14 @@ jobs:
   release:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/download-artifact@v2
-      with:
-        path: ./
+    - name: "Download artifacts"
+      run: |
+        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Mac OS X application'
+        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Ubuntu 20.04 package'
+        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Linux x86_64 AppImage'
+        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Windows binary'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: List artifacts
       run: |
         find
@@ -20,4 +25,4 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: 'nightly'
         files: |
-          ./*/*
+          ./*

@@ -7,10 +7,8 @@ and combines them so that the complete subject is in focus.
 
 Installation
 ------------
-Binary packages for Windows 10, Ubuntu 20.04 and Mac OS X are available on the GitHub
-releases tab.
-
-There are also development builds here: https://github.com/PetteriAimonen/focus-stack/actions
+Binary packages for Windows 10, Ubuntu 20.04 and Mac OS X are available on the
+[GitHub releases tab](https://github.com/PetteriAimonen/focus-stack/releases).
 
 Basic usage
 -----------
