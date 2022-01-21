@@ -46,7 +46,7 @@ package: build/focus-stack.exe
 	mkdir distrib || echo.
 	mkdir distrib\focus-stack || echo.
 	copy /Y build\focus-stack.exe distrib\focus-stack
-        copy /Y build\opencv*.dll distrib\focus-stack
+        copy /Y build\*.dll distrib\focus-stack
 	xcopy /E examples distrib\focus-stack
 	copy /Y README.md distrib\focus-stack\README.txt
 	copy /Y LICENSE.md distrib\focus-stack\LICENSE.txt
