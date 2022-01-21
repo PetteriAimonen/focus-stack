@@ -44,11 +44,7 @@ jobs:
       - name: Install OpenCV dependency
         shell: cmd
         run: |
-          C:
-          cd C:\vcpkg\installed
-          tree /F
           vcpkg install opencv:x64-windows
-          tree /F
       
       - name: Build binary
         shell: cmd
