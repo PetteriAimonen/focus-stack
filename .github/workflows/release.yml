@@ -1,0 +1,23 @@
+name: Copy latest artifacts to releases
+  
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '46 3 * * *'
+
+jobs:
+  release:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        path: ./
+    - name: List artifacts
+      run: |
+        find
+    - uses: pyTooling/Actions/releaser@main
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: 'nightly'
+        files: |
+          ./*/*
