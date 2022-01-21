@@ -1,0 +1,48 @@
+name: Linux binary
+
+on: 
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    name: Build binary on Ubuntu 20.04
+    runs-on: ubuntu-20.04
+    
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v2
+        with:
+          path: focus-stack
+          fetch-depth: "0"
+      
+      - name: Install build dependencies
+        run: |
+          sudo apt install libopencv-dev build-essential debhelper devscripts
+      
+      - name: Build binary, .deb and appimage
+        run: |
+          cd focus-stack
+          make
+          make builddeb
+          make build/focus-stack.AppImage
+    
+      - name: Upload deb
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/DEBUILD/*.deb
+          name: Focus-stack Ubuntu 20.04 package
+      
+      - name: Upload ddeb
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/DEBUILD/*.ddeb
+          name: Focus-stack Ubuntu 20.04 debug symbols
+
+      - name: Upload appimage
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/build/focus-stack.AppImage
+          name: Focus-stack Linux x86_64 AppImage

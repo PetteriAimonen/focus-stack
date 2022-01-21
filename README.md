@@ -7,10 +7,10 @@ and combines them so that the complete subject is in focus.
 
 Installation
 ------------
-Binary packages for Windows 10, Ubuntu 18.04 and Mac OS X are available on the GitHub
-releases tab. Ubuntu packages are also available from [this PPA](https://launchpad.net/~jpa-lp/+archive/ubuntu/focus-stack).
+Binary packages for Windows 10, Ubuntu 20.04 and Mac OS X are available on the GitHub
+releases tab.
 
-There are nightly builds here: https://jpa.kapsi.fi/jenkins/job/focus-stack/
+There are also development builds here: https://github.com/PetteriAimonen/focus-stack/actions
 
 Basic usage
 -----------

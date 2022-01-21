@@ -12,8 +12,9 @@ CXXFLAGS = /O2 /EHsc /W2 /D_USE_MATH_DEFINES
 
 # Path to OpenCV, you may need to edit these if your version is different
 OPENCV_PATH = ..\opencv\build
+OPENCV_LIB = $(OPENCV_PATH)\x64\vc14\lib\opencv_world430.lib
 CXXFLAGS = $(CXXFLAGS) /I$(OPENCV_PATH)\include
-LDFLAGS = $(OPENCV_PATH)\x64\vc14\lib\opencv_world430.lib
+LDFLAGS = $(OPENCV_LIB)
 
 !IF [git describe --always --dirty > gitrev] == 0
 GIT_VERSION = \

@@ -16,7 +16,7 @@ CXXFLAGS += --std=c++14
 LDFLAGS += -lpthread -lm
 LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
 
-VERSION = $(shell git describe)
+VERSION = $(shell git describe --tags --always)
 CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty 2>/dev/null)\"
 
 # List of source code files
@@ -111,3 +111,17 @@ distrib/focus-stack_MacOSX.zip: build/focus-stack.app
 	cp docs/focus-stack.html distrib/focus-stack
 	cd distrib; zip -r focus-stack_MacOSX.zip focus-stack
 
+# Linux AppImage
+build/linuxdeploy:
+	wget -O $@ https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+	chmod +x $@
+
+build/focus-stack.AppImage: build/focus-stack build/linuxdeploy
+	mkdir -p build/AppDir
+	mkdir -p build/AppDir/usr/share/applications/
+	mkdir -p build/AppDir/usr/share/icons/hicolor/scalable/apps/
+	prefix=/usr DESTDIR=build/AppDir make install
+	cp packaging/focus-stack.desktop build/AppDir/usr/share/applications/
+	touch build/AppDir/usr/share/icons/hicolor/scalable/apps/focus-stack.svg
+	VERSION=$(VERSION) build/linuxdeploy --appdir build/AppDir --output appimage
+	mv *.AppImage $@

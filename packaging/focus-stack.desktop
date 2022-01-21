@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Focus stack command line application
+Exec=focus-stack
+Icon=focus-stack
+Terminal=true
+Categories=Graphics

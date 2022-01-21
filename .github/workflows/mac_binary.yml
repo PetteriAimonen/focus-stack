@@ -1,0 +1,36 @@
+name: Mac OS X binary
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build_macos:
+    name: Build binary on Mac OS X Big Sur 11
+    runs-on: macos-11
+    
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v2
+        with:
+          path: focus-stack
+          fetch-depth: "0"
+      
+      - name: Install build dependencies
+        run: |
+          brew install opencv pkg-config dylibbundler
+      
+      - name: Build binary
+        run: |
+          cd focus-stack
+          make
+          make distrib/focus-stack_MacOSX.zip
+    
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/distrib/focus-stack_MacOSX.zip
+          name: Focus-stack Mac OS X application
+      

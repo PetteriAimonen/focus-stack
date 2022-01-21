@@ -1,0 +1,44 @@
+name: Run focus-stack tests on Ubuntu
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run_tests_linux:
+    name: Run tests on Ubuntu 20.04
+    runs-on: ubuntu-20.04
+    
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v2
+        with:
+          path: focus-stack
+      
+      - name: Install build dependencies
+        run: |
+          sudo apt install libopencv-dev build-essential libgtest-dev openimageio-tools
+      
+      - name: Build binary
+        run: |
+          cd focus-stack
+          make
+
+      - name: Run unittests
+        run: |
+          cd focus-stack
+          make run_unittests
+      
+      - name: Run integration tests
+        run: |
+          cd focus-stack
+          make run_tests
+
+      - name: Archive images
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: |
+            focus-stack/build/*.jpg
+            focus-stack/build/*.png
+          name: Generated images from test cases
