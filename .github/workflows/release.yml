@@ -3,26 +3,49 @@ name: Copy latest artifacts to releases
 on:
   workflow_dispatch:
   schedule:
-    - cron:  '46 3 * * *'
+    - cron: '46 3 * * *'
 
 jobs:
   release:
     runs-on: ubuntu-20.04
     steps:
-    - name: "Download artifacts"
-      run: |
-        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Mac OS X application'
-        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Ubuntu 20.04 package'
-        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Linux x86_64 AppImage'
-        gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Windows binary'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: List artifacts
-      run: |
-        find
-    - uses: pyTooling/Actions/releaser@main
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: 'nightly'
-        files: |
-          ./*
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
+        with:
+          path: focus-stack
+          fetch-depth: "0"
+      
+      - name: Download artifacts
+        run: |
+          mkdir -p focus-stack/distrib
+          cd focus-stack/distrib
+          gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Mac OS X application'
+          gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Ubuntu 20.04 package'
+          gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Linux x86_64 AppImage'
+          gh run --repo ${GITHUB_REPOSITORY} download -n 'Focus-stack Windows binary'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: List artifacts
+        run: |
+          find focus-stack/distrib
+      
+      - name: Upload to latest release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd focus-stack
+
+          if TAG=$(git describe --exact-match)
+          then
+            gh release create $TAG
+          else
+            git tag -d latest
+            git tag latest
+            git push origin --force latest
+            TAG=latest
+            gh release delete -y $TAG || true
+            gh release create $TAG --prerelease
+          fi
+          cd distrib
+          gh release upload --clobber $TAG *
