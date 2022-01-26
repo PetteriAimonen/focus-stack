@@ -16,7 +16,7 @@ CXXFLAGS += --std=c++14
 LDFLAGS += -lpthread -lm
 LDFLAGS += -lopencv_video -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core
 
-VERSION = $(shell git describe --tags --always)
+VERSION = $(shell git describe --always)
 CXXFLAGS += -DGIT_VERSION=\"$(shell git describe --always --dirty 2>/dev/null)\"
 
 # List of source code files

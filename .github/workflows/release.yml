@@ -40,12 +40,18 @@ jobs:
           then
             gh release create $TAG
           else
-            git tag -d latest
-            git tag latest
-            git push origin --force latest
-            TAG=latest
-            gh release delete -y $TAG || true
-            gh release create $TAG --prerelease
+            if git describe --exact-match --tags | grep latest
+            then
+              echo Nothing to do
+              exit 0
+            else
+              git tag -d latest
+              git tag latest
+              git push origin --force latest
+              TAG=latest
+              gh release delete -y $TAG || true
+              gh release create $TAG --prerelease
+            fi
           fi
           cd distrib
           gh release upload --clobber $TAG *
