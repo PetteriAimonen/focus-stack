@@ -49,8 +49,7 @@ jobs:
               git tag latest
               git push origin --force latest
               TAG=latest
-              gh release delete -y $TAG || true
-              gh release create $TAG --prerelease
+              gh release create $TAG --prerelease || true
             fi
           fi
           cd distrib
