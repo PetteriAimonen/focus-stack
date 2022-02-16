@@ -17,7 +17,8 @@ jobs:
       
       - name: Install build dependencies
         run: |
-          sudo apt install libopencv-dev build-essential libgtest-dev openimageio-tools
+          sudo apt-get update
+          sudo apt-get install libopencv-dev build-essential libgtest-dev openimageio-tools
       
       - name: Build binary
         run: |
