@@ -9,7 +9,7 @@ namespace focusstack {
 class Task_FocusMeasure: public ImgTask
 {
 public:
-    Task_FocusMeasure(std::shared_ptr<ImgTask> input, float radius = 0, float threshold = 2000.0f);
+    Task_FocusMeasure(std::shared_ptr<ImgTask> input, float radius = 0, float threshold = /*200*/0.0f);
 
 private:
     virtual void task();

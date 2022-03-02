@@ -41,6 +41,7 @@ static void masked_blur(const cv::Mat &input, cv::Mat &output, const cv::Mat &ma
 
 void Task_Depthmap_Inpaint::task()
 {
+  int max_depth = m_depthmap->maxdepth();
   cv::Mat depth = m_depthmap->depthmap().clone();
   cv::Mat mask = m_depthmap->mask(m_halo_radius * 2);
   cv::Mat mask_nh = m_depthmap->mask(m_halo_radius / 2);
@@ -52,22 +53,6 @@ void Task_Depthmap_Inpaint::task()
   border_mask(m_valid_area) = 0;
   mask.setTo(0, border_mask);
   mask_nh.setTo(0, border_mask);
-
-  // Scale depthmap values to range 0 - 255, reserving the lowest level as "unknown".
-  double maxdepth;
-  cv::minMaxIdx(depth, nullptr, &maxdepth);
-  float scaler, offset;
-  if (maxdepth < 254)
-  {
-    scaler = 255.0f / (maxdepth + 1);
-    offset = scaler;
-  }
-  else
-  {
-    scaler = 254.0f / maxdepth;
-    offset = 1;
-  }
-  depth.convertTo(depth, CV_8UC1, scaler, offset);
 
   // Make an initial low resolution depthmap
   cv::Mat depth_lowres;
@@ -100,6 +85,11 @@ void Task_Depthmap_Inpaint::task()
   depth.setTo(0, depth < minlimit - outlier_limit);
   depth.setTo(0, depth > maxlimit + outlier_limit);
 
+  if (m_save_steps)
+  {
+    cv::imwrite("depth_inpaint_masked.png", depth);
+  }
+
   masked_blur(depth, depth, depth > 0, 2);
 
   if (m_save_steps)
@@ -108,7 +98,8 @@ void Task_Depthmap_Inpaint::task()
   }
 
   // Fill in small gaps in outlines
-  depth = RadialFilter::connect(depth, lowres_blur * 2, scaler);
+  int connect_threshold = 255 / max_depth + 1;
+  depth = RadialFilter::connect(depth, lowres_blur * 2, connect_threshold);
 
   if (m_save_steps)
   {

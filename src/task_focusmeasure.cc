@@ -44,5 +44,5 @@ void Task_FocusMeasure::task()
         cv::GaussianBlur(magnitude, magnitude, cv::Size(blurwindow, blurwindow), m_radius, m_radius, cv::BORDER_REFLECT);
     }
 
-    m_result = magnitude;
+    cv::sqrt(magnitude, m_result);
 }

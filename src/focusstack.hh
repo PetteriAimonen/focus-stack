@@ -157,9 +157,7 @@ private:
   std::shared_ptr<Task_Merge> m_prev_merge;
 
   // Depthmap building
-  std::vector<std::shared_ptr<ImgTask> > m_focusmeasures;
   std::shared_ptr<Task_Depthmap> m_latest_depthmap;
-  std::unordered_set<int> m_depthmap_processed;
 
   // Final image merging
   std::vector<std::shared_ptr<ImgTask> > m_merge_batch;

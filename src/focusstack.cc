@@ -198,9 +198,7 @@ void FocusStack::reset(bool keep_results)
   m_refcolor.reset();
   m_refgray.reset();
   m_prev_merge.reset();
-  m_focusmeasures.clear();
   m_latest_depthmap.reset();
-  m_depthmap_processed.clear();
   m_merge_batch.clear();
   m_reassign_batch_grays.clear();
   m_reassign_batch_colors.clear();
@@ -273,7 +271,6 @@ void FocusStack::schedule_queue_processing()
   m_grayscale_imgs.resize(count);
   m_aligned_imgs.resize(count);
   m_aligned_grayscales.resize(count);
-  m_focusmeasures.resize(count);
 
   if (!m_refcolor)
   {
@@ -451,55 +448,21 @@ void FocusStack::schedule_depthmap_processing(int i, bool is_final)
 {
   if (m_depthmap != "" || m_filename_3dview != "")
   {
-    if (i >= 0)
+    std::shared_ptr<ImgTask> focusmeasure;
+    if (i > 0)
     {
-      m_focusmeasures.at(i) = std::make_shared<Task_FocusMeasure>(m_aligned_grayscales.at(i));
-      m_worker->add(m_focusmeasures.at(i));
+      focusmeasure = std::make_shared<Task_FocusMeasure>(m_aligned_grayscales.at(i));
+      m_worker->add(focusmeasure);
 
       if (m_save_steps)
       {
-        m_worker->add(std::make_shared<Task_SaveImg>(m_focusmeasures.at(i)->filename(),
-                              m_focusmeasures.at(i), m_jpgquality, true));
+        m_worker->add(std::make_shared<Task_SaveImg>(focusmeasure->filename(),
+                              focusmeasure, m_jpgquality, true));
       }
     }
 
-    // Check when neighbours are available so that we can process the depthmap layer
-    if (m_focusmeasures.size() > 1)
-    {
-      for (int j = 0; j < m_focusmeasures.size(); j++)
-      {
-        if (m_focusmeasures.at(j) && !m_depthmap_processed.count(j))
-        {
-          if (j == m_focusmeasures.size() - 1)
-          {
-            // The last image can be scheduled once we know no more images are coming.
-            if (is_final && m_focusmeasures.at(j - 1))
-            {
-              std::vector<std::shared_ptr<ImgTask> > neighbors = {m_focusmeasures.at(j - 1)};
-              m_latest_depthmap = std::make_shared<Task_Depthmap>(m_focusmeasures.at(j), neighbors, j, m_latest_depthmap);
-              m_worker->add(m_latest_depthmap);
-              m_depthmap_processed.insert(j);
-            }
-          }
-          else if (j == 0 && m_focusmeasures.at(j + 1))
-          {
-            // First image, one neighbour
-            std::vector<std::shared_ptr<ImgTask> > neighbors = {m_focusmeasures.at(j + 1)};
-            m_latest_depthmap = std::make_shared<Task_Depthmap>(m_focusmeasures.at(j), neighbors, j, m_latest_depthmap);
-            m_worker->add(m_latest_depthmap);
-            m_depthmap_processed.insert(j);
-          }
-          else if (m_focusmeasures.at(j - 1) && m_focusmeasures.at(j + 1))
-          {
-            // Two neighbours
-            std::vector<std::shared_ptr<ImgTask> > neighbors = {m_focusmeasures.at(j - 1), m_focusmeasures.at(j + 1)};
-            m_latest_depthmap = std::make_shared<Task_Depthmap>(m_focusmeasures.at(j), neighbors, j, m_latest_depthmap);
-            m_worker->add(m_latest_depthmap);
-            m_depthmap_processed.insert(j);
-          }
-        }
-      }
-    }
+    m_latest_depthmap = std::make_shared<Task_Depthmap>(focusmeasure, i, is_final, m_latest_depthmap, m_save_steps);
+    m_worker->add(m_latest_depthmap);
   }
 }
 
@@ -523,18 +486,6 @@ void FocusStack::release_temporaries()
       m_grayscale_imgs.at(i).reset();
       m_aligned_imgs.at(i).reset();
       m_aligned_grayscales.at(i).reset();
-    }
-
-    // Focus measures can be released once their neighbours have been processed.
-    if (m_focusmeasures.size() > i && m_focusmeasures.at(i))
-    {
-      if (i != m_scheduled_image_count - 1 &&
-          m_depthmap_processed.count(i) &&
-          m_depthmap_processed.count(i + 1) &&
-          (i == 0 || m_depthmap_processed.count(i - 1)))
-      {
-        m_focusmeasures.at(i).reset();
-      }
     }
   }
 }
