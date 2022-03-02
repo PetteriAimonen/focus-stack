@@ -26,6 +26,11 @@ Task_Depthmap::Task_Depthmap(std::shared_ptr<ImgTask> input,
 
   if (m_previous)
     m_depends_on.push_back(m_previous);
+
+  if (!m_input && !m_previous)
+  {
+    throw new std::logic_error("Task_Depthmap: Either input or previous layer is required!");
+  }
 }
 
 void Task_Depthmap::task()

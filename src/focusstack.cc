@@ -449,7 +449,7 @@ void FocusStack::schedule_depthmap_processing(int i, bool is_final)
   if (m_depthmap != "" || m_filename_3dview != "")
   {
     std::shared_ptr<ImgTask> focusmeasure;
-    if (i > 0)
+    if (i >= 0)
     {
       focusmeasure = std::make_shared<Task_FocusMeasure>(m_aligned_grayscales.at(i));
       m_worker->add(focusmeasure);
