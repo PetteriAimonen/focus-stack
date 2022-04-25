@@ -58,3 +58,10 @@ jobs:
         with:
           path: focus-stack/distrib/*.zip
           name: Focus-stack Windows binary
+
+      - name: Upload debug symbols
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/build/*.pdb
+          name: Focus-stack Windows debug symbols
+
