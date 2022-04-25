@@ -186,6 +186,10 @@ bool Worker::wait_all(int timeout_ms)
       {
         return false; // Return with timeout
       }
+      else
+      {
+        timeout = std::chrono::system_clock::now() + std::chrono::seconds(10);
+      }
     }
   }
 
