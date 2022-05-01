@@ -2,8 +2,7 @@ name: Windows binary
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '46 2 * * *'
+  workflow_call:
 
 jobs:
   build_windows:
@@ -13,7 +12,7 @@ jobs:
       VCPKG_BUILD_TYPE: release
     
     steps:
-      - name: ⤵️ Check out code from GitHub
+      - name: Check out code from GitHub
         uses: actions/checkout@v2
         with:
           path: focus-stack

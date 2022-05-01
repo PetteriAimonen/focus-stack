@@ -2,11 +2,24 @@ name: Copy latest artifacts to releases
   
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '46 3 * * *'
+  push:
+    branches:
+      - 'master'
+    tags:
+      - '*'
 
 jobs:
+  linux_binary:
+      uses: ./.github/workflows/linux_binary.yml
+
+  mac_binary:
+      uses: ./.github/workflows/mac_binary.yml
+
+  windows_binary:
+      uses: ./.github/workflows/windows_binary.yml
+
   release:
+    needs: [linux_binary, mac_binary, windows_binary]
     runs-on: ubuntu-20.04
     steps:
       - name: Check out code from GitHub
@@ -33,24 +46,22 @@ jobs:
       - name: Upload to latest release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref == 'refs/heads/main'
         run: |
           cd focus-stack
-
-          if TAG=$(git describe --exact-match)
-          then
-            gh release create $TAG
-          else
-            if git describe --exact-match --tags | grep latest
-            then
-              echo Nothing to do
-              exit 0
-            else
-              git tag -d latest
-              git tag latest
-              git push origin --force latest
-              TAG=latest
-              gh release create $TAG --prerelease || true
-            fi
-          fi
+          git tag -d latest
+          git tag latest
+          git push origin --force latest
           cd distrib
-          gh release upload --clobber $TAG *
+          gh api repos/${GITHUB_REPOSITORY}/releases/tags/latest | jq -r '.assets[] | [.url] | @tsv' | xargs -n 1 gh api -X DELETE || true
+          gh release upload --repo ${GITHUB_REPOSITORY} --clobber latest *
+
+
+      - name: Upload to newly created release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          cd focus-stack/distrib
+          RELEASE=$(basename ${{github.ref}})
+          gh release upload --repo ${GITHUB_REPOSITORY} $RELEASE *

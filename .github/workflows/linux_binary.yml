@@ -2,8 +2,7 @@ name: Linux binary
 
 on: 
   workflow_dispatch:
-  schedule:
-    - cron: '46 2 * * *'
+  workflow_call:
 
 jobs:
   build_linux:
@@ -11,7 +10,7 @@ jobs:
     runs-on: ubuntu-20.04
     
     steps:
-      - name: ⤵️ Check out code from GitHub
+      - name: Check out code from GitHub
         uses: actions/checkout@v2
         with:
           path: focus-stack

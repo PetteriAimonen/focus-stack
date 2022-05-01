@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-20.04
     
     steps:
-      - name: ⤵️ Check out code from GitHub
+      - name: Check out code from GitHub
         uses: actions/checkout@v2
         with:
           path: focus-stack
