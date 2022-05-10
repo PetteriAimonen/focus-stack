@@ -45,6 +45,9 @@ TESTDEPS := $(TESTOBJS:%.o=%.d)
 $(shell mkdir -p build)
 
 all: build/focus-stack
+	which ronn && make update_docs || .
+
+update_docs: docs/focus-stack.1 docs/focus-stack.html
 
 run_unittests: build/unittests
 	build/unittests
@@ -74,8 +77,11 @@ builddeb: make_debuild
 builddeb_signed: make_debuild
 	(cd DEBUILD/focus-stack && debuild -S)
 
-docs/focus-stack.html: docs/focus-stack.1
-	mandoc -Thtml docs/focus-stack.1 > $@
+docs/focus-stack.1: docs/focus-stack.md
+	ronn --pipe --roff $< > $@
+
+docs/focus-stack.html: docs/focus-stack.md
+	ronn --pipe --html $< > $@
 
 -include $(DEPS)
 -include $(TESTDEPS)

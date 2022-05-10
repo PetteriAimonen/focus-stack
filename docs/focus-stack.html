@@ -1,232 +1,295 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8"/>
-  <style>
-    table.head, table.foot { width: 100%; }
-    td.head-rtitle, td.foot-os { text-align: right; }
-    td.head-vol { text-align: center; }
-    div.Pp { margin: 1ex 0ex; }
-    div.Nd, div.Bf, div.Op { display: inline; }
-    span.Pa, span.Ad { font-style: italic; }
-    span.Ms { font-weight: bold; }
-    dl.Bl-diag > dt { font-weight: bold; }
-    code.Nm, code.Fl, code.Cm, code.Ic, code.In, code.Fd, code.Fn,
-    code.Cd { font-weight: bold; font-family: inherit; }
+  <meta http-equiv='content-type' content='text/html;charset=utf8'>
+  <meta name='generator' content='Ronn-NG/v0.8.0 (http://github.com/apjanke/ronn-ng/tree/0.8.0)'>
+  <title>Combine photos to create extended depth of field image</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
   </style>
-  <title>focus-stack(1)</title>
 </head>
-<body>
-<table class="head">
-  <tr>
-    <td class="head-ltitle">focus-stack(1)</td>
-    <td class="head-vol">focus-stack man page</td>
-    <td class="head-rtitle">focus-stack(1)</td>
-  </tr>
-</table>
-<div class="manual-text">
-<h1 class="Sh" title="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
-focus-stack - combine photos to create extended depth of field image
-<h1 class="Sh" title="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
-focus-stack [options] file1.jpg file2.jpg ...
-<h1 class="Sh" title="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
-focus-stack takes a set of photos taken at different focus settings and combines
-  them into one, selecting the sharpest source image for each pixel position.
-  This is commonly called extended depth of field, or focus stacking. Typical
-  use is for microscope photography where it is difficult to obtain large enough
-  depth of field to cover the whole subject.
-<div class="Pp"></div>
-Usually good results are obtained with the default settings, but following
-  options are available:
-<div class="Pp"></div>
-<dl class="Bl-tag">
-  <dt><b>--output=</b><i>output.jpg</i></dt>
-  <dd>Set output filename. If file already exists, it will be overwritten.
-      Format is decided by file extension. The formats currently supported by
-      OpenCV are .bmp, .jpg, .jp2, .png, .webp, .ppm, .pfm, .sr, .tif, .exr and
-      .hdr.
-    <div class="Pp"></div>
-  </dd>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#EXAMPLES">EXAMPLES</a>
+    <a href="#GPU-ACCELERATION">GPU ACCELERATION</a>
+    <a href="#REFERENCES">REFERENCES</a>
+    <a href="#REPORTING-BUGS">REPORTING BUGS</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>focus-stack</li>
+    <li class='tc'></li>
+    <li class='tr'>focus-stack</li>
+  </ol>
+
+  
+
+<h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>focus-stack</code> - <span class="man-whatis">Combine photos to create extended depth of field image</span>
+</p>
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p><code>focus-stack [options ...] file1.jpg file2.jpg ...</code></p>
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<p><strong>focus-stack</strong> takes a set of photos taken at different focus settings and
+combines them into one, selecting the sharpest source image for each
+pixel position. This is commonly called extended depth of field, or
+focus stacking. Typical use is for microscope photography where it is
+difficult to obtain large enough depth of field to cover the whole
+subject.</p>
+
+<p>Usually good results are obtained with the default settings, but
+following options are available:</p>
+
+<h3 id="Output-file-options">Output file options</h3>
+
+<dl>
+<dt>
+<code>--output</code>=output.jpg</dt>
+<dd>Set output filename. If file already exists, it will be overwritten.
+Format is decided by file extension. The formats currently supported
+by OpenCV are .bmp, .jpg, .jp2, .png, .webp, .ppm, .pfm, .sr, .tif,
+.exr and .hdr.</dd>
+<dt>
+<code>--depthmap</code>=depthmap.png</dt>
+<dd>Generate depthmap image, which shows the depth layers determined
+from image stack. The brightness will be scaled from 0 to 255,
+where 0 is the first image given on command line and 255 is the
+last image.</dd>
+<dt>
+<code>--3dview</code>=3dview.png</dt>
+<dd>Based on depth map, generate a 3-dimensional preview image.</dd>
+<dt><code>--save-steps</code></dt>
+<dd>Save intermediate images from processing steps. This includes the
+aligned images and the final grayscale image before color
+reassignment.</dd>
+<dt>
+<code>--jpgquality</code>=95</dt>
+<dd>Set the level of quality of the JPEG files (final and intermediates
+if asked to be written). The value can go from 0 to 100 with a
+default at 95.</dd>
+<dt><code>--nocrop</code></dt>
+<dd>Keep the full size of input images. By default images are cropped
+to the area that is valid for all images in the input stack, to
+avoid distortion near the edges.</dd>
 </dl>
-<dl class="Bl-tag">
-  <dt><b>--depthmap=</b><i>depthmap.png</i></dt>
-  <dd>Also save computed depthmap image. The brightness will be scaled from 0 to
-      255, where 0 is the first image given on command line and 255 is the last
-      image.
-    <div class="Pp"></div>
-  </dd>
+
+
+<h3 id="Image-alignment-options">Image alignment options</h3>
+
+<dl>
+<dt>
+<code>--reference</code>=index</dt>
+<dd>Select image index (starting from 0) to use as alignment reference.
+Images in a stack will usually vary in scale and position. All other
+images are resized and rotated to match with this image. This also
+determines the scale of the output image, which is important for
+performing measurements. By default middle image of the stack is
+used as reference.</dd>
+<dt><code>--global-align</code></dt>
+<dd>By default each image is aligned against its neighbour. This
+improves results in deep stacks, as blur at the extreme focus levels
+can make direct alignment to reference inaccurate. However, if the
+images given as argument are not in correct order, or if some of
+them are of poorer quality, this option can be specified to align
+directly against the reference image.</dd>
+<dt><code>--full-resolution-align</code></dt>
+<dd>By default the resolution of images used in alignment step is
+limited to 2048x2048 pixels. This improves performance, and because
+sub-pixel accuracy is used in computing the gradients, higher
+resolution rarely improves results. Specifying this option will
+force the use of full resolution images in alignment.</dd>
+<dt><code>--no-whitebalance</code></dt>
+<dd>The application tries to compensate for any white balance
+differences between photos automatically. If camera white balance is
+set manually, this option can be specified to skip the unnecessary
+white balance adjustment.</dd>
+<dt><code>--no-contrast</code></dt>
+<dd>If camera exposure is manually controlled, this option can be used
+to skip unnecessary exposure compensation.</dd>
+<dt><code>--align-only</code></dt>
+<dd>Only align the image stack and exit. Useful for further processing
+of the aligned images with external tools.</dd>
 </dl>
-<dl class="Bl-tag">
-  <dt><b>--jpgquality=</b><i>95</i></dt>
-  <dd>Set the level of quality of the JPEG files (final and intermediates if
-      asked to be written). The value can go from 0 to 100 with a default at 95.
-    <div class="Pp"></div>
-  </dd>
+
+
+<h3 id="Image-merge-options">Image merge options</h3>
+
+<dl>
+<dt>
+<code>--consistency</code>=level</dt>
+<dd>Set the level of consistency filter applied to the depth map, in
+range 0 to 2. Higher level reduces artefacts and noise in output
+image, but can also result in removing small objects that appear
+against a textured background. By default the highest filter level 2
+is used.</dd>
+<dt>
+<code>--denoise</code>=level</dt>
+<dd>Set level of wavelet-based denoise filter applied to the result
+image. Because focus stacking selects the largest difference from
+source images, it has a tendency to increase noise. The denoising
+step reduces all wavelet values by this amount, which corresponds
+directly to pixel values. The default value of 1.0 removes noise
+that is on the order of +- 1 pixel value.</dd>
 </dl>
-<dl class="Bl-tag">
-  <dt><b>--reference=</b><i>index</i></dt>
-  <dd>Select image index (starting from 0) to use as alignment reference. Images
-      in a stack will usually vary in scale and position. All other images are
-      resized and rotated to match with this image. This also determines the
-      scale of the output image, which is important for performing measurements.
-      By default middle image of the stack is used as reference.
-    <div class="Pp"></div>
-  </dd>
+
+
+<h3 id="Depth-map-generation-options">Depth map generation options</h3>
+
+<dl>
+<dt>
+<code>--depthmap-threshold</code>=level</dt>
+<dd>Minimum contrast in input image for accepting as data point for
+depth map building. Range 0-255, default 10.</dd>
+<dt>
+<code>--depthmap-smooth-xy</code>=level</dt>
+<dd>Smoothing of depthmap in image plane. Value is radius in pixels.</dd>
+<dt>
+<code>--depthmap-smooth-z</code>=level</dt>
+<dd>Smoothing of depthmap in depth direction. Value is in 0-255 units.</dd>
+<dt>
+<code>--remove-bg</code>=threshold</dt>
+<dd>Add alpha channel to depthmap and remove constant colored background.
+Threshold is positive for black background, negative for white background.</dd>
+<dt>
+<code>--halo-radius</code>=level</dt>
+<dd>Reduce halo effects in depthmap near sharp contrast edges.
+Value is radius in pixels.</dd>
+<dt>
+<code>--3dviewpoint</code>=x:y:z:zscale</dt>
+<dd>Viewpoint used for the 3D preview. Specifies the x, y and z coordinates
+of the camera and the z scaling of the depthmap values.</dd>
 </dl>
-<dl class="Bl-tag">
-  <dt><b>--global-align</b></dt>
-  <dd>By default each image is aligned against its neighbour. This improves
-      results in deep stacks, as blur at the extreme focus levels can make
-      direct alignment to reference inaccurate. However, if the images given as
-      argument are not in correct order, or if some of them are of poorer
-      quality, this option can be specified to align directly against the
-      reference image.
-    <div class="Pp"></div>
-  </dd>
+
+
+<h3 id="Performance-options">Performance options</h3>
+
+<dl>
+<dt>
+<code>--threads</code>=count</dt>
+<dd>Set the number of parallel threads in use. By default uses the
+number of CPU cores detected plus one to feed possible GPU
+accelerator. Lower number of threads also reduces memory
+consumption.</dd>
+<dt>
+<code>--batchsize</code>=count</dt>
+<dd>Set the batch size for image merging. Larger values may give
+slightly better performance on machines with large amount of memory,
+while smaller values reduce memory usage.
+Currently default value is 8 and maximum value is 32.</dd>
+<dt><code>--no-opencl</code></dt>
+<dd>By default OpenCL-based GPU acceleration is used if available. This
+option can be specified to disable it.</dd>
+<dt>
+<code>--wait-images</code>=seconds</dt>
+<dd>Wait for given time if any image files are missing. Specifying this
+option allows to start processing before all image files have been
+captured from camera.</dd>
 </dl>
-<dl class="Bl-tag">
-  <dt><b>--full-resolution-align</b></dt>
-  <dd>By default the resolution of images used in alignment step is limited to
-      2048x2048 pixels. This improves performance, and because sub-pixel
-      accuracy is used in computing the gradients, higher resolution rarely
-      improves results. Specifying this option will force the use of full
-      resolution images in alignment.
-    <div class="Pp"></div>
-  </dd>
+
+
+<h3 id="Information-options">Information options</h3>
+
+<dl>
+<dt><code>--verbose</code></dt>
+<dd>Report each step as it begins and ends, and also the alignment
+parameters and other detailed information.</dd>
+<dt><code>--version</code></dt>
+<dd>Show application version number.</dd>
+<dt><code>--opencv-version</code></dt>
+<dd>Show OpenCV library build information.</dd>
 </dl>
-<dl class="Bl-tag">
-  <dt><b>--no-whitebalance</b></dt>
-  <dd>The application tries to compensate for any white balance differences
-      between photos automatically. If camera white balance is set manually,
-      this option can be specified to skip the unnecessary white balance
-      adjustment.
-    <div class="Pp"></div>
-  </dd>
+
+
+<h2 id="EXAMPLES">EXAMPLES</h2>
+
+<dl>
+<dt><code>focus-stack IMG*.JPG</code></dt>
+<dd>Combine all images in current directory, and write output to <code>output.jpg</code>
+</dd>
+<dt><code>focus-stack --verbose --output=stacked.png IMG*.JPG</code></dt>
+<dd>Combine all images, giving detailed printout of steps and write output
+to <code>stacked.png</code>
+</dd>
+<dt><code>focus-stack --jpgquality=100 IMG*.JPG</code></dt>
+<dd>Generate a JPEG with the maximum quality level.</dd>
 </dl>
-<dl class="Bl-tag">
-  <dt><b>--no-contrast</b></dt>
-  <dd>If camera exposure is manually controlled, this option can be used to skip
-      unnecessary exposure compensation.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--threads=</b><i>count</i></dt>
-  <dd>Set the number of parallel threads in use. By default uses the number of
-      CPU cores detected plus one to feed possible GPU accelerator. Lower number
-      of threads also reduces memory consumption.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--batchsize=</b><i>count</i></dt>
-  <dd>Set the batch size for image merging. Larger values may give slightly
-      better performance on machines with large amount of memory, while smaller
-      values reduce memory usage.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--no-opencl</b></dt>
-  <dd>By default OpenCL-based GPU acceleration is used if available. This option
-      can be specified to disable it.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--consistency=</b><i>level</i></dt>
-  <dd>Set the level of consistency filter applied to the depth map, in range 0
-      to 2. Higher level reduces artefacts and noise in output image, but can
-      also result in removing small objects that appear against a textured
-      background. By default the highest filter level 2 is used.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--denoise=</b><i>level</i></dt>
-  <dd>Set level of wavelet-based denoise filter applied to the result image.
-      Because focus stacking selects the largest difference from source images,
-      it has a tendency to increase noise. The denoising step reduces all
-      wavelet values by this amount, which corresponds directly to pixel values.
-      The default value of 1.0 removes noise that is on the order of +- 1 pixel
-      value.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--depthmap-smoothing=</b><i>level</i></dt>
-  <dd>Set the smoothing threshold for filtering depthmap image. Larger values
-      result in more consistent values over even-colored areas, but reduce
-      amount of details. Default value is 0.02.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--save-steps</b></dt>
-  <dd>Save intermediate images from processing steps. This includes the aligned
-      images and the final grayscale image before color reassignment.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--verbose</b></dt>
-  <dd>Report each step as it begins and ends, and also the alignment parameters
-      and other detailed information.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--version</b></dt>
-  <dd>Show application version number.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<dl class="Bl-tag">
-  <dt><b>--opencv-version</b></dt>
-  <dd>Show OpenCV library build information.
-    <div class="Pp"></div>
-  </dd>
-</dl>
-<h1 class="Sh" title="Sh" id="EXAMPLES"><a class="permalink" href="#EXAMPLES">EXAMPLES</a></h1>
-<pre>
-<b>focus-stack IMG*.JPG</b>
-</pre>
-Combine all images in current directory, and write output to <b>output.jpg</b>
-<div class="Pp"></div>
-<pre>
-<b>focus-stack --verbose --output=stacked.jpg IMG*.JPG</b>
-</pre>
-Combine all images, giving detailed printout of steps and write output to
-  <b>stacked.jpg</b>
-<div class="Pp"></div>
-<pre>
-<b>focus-stack --jpgquality=100 IMG*.JPG</b>
-</pre>
-Generate a JPEG with the maximum level of quality (no compression).
-<div class="Pp"></div>
-<h1 class="Sh" title="Sh" id="GPU_ACCELERATION"><a class="permalink" href="#GPU_ACCELERATION">GPU
-  ACCELERATION</a></h1>
-This application uses OpenCV library and its OpenCL acceleration interface. The
-  GPU used for acceleration can be selected by environment variable
-  <b>OPENCV_OPENCL_DEVICE</b> which takes a value such as <b>Intel:GPU:0</b> See
-  OpenCV documentation for details.
-<div class="Pp"></div>
-<h1 class="Sh" title="Sh" id="REFERENCES"><a class="permalink" href="#REFERENCES">REFERENCES</a></h1>
-The algorithm used for combining images is described in <b>Complex Wavelets for
-  Extended Depth-of-Field: A New Method for the Fusion of Multichannel
-  Microscopy Images</b> by B. Forster, D. Van De Ville, J. Berent, D. Sage and
-  M. Unser.
-<div class="Pp"></div>
-<h1 class="Sh" title="Sh" id="REPORTING_BUGS"><a class="permalink" href="#REPORTING_BUGS">REPORTING
-  BUGS</a></h1>
-Bugs can be reported at https://github.com/PetteriAimonen/focus-stack/issues
-<div class="Pp"></div>
-</div>
-<table class="foot">
-  <tr>
-    <td class="foot-date">23 Sep 2019</td>
-    <td class="foot-os">focus-stack 1.0</td>
-  </tr>
-</table>
+
+
+<h2 id="GPU-ACCELERATION">GPU ACCELERATION</h2>
+
+<p>This application uses OpenCV library and its OpenCL acceleration
+interface. The GPU used for acceleration can be selected by environment
+variable <strong>OPENCV_OPENCL_DEVICE</strong> which takes a value such as
+<strong>Intel:GPU:0</strong> See OpenCV documentation for details.</p>
+
+<h2 id="REFERENCES">REFERENCES</h2>
+
+<p>The algorithm used for combining images is described in <strong>Complex
+Wavelets for Extended Depth-of-Field: A New Method for the Fusion of
+Multichannel Microscopy Images</strong> by B. Forster, D. Van De Ville, J.
+Berent, D. Sage and M. Unser.</p>
+
+<h2 id="REPORTING-BUGS">REPORTING BUGS</h2>
+
+<p>Bugs can be reported at
+https://github.com/PetteriAimonen/focus-stack/issues</p>
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'></li>
+    <li class='tc'>May 2022</li>
+    <li class='tr'>focus-stack</li>
+  </ol>
+
+  </div>
 </body>
 </html>

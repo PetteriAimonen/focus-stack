@@ -16,7 +16,7 @@ In most cases just passing all the images is enough:
 
      build/focus-stack .../path/to/input/*.jpg
 
-For advanced usage, see `--help` for list of all options:
+For advanced usage, see `--help` for list of all options or [check the manual](docs/focus-stack.md):
 
     Usage: build/focus-stack [options] file1.jpg file2.jpg ...
 
@@ -52,6 +52,7 @@ For advanced usage, see `--help` for list of all options:
       --threads=2                   Select number of threads to use (default number of CPUs + 1)
       --batchsize=8                 Images per merge batch (default 8)
       --no-opencl                   Disable OpenCL GPU acceleration (default enabled)
+      --wait-images=0.0             Wait for image files to appear (allows simultaneous capture and processing)
 
     Information options:
       --verbose                     Verbose output from steps

@@ -1,162 +1,114 @@
-.TH focus-stack 1 "23 Sep 2019" "focus-stack 1.0" "focus-stack man page"
-.SH NAME
-focus-stack \- combine photos to create extended depth of field image
-.SH SYNOPSIS
-focus-stack [options] file1.jpg file2.jpg ...
-.SH DESCRIPTION
-focus-stack takes a set of photos taken at different focus settings and
-combines them into one, selecting the sharpest source image for each pixel
-position. This is commonly called extended depth of field, or focus stacking.
-Typical use is for microscope photography where it is difficult to obtain
-large enough depth of field to cover the whole subject.
-.PP
-Usually good results are obtained with the default settings, but following
-options are available:
-
+.\" generated with Ronn-NG/v0.8.0
+.\" http://github.com/apjanke/ronn-ng/tree/0.8.0
+.TH "FOCUS\-STACK" "" "May 2022" "" ""
+.SH "NAME"
+\fBfocus\-stack\fR \- Combine photos to create extended depth of field image
+.SH "SYNOPSIS"
+\fBfocus\-stack [options \|\.\|\.\|\.] file1\.jpg file2\.jpg \|\.\|\.\|\.\fR
+.SH "DESCRIPTION"
+\fBfocus\-stack\fR takes a set of photos taken at different focus settings and combines them into one, selecting the sharpest source image for each pixel position\. This is commonly called extended depth of field, or focus stacking\. Typical use is for microscope photography where it is difficult to obtain large enough depth of field to cover the whole subject\.
+.P
+Usually good results are obtained with the default settings, but following options are available:
+.SS "Output file options"
 .TP
-\fB\-\-output=\fI\,output.jpg\/\fR
-Set output filename. If file already exists, it will be overwritten.
-Format is decided by file extension. The formats currently supported by OpenCV
-are .bmp, .jpg, .jp2, .png, .webp, .ppm, .pfm, .sr, .tif, .exr and .hdr.
-
+\fB\-\-output\fR=output\.jpg
+Set output filename\. If file already exists, it will be overwritten\. Format is decided by file extension\. The formats currently supported by OpenCV are \.bmp, \.jpg, \.jp2, \.png, \.webp, \.ppm, \.pfm, \.sr, \.tif, \.exr and \.hdr\.
 .TP
-\fB\-\-depthmap=\fI\,depthmap.png\/\fR
-Also save computed depthmap image. The brightness will be scaled from 0 to 255,
-where 0 is the first image given on command line and 255 is the last image.
-
+\fB\-\-depthmap\fR=depthmap\.png
+Generate depthmap image, which shows the depth layers determined from image stack\. The brightness will be scaled from 0 to 255, where 0 is the first image given on command line and 255 is the last image\.
 .TP
-\fB\-\-jpgquality=\fI\,95\/\fR
-Set the level of quality of the JPEG files (final and intermediates
-if asked to be written). The value can go from 0 to 100 with a default
-at 95.
-
+\fB\-\-3dview\fR=3dview\.png
+Based on depth map, generate a 3\-dimensional preview image\.
 .TP
-\fB\-\-reference=\fI\,index\/\fR
-Select image index (starting from 0) to use as alignment reference.
-Images in a stack will usually vary in scale and position.
-All other images are resized and rotated to match with this image.
-This also determines the scale of the output image, which is important
-for performing measurements. By default middle image of the stack is
-used as reference.
-
+\fB\-\-save\-steps\fR
+Save intermediate images from processing steps\. This includes the aligned images and the final grayscale image before color reassignment\.
 .TP
-\fB\-\-global-align\fR
-By default each image is aligned against its neighbour. This improves
-results in deep stacks, as blur at the extreme focus levels can make
-direct alignment to reference inaccurate. However, if the images given
-as argument are not in correct order, or if some of them are of poorer
-quality, this option can be specified to align directly against the
-reference image.
-
+\fB\-\-jpgquality\fR=95
+Set the level of quality of the JPEG files (final and intermediates if asked to be written)\. The value can go from 0 to 100 with a default at 95\.
 .TP
-\fB\-\-full-resolution-align\fR
-By default the resolution of images used in alignment step is limited
-to 2048x2048 pixels. This improves performance, and because sub-pixel
-accuracy is used in computing the gradients, higher resolution rarely
-improves results. Specifying this option will force the use of full
-resolution images in alignment.
-
+\fB\-\-nocrop\fR
+Keep the full size of input images\. By default images are cropped to the area that is valid for all images in the input stack, to avoid distortion near the edges\.
+.SS "Image alignment options"
 .TP
-\fB\-\-no-whitebalance\fR
-The application tries to compensate for any white balance differences
-between photos automatically. If camera white balance is set manually,
-this option can be specified to skip the unnecessary white balance
-adjustment.
-
+\fB\-\-reference\fR=index
+Select image index (starting from 0) to use as alignment reference\. Images in a stack will usually vary in scale and position\. All other images are resized and rotated to match with this image\. This also determines the scale of the output image, which is important for performing measurements\. By default middle image of the stack is used as reference\.
 .TP
-\fB\-\-no-contrast\fR
-If camera exposure is manually controlled, this option can be used to
-skip unnecessary exposure compensation.
-
+\fB\-\-global\-align\fR
+By default each image is aligned against its neighbour\. This improves results in deep stacks, as blur at the extreme focus levels can make direct alignment to reference inaccurate\. However, if the images given as argument are not in correct order, or if some of them are of poorer quality, this option can be specified to align directly against the reference image\.
 .TP
-\fB\-\-threads=\fI\,count\/\fR
-Set the number of parallel threads in use. By default uses the number
-of CPU cores detected plus one to feed possible GPU accelerator. Lower
-number of threads also reduces memory consumption.
-
+\fB\-\-full\-resolution\-align\fR
+By default the resolution of images used in alignment step is limited to 2048x2048 pixels\. This improves performance, and because sub\-pixel accuracy is used in computing the gradients, higher resolution rarely improves results\. Specifying this option will force the use of full resolution images in alignment\.
 .TP
-\fB\-\-batchsize=\fI\,count\/\fR
-Set the batch size for image merging. Larger values may give slightly
-better performance on machines with large amount of memory, while
-smaller values reduce memory usage.
-
+\fB\-\-no\-whitebalance\fR
+The application tries to compensate for any white balance differences between photos automatically\. If camera white balance is set manually, this option can be specified to skip the unnecessary white balance adjustment\.
 .TP
-\fB\-\-no-opencl\fR
-By default OpenCL-based GPU acceleration is used if available. This
-option can be specified to disable it.
-
+\fB\-\-no\-contrast\fR
+If camera exposure is manually controlled, this option can be used to skip unnecessary exposure compensation\.
 .TP
-\fB\-\-consistency=\fI\,level\/\fR
-Set the level of consistency filter applied to the depth map, in range
-0 to 2. Higher level reduces artefacts and noise in output image, but
-can also result in removing small objects that appear against a textured
-background. By default the highest filter level 2 is used.
-
+\fB\-\-align\-only\fR
+Only align the image stack and exit\. Useful for further processing of the aligned images with external tools\.
+.SS "Image merge options"
 .TP
-\fB\-\-denoise=\fI\,level\/\fR
-Set level of wavelet-based denoise filter applied to the result image.
-Because focus stacking selects the largest difference from source images,
-it has a tendency to increase noise. The denoising step reduces all
-wavelet values by this amount, which corresponds directly to pixel values.
-The default value of 1.0 removes noise that is on the order of +- 1 pixel
-value.
-
+\fB\-\-consistency\fR=level
+Set the level of consistency filter applied to the depth map, in range 0 to 2\. Higher level reduces artefacts and noise in output image, but can also result in removing small objects that appear against a textured background\. By default the highest filter level 2 is used\.
 .TP
-\fB\-\-depthmap-smoothing=\fI\,level\/\fR
-Set the smoothing threshold for filtering depthmap image. Larger values
-result in more consistent values over even-colored areas, but reduce
-amount of details. Default value is 0.02.
-
+\fB\-\-denoise\fR=level
+Set level of wavelet\-based denoise filter applied to the result image\. Because focus stacking selects the largest difference from source images, it has a tendency to increase noise\. The denoising step reduces all wavelet values by this amount, which corresponds directly to pixel values\. The default value of 1\.0 removes noise that is on the order of +\- 1 pixel value\.
+.SS "Depth map generation options"
 .TP
-\fB\-\-save-steps\fR
-Save intermediate images from processing steps. This includes the aligned
-images and the final grayscale image before color reassignment.
-
+\fB\-\-depthmap\-threshold\fR=level
+Minimum contrast in input image for accepting as data point for depth map building\. Range 0\-255, default 10\.
+.TP
+\fB\-\-depthmap\-smooth\-xy\fR=level
+Smoothing of depthmap in image plane\. Value is radius in pixels\.
+.TP
+\fB\-\-depthmap\-smooth\-z\fR=level
+Smoothing of depthmap in depth direction\. Value is in 0\-255 units\.
+.TP
+\fB\-\-remove\-bg\fR=threshold
+Add alpha channel to depthmap and remove constant colored background\. Threshold is positive for black background, negative for white background\.
+.TP
+\fB\-\-halo\-radius\fR=level
+Reduce halo effects in depthmap near sharp contrast edges\. Value is radius in pixels\.
+.TP
+\fB\-\-3dviewpoint\fR=x:y:z:zscale
+Viewpoint used for the 3D preview\. Specifies the x, y and z coordinates of the camera and the z scaling of the depthmap values\.
+.SS "Performance options"
+.TP
+\fB\-\-threads\fR=count
+Set the number of parallel threads in use\. By default uses the number of CPU cores detected plus one to feed possible GPU accelerator\. Lower number of threads also reduces memory consumption\.
+.TP
+\fB\-\-batchsize\fR=count
+Set the batch size for image merging\. Larger values may give slightly better performance on machines with large amount of memory, while smaller values reduce memory usage\. Currently default value is 8 and maximum value is 32\.
+.TP
+\fB\-\-no\-opencl\fR
+By default OpenCL\-based GPU acceleration is used if available\. This option can be specified to disable it\.
+.TP
+\fB\-\-wait\-images\fR=seconds
+Wait for given time if any image files are missing\. Specifying this option allows to start processing before all image files have been captured from camera\.
+.SS "Information options"
 .TP
 \fB\-\-verbose\fR
-Report each step as it begins and ends, and also the alignment parameters
-and other detailed information.
-
+Report each step as it begins and ends, and also the alignment parameters and other detailed information\.
 .TP
 \fB\-\-version\fR
-Show application version number.
-
+Show application version number\.
 .TP
-\fB\-\-opencv-version\fR
-Show OpenCV library build information.
-
-.SH EXAMPLES
-.nf
-.B focus-stack IMG*.JPG
-.fi
-Combine all images in current directory, and write output to
-.B output.jpg
-.
-
-.nf
-.B focus-stack --verbose --output=stacked.jpg IMG*.JPG
-.fi
-Combine all images, giving detailed printout of steps and write output to
-.B stacked.jpg
-
-.nf
-.B focus-stack --jpgquality=100 IMG*.JPG
-.fi
-Generate a JPEG with the maximum level of quality (no compression).
-
-.SH GPU ACCELERATION
-This application uses OpenCV library and its OpenCL acceleration interface.
-The GPU used for acceleration can be selected by environment variable
-.B OPENCV_OPENCL_DEVICE
-which takes a value such as
-.B Intel:GPU:0
-See OpenCV documentation for details.
-
-.SH REFERENCES
-The algorithm used for combining images is described in
-.B Complex Wavelets for Extended Depth-of-Field: A New Method for the Fusion of Multichannel Microscopy Images
-by B. Forster, D. Van De Ville, J. Berent, D. Sage and M. Unser.
-
-.SH REPORTING BUGS
-Bugs can be reported at https://github.com/PetteriAimonen/focus-stack/issues
-
+\fB\-\-opencv\-version\fR
+Show OpenCV library build information\.
+.SH "EXAMPLES"
+.TP
+\fBfocus\-stack IMG*\.JPG\fR
+Combine all images in current directory, and write output to \fBoutput\.jpg\fR
+.TP
+\fBfocus\-stack \-\-verbose \-\-output=stacked\.png IMG*\.JPG\fR
+Combine all images, giving detailed printout of steps and write output to \fBstacked\.png\fR
+.TP
+\fBfocus\-stack \-\-jpgquality=100 IMG*\.JPG\fR
+Generate a JPEG with the maximum quality level\.
+.SH "GPU ACCELERATION"
+This application uses OpenCV library and its OpenCL acceleration interface\. The GPU used for acceleration can be selected by environment variable \fBOPENCV_OPENCL_DEVICE\fR which takes a value such as \fBIntel:GPU:0\fR See OpenCV documentation for details\.
+.SH "REFERENCES"
+The algorithm used for combining images is described in \fBComplex Wavelets for Extended Depth\-of\-Field: A New Method for the Fusion of Multichannel Microscopy Images\fR by B\. Forster, D\. Van De Ville, J\. Berent, D\. Sage and M\. Unser\.
+.SH "REPORTING BUGS"
+Bugs can be reported at https://github\.com/PetteriAimonen/focus\-stack/issues
