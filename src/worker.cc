@@ -105,6 +105,7 @@ Worker::Worker(int max_threads, std::shared_ptr<Logger> logger):
   m_completed_tasks(0), m_opencl_users(0), m_failed(false)
 {
   m_start_time = std::chrono::steady_clock::now();
+  m_wait_count = 0;
 
   for (int i = 0; i < max_threads; i++)
   {
@@ -243,6 +244,7 @@ void Worker::worker(int thread_idx)
           task = m_tasks.at(i);
           m_tasks.erase(m_tasks.begin() + i);
           m_running.insert(task);
+          m_wait_count = 0;
           break;
         }
       }
@@ -330,7 +332,32 @@ void Worker::worker(int thread_idx)
         break;
       }
 
-      m_wakeup.wait(lock);
+      if (m_running.size() != 0 || m_tasks.size() == 0)
+      {
+        m_wait_count = 0;
+      }
+      else
+      {
+        m_wait_count++;
+      }
+
+      if (m_wait_count == 10)
+      {
+        if (m_logger->get_level() > Logger::LOG_VERBOSE)
+        {
+          m_logger->progress("[%3d/%3d] Waiting %-30.30s\r", m_tasks_started, m_total_tasks,
+            m_tasks.at(0)->name().c_str());
+        }
+        else
+        {
+          m_logger->verbose("%6.3f [%3d/%3d] T%d Waiting for task to become runnable: %s\n",
+                      seconds_passed(), m_tasks_started, m_total_tasks, thread_idx,
+                      m_tasks.at(0)->name().c_str());
+        }
+      }
+
+      // Poll every 100 ms for new image files
+      m_wakeup.wait_for(lock, std::chrono::milliseconds(100));
     }
   }
 }

@@ -132,6 +132,7 @@ private:
   int m_total_tasks;
   int m_completed_tasks;
   int m_opencl_users;
+  int m_wait_count;
 
   bool m_failed;
   std::string m_error;

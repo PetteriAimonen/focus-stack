@@ -82,7 +82,8 @@ int main(int argc, const char *argv[])
     std::cerr << "Performance options:\n"
                  "  --threads=2                   Select number of threads to use (default number of CPUs + 1)\n"
                  "  --batchsize=8                 Images per merge batch (default 8)\n"
-                 "  --no-opencl                   Disable OpenCL GPU acceleration (default enabled)\n";
+                 "  --no-opencl                   Disable OpenCL GPU acceleration (default enabled)\n"
+                 "  --wait-images=0.0             Wait for image files to appear (allows simultaneous capture and processing)\n";
     std::cerr << "\n";
     std::cerr << "Information options:\n"
                  "  --verbose                     Verbose output from steps\n"
@@ -143,6 +144,7 @@ int main(int argc, const char *argv[])
   }
 
   stack.set_disable_opencl(options.has_flag("--no-opencl"));
+  stack.set_wait_images(std::stof(options.get_arg("--wait-images", "0.0")));
 
   // Information options (some are handled at beginning of this function)
   stack.set_verbose(options.has_flag("--verbose"));

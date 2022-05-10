@@ -66,6 +66,7 @@ public:
   void set_jpgquality(int level) { m_jpgquality = level; }
   void set_consistency(int level) { m_consistency = level; }
   void set_denoise(float level) { m_denoise = level; }
+  void set_wait_images(float seconds) { m_wait_images = seconds; }
   void set_align_flags(int flags) { m_align_flags = static_cast<align_flags_t>(flags); }
   void set_3dviewpoint(float x, float y, float z, float zscale) { m_3dviewpoint = cv::Vec3f(x,y,z); m_3dzscale = zscale; }
   void set_3dviewpoint(std::string value) {
@@ -142,6 +143,7 @@ private:
   int m_consistency;
   int m_jpgquality;
   float m_denoise;
+  float m_wait_images;
 
   // Runtime variables
   bool m_have_opencl;

@@ -39,7 +39,8 @@ FocusStack::FocusStack():
   m_reference(-1),
   m_consistency(0),
   m_jpgquality(95),
-  m_denoise(0)
+  m_denoise(0),
+  m_wait_images(0.0f)
 {
   m_logger = std::make_shared<Logger>();
 
@@ -117,7 +118,7 @@ void FocusStack::start()
   // Add any images that have been added as filenames
   for (const std::string &input: m_inputs)
   {
-    m_input_images.push_back(std::make_shared<Task_LoadImg>(input));
+    m_input_images.push_back(std::make_shared<Task_LoadImg>(input, m_wait_images));
   }
 
   schedule_queue_processing();
@@ -125,7 +126,7 @@ void FocusStack::start()
 
 void FocusStack::add_image(std::string filename)
 {
-  m_input_images.push_back(std::make_shared<Task_LoadImg>(filename));
+  m_input_images.push_back(std::make_shared<Task_LoadImg>(filename, m_wait_images));
 
   if (m_worker)
   {
