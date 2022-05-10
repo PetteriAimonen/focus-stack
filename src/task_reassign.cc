@@ -23,6 +23,31 @@ Task_Reassign_Map::Task_Reassign_Map(const std::vector<std::shared_ptr<ImgTask> 
 
 void Task_Reassign_Map::task()
 {
+  if (m_old_map)
+  {
+    m_grayscale_input = m_old_map->m_grayscale_input;
+  }
+  else
+  {
+    m_grayscale_input = (m_color_imgs.at(0)->img().channels() == 1);
+  }
+
+  if (m_grayscale_input)
+  {
+    build_gray();
+  }
+  else
+  {
+    build_color();
+  }
+
+  m_grayscale_imgs.clear();
+  m_color_imgs.clear();
+  m_old_map.reset();
+}
+
+void Task_Reassign_Map::build_color()
+{
   // Check that all input images are in correct format
   int imgcount = m_grayscale_imgs.size();
   assert(imgcount < REASSIGN_MAX_BATCH);
@@ -100,10 +125,32 @@ void Task_Reassign_Map::task()
   // Release any extra memory that was preallocated
   assert(colors_wrpos - m_colors.data() < m_colors.size());
   m_colors.resize(colors_wrpos - m_colors.data());
+}
 
-  m_grayscale_imgs.clear();
-  m_color_imgs.clear();
-  m_old_map.reset();
+void Task_Reassign_Map::build_gray()
+{
+  int start = 0;
+  if (m_old_map)
+  {
+    m_gray_min = m_old_map->m_gray_min.clone();
+    m_gray_max = m_old_map->m_gray_max.clone();
+    m_old_map.reset();
+  }
+  else
+  {
+    cv::Mat img0 = m_color_imgs.at(0)->img();
+    m_gray_min = img0.clone();
+    m_gray_max = img0.clone();
+    start = 1;
+  }
+
+  int imgcount = m_color_imgs.size();
+  for (int i = start; i < imgcount; i++)
+  {
+    assert(m_color_imgs.at(i)->img().type() == CV_8UC1);
+    cv::min(m_gray_min, m_color_imgs.at(i)->img(), m_gray_min);
+    cv::max(m_gray_max, m_color_imgs.at(i)->img(), m_gray_max);
+  }
 }
 
 Task_Reassign::Task_Reassign(std::shared_ptr<Task_Reassign_Map> map,
@@ -118,6 +165,25 @@ Task_Reassign::Task_Reassign(std::shared_ptr<Task_Reassign_Map> map,
 }
 
 void Task_Reassign::task()
+{
+  m_valid_area = m_merged->valid_area();
+
+  if (m_map->m_grayscale_input)
+  {
+    m_logger->verbose("Performing grayscale range limiting in reassignment step\n");
+    reassign_gray();
+  }
+  else
+  {
+    reassign_color();
+  }
+
+  m_map.reset();
+  m_merged.reset();
+  return;
+}
+
+void Task_Reassign::reassign_color()
 {
   cv::Mat merged = m_merged->img();
   m_result.create(merged.rows, merged.cols, CV_8UC3);
@@ -155,8 +221,11 @@ void Task_Reassign::task()
       m_result.at<cv::Vec3b>(y, x) = closest.color;
     }
   }
+}
 
-  m_valid_area = m_merged->valid_area();
-  m_map.reset();
-  m_merged.reset();
+void Task_Reassign::reassign_gray()
+{
+  m_result = m_merged->img().clone();
+  cv::min(m_result, m_map->m_gray_max, m_result);
+  cv::max(m_result, m_map->m_gray_min, m_result);
 }

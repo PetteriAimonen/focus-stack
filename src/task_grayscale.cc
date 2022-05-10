@@ -23,23 +23,32 @@ Task_Grayscale::Task_Grayscale(std::shared_ptr<ImgTask> input, std::shared_ptr<T
 
 void Task_Grayscale::task()
 {
-  if (m_reference)
+  cv::Mat img = m_input->img();
+
+  if (img.channels() == 1)
   {
-    m_weights = m_reference->weights();
+    // Input is already grayscale
+    m_result = img;
   }
   else
   {
-    do_pca();
+    if (m_reference)
+    {
+      m_weights = m_reference->weights();
+    }
+    else
+    {
+      do_pca();
+    }
+
+    cv::Mat channels[3];
+    cv::split(img, channels);
+    m_result = channels[0] * m_weights.at<float>(0)
+             + channels[1] * m_weights.at<float>(1)
+             + channels[2] * m_weights.at<float>(2);
   }
 
-  cv::Mat channels[3];
-  cv::split(m_input->img(), channels);
-  m_result = channels[0] * m_weights.at<float>(0);
-  m_result += channels[1] * m_weights.at<float>(1);
-  m_result += channels[2] * m_weights.at<float>(2);
-
   m_valid_area = m_input->valid_area();
-
   m_input.reset();
   m_reference.reset();
 }

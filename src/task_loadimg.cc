@@ -22,7 +22,7 @@ void Task_LoadImg::task()
 {
   if (!m_result.data)
   {
-    m_result = cv::imread(m_filename, cv::IMREAD_COLOR);
+    m_result = cv::imread(m_filename, cv::IMREAD_ANYCOLOR);
   }
 
   if (!m_result.data)

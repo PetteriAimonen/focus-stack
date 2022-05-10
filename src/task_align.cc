@@ -82,7 +82,7 @@ void Task_Align::task()
     }
 
     // Perform color/whit balance alignment
-    if (!(m_flags & FocusStack::ALIGN_NO_WHITEBALANCE))
+    if (!(m_flags & FocusStack::ALIGN_NO_WHITEBALANCE) && m_srccolor->img().channels() == 3)
     {
       match_whitebalance();
     }

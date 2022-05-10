@@ -13,6 +13,11 @@ namespace focusstack {
 //
 // Each unique gray value for each pixel is stored only once, which
 // conserves RAM compared to storing all source images.
+//
+// For grayscale input images color reassignment is not strictly necessary,
+// but limiting the output values to input range reduces ringing artefacts
+// in the image. The class uses an optimized implementation for grayscale
+// case.
 class Task_Reassign_Map: public Task
 {
 public:
@@ -23,6 +28,15 @@ public:
 private:
   virtual void task();
 
+  // Build reassigment map for color input images.
+  void build_color();
+
+  // Build reassignment map for grayscale images.
+  // This only stores the range of grayscale values present in input,
+  // which helps with reducing any ringing artefacts.
+  void build_gray();
+
+  bool m_grayscale_input;
   std::vector<std::shared_ptr<ImgTask> > m_grayscale_imgs;
   std::vector<std::shared_ptr<ImgTask> > m_color_imgs;
   std::shared_ptr<Task_Reassign_Map> m_old_map;
@@ -47,6 +61,9 @@ private:
   std::vector<color_entry_t> m_colors;
   std::vector<uint8_t> m_counts;
 
+  cv::Mat m_gray_min;
+  cv::Mat m_gray_max;
+
   friend class Task_Reassign;
 };
 
@@ -60,6 +77,9 @@ public:
 
 private:
   virtual void task();
+
+  void reassign_color();
+  void reassign_gray();
 
   std::shared_ptr<Task_Reassign_Map> m_map;
   std::shared_ptr<ImgTask> m_merged;
