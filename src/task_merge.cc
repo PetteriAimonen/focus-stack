@@ -107,7 +107,8 @@ cv::Mat Task_Merge::get_source_img(int index)
 // and perform two-out-of-three voting filter.
 void Task_Merge::denoise_subbands()
 {
-  for (int level = 0; level < Task_Wavelet::levels; level++)
+  int levels = Task_Wavelet::levels_for_size(m_result.size());
+  for (int level = 0; level < levels; level++)
   {
     int w = m_result.cols >> level;
     int h = m_result.rows >> level;

@@ -36,8 +36,9 @@ void Task_Denoise::task()
   m_result.create(src.rows, src.cols, CV_32FC2);
   src.copyTo(m_result);
 
-  int lowest_w = src.cols >> Task_Wavelet::levels;
-  int lowest_h = src.rows >> Task_Wavelet::levels;
+  int levels = Task_Wavelet::levels_for_size(src.size());
+  int lowest_w = src.cols >> levels;
+  int lowest_h = src.rows >> levels;
 
   for (int y = 0; y < src.rows; y++)
   {

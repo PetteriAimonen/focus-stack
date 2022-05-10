@@ -17,6 +17,7 @@ void Task_Wavelet_OpenCL::task()
     cv::Mat img = m_input->img();
 
     // nth level wavelet decomposition requires image width to be multiple of 2^n
+    int levels = levels_for_size(img.size());
     int factor = (1 << levels);
     assert(img.rows % factor == 0 && img.cols % factor == 0);
 
@@ -47,6 +48,7 @@ void Task_Wavelet_OpenCL::task()
     // Perform composition from complex wavelets to real-valued image
     cv::UMat usrc = m_input->img().getUMat(cv::ACCESS_READ);
     cv::UMat utmp(usrc.rows, usrc.cols, CV_32FC2);
+    int levels = levels_for_size(usrc.size());
 
     Wavelet<cv::UMat>::compose_multilevel(usrc, utmp, levels);
 

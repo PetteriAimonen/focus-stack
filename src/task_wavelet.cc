@@ -19,6 +19,45 @@ Task_Wavelet::Task_Wavelet(std::shared_ptr<ImgTask> input, bool inverse)
   m_depends_on.push_back(input);
 }
 
+int Task_Wavelet::levels_for_size(cv::Size size, cv::Size *expanded_size)
+{
+  int dimension = std::max(size.width, size.height);
+
+  // Aim for 8 pixel wide image at lowest level
+  int levels = Task_Wavelet::min_levels;
+  while ((dimension >> levels) > 8 && levels < Task_Wavelet::max_levels)
+  {
+    levels++;
+  }
+
+  // Expand to divisible size
+  int divider = (1 << levels);
+  cv::Size expanded = size;
+
+  if (expanded.width % divider != 0)
+  {
+    expanded.width += divider - expanded.width % divider;
+  }
+
+  if (expanded.height % divider != 0)
+  {
+    expanded.height += divider - expanded.height % divider;
+  }
+
+  // Make sure we return the same number of levels for the expanded size also
+  if (levels < Task_Wavelet::max_levels && expanded != size)
+  {
+    levels = levels_for_size(expanded, &expanded);
+  }
+
+  if (expanded_size)
+  {
+    *expanded_size = expanded;
+  }
+
+  return levels;
+}
+
 void Task_Wavelet::task()
 {
   if (!m_inverse)
@@ -28,6 +67,7 @@ void Task_Wavelet::task()
     cv::Mat img = m_input->img();
 
     // nth level wavelet decomposition requires image width to be multiple of 2^n
+    int levels = levels_for_size(img.size());
     int factor = (1 << levels);
     assert(img.rows % factor == 0 && img.cols % factor == 0);
 
@@ -53,6 +93,7 @@ void Task_Wavelet::task()
     // Perform composition from complex wavelets to real-valued image
     cv::Mat src = m_input->img();
     cv::Mat tmp(src.rows, src.cols, CV_32FC2);
+    int levels = levels_for_size(src.size());
 
     Wavelet<cv::Mat>::compose_multilevel(src, tmp, levels);
 
