@@ -45,7 +45,7 @@ TESTDEPS := $(TESTOBJS:%.o=%.d)
 $(shell mkdir -p build)
 
 all: build/focus-stack
-	which ronn && make update_docs || .
+	which ronn && make update_docs || true
 
 update_docs: docs/focus-stack.1 docs/focus-stack.html
 
