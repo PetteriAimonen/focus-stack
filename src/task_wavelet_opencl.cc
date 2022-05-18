@@ -58,5 +58,6 @@ void Task_Wavelet_OpenCL::task()
     channels[0].convertTo(m_result, CV_8U);
   }
 
+  m_valid_area = m_input->valid_area();
   m_input.reset();
 }
