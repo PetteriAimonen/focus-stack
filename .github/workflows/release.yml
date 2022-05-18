@@ -1,4 +1,4 @@
-name: Copy latest artifacts to releases
+name: Build binary release
   
 on:
   workflow_dispatch:
@@ -10,13 +10,131 @@ on:
 
 jobs:
   linux_binary:
-      uses: ./.github/workflows/linux_binary.yml
+    name: Build binary on Ubuntu 20.04
+    runs-on: ubuntu-20.04
+    
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
+        with:
+          path: focus-stack
+          fetch-depth: "0"
+      
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libopencv-dev build-essential debhelper devscripts
+      
+      - name: Build binary, .deb and appimage
+        run: |
+          cd focus-stack
+          make
+          make builddeb
+          make build/focus-stack.AppImage
+    
+      - name: Upload deb
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/DEBUILD/*.deb
+          name: Focus-stack Ubuntu 20.04 package
+      
+      - name: Upload ddeb
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/DEBUILD/*.ddeb
+          name: Focus-stack Ubuntu 20.04 debug symbols
+
+      - name: Upload appimage
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/build/focus-stack.AppImage
+          name: Focus-stack Linux x86_64 AppImage
 
   mac_binary:
-      uses: ./.github/workflows/mac_binary.yml
+    name: Build binary on Mac OS X Big Sur 11
+    runs-on: macos-11
+    
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
+        with:
+          path: focus-stack
+          fetch-depth: "0"
+      
+      - name: Install build dependencies
+        run: |
+          brew install opencv pkg-config dylibbundler
+      
+      - name: Build binary
+        run: |
+          cd focus-stack
+          make
+          make distrib/focus-stack_MacOSX.zip
+    
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/distrib/focus-stack_MacOSX.zip
+          name: Focus-stack Mac OS X application
 
   windows_binary:
-      uses: ./.github/workflows/windows_binary.yml
+    name: Build binary on Windows 2022
+    runs-on: windows-2022
+    env:
+      VCPKG_BUILD_TYPE: release
+    
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2
+        with:
+          path: focus-stack
+          fetch-depth: "0"
+      
+      - name: Set vcpkg build type
+        shell: powershell
+        working-directory: C:\vcpkg\triplets
+        run: |
+          $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+          echo "set(VCPKG_BUILD_TYPE release)" | Tee-Object -FilePath x64-windows-static.cmake -Append
+          echo "set(VCPKG_BUILD_TYPE release)" | Tee-Object -FilePath x64-windows.cmake -Append
+          echo "set(VCPKG_BUILD_TYPE release)" | Tee-Object -FilePath x86-windows-static.cmake -Append
+          echo "set(VCPKG_BUILD_TYPE release)" | Tee-Object -FilePath x86-windows.cmake -Append
+          cat x64-windows-static.cmake
+          cat x64-windows.cmake
+
+      - name: Cache dependencies
+        id: cache-vcpkg-1
+        uses: actions/cache@v2
+        with:
+          path: |
+            C:\Users\runneradmin\AppData\Local\vcpkg\archives
+            C:\vcpkg\installed
+          key: vcpkg-win2022-cache
+
+      - name: Install OpenCV dependency
+        shell: cmd
+        run: |
+          vcpkg install opencv:x64-windows
+      
+      - name: Build binary
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cd focus-stack
+          nmake -f Makefile.windows OPENCV_INC=C:\vcpkg\installed\x64-windows\include OPENCV_LIB=C:\vcpkg\installed\x64-windows\lib\opencv*.lib OPENCV_DLL=C:\vcpkg\installed\x64-windows\bin\*.dll
+          nmake -f Makefile.windows package
+    
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/distrib/*.zip
+          name: Focus-stack Windows binary
+
+      - name: Upload debug symbols
+        uses: actions/upload-artifact@v2
+        with:
+          path: focus-stack/build/*.pdb
+          name: Focus-stack Windows debug symbols
 
   release:
     needs: [linux_binary, mac_binary, windows_binary]
