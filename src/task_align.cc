@@ -424,4 +424,7 @@ void Task_Align::compute_valid_area()
 
   m_valid_area = a;
   limit_valid_area(cv::Rect(left, top, right - left, bottom - top));
+
+  m_logger->verbose("%s valid area X %d, Y %d, W %d, H %d\n",
+    m_filename.c_str(), m_valid_area.x, m_valid_area.y, m_valid_area.width, m_valid_area.height);
 }

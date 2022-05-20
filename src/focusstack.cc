@@ -368,7 +368,7 @@ void FocusStack::schedule_alignment(int i)
     {
       // Align directly against the global reference, but use neighbour as a guess.
       // This can give slightly better alignment in shallow stacks with little blur.
-      aligned = std::make_shared<Task_Align>(m_aligned_grayscales.at(m_refidx),
+      aligned = std::make_shared<Task_Align>(m_grayscale_imgs.at(m_refidx),
                                               m_aligned_imgs.at(m_refidx),
                                               m_grayscale_imgs.at(i),
                                               m_input_images.at(i),
