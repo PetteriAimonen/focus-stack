@@ -11,7 +11,8 @@ Binary packages for Windows 10, Ubuntu 20.04 and Mac OS X are available on the
 [GitHub releases tab](https://github.com/PetteriAimonen/focus-stack/releases).
 
 Note that Mac OS X may end up putting the application to quarantine because
-it is unsigned. You can try this command to remove the protection:
+it is unsigned. This gives misleading error message "focus-stack.app” is damaged and can’t be opened. You should move it to the Trash."
+You can try this command to remove the protection:
 
     xattr -d com.apple.quarantine focus-stack.app
 
