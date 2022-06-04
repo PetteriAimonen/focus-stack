@@ -10,6 +10,11 @@ Installation
 Binary packages for Windows 10, Ubuntu 20.04 and Mac OS X are available on the
 [GitHub releases tab](https://github.com/PetteriAimonen/focus-stack/releases).
 
+Note that Mac OS X may end up putting the application to quarantine because
+it is unsigned. You can try this command to remove the protection:
+
+    xattr -d com.apple.quarantine focus-stack.app
+
 Basic usage
 -----------
 In most cases just passing all the images is enough:
