@@ -41,6 +41,7 @@ For advanced usage, see `--help` for list of all options or [check the manual](d
       --no-whitebalance             Don't attempt to correct white balance differences
       --no-contrast                 Don't attempt to correct contrast and exposure differences
       --align-only                  Only align the input image stack and exit
+      --align-keep-size             Keep original image size by not cropping alignment borders
 
     Image merge options:
       --consistency=2               Neighbour pixel consistency filter level 0..2 (default 2)

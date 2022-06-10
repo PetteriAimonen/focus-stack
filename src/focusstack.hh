@@ -32,7 +32,8 @@ public:
     ALIGN_NO_WHITEBALANCE     = 0x01,
     ALIGN_NO_CONTRAST         = 0x02,
     ALIGN_FULL_RESOLUTION     = 0x04,
-    ALIGN_GLOBAL              = 0x08
+    ALIGN_GLOBAL              = 0x08,
+    ALIGN_KEEP_SIZE           = 0x10,
   };
 
   enum log_level_t

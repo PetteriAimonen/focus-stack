@@ -88,6 +88,10 @@ following options are available:
     Only align the image stack and exit. Useful for further processing
     of the aligned images with external tools.
 
+  * `--align-keep-size`:
+    Keep original image size by not cropping alignment borders. The
+    wavelet processing borders still get cropped, unlike with --nocrop.
+
 ### Image merge options
 
 * `--consistency`=level:

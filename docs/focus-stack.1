@@ -1,6 +1,6 @@
 .\" generated with Ronn-NG/v0.8.0
 .\" http://github.com/apjanke/ronn-ng/tree/0.8.0
-.TH "FOCUS\-STACK" "" "May 2022" "" ""
+.TH "FOCUS\-STACK" "" "June 2022" "" ""
 .SH "NAME"
 \fBfocus\-stack\fR \- Combine photos to create extended depth of field image
 .SH "SYNOPSIS"
@@ -47,6 +47,9 @@ If camera exposure is manually controlled, this option can be used to skip unnec
 .TP
 \fB\-\-align\-only\fR
 Only align the image stack and exit\. Useful for further processing of the aligned images with external tools\.
+.TP
+\fB\-\-align\-keep\-size\fR
+Keep original image size by not cropping alignment borders\. The wavelet processing borders still get cropped, unlike with \-\-nocrop\.
 .SS "Image merge options"
 .TP
 \fB\-\-consistency\fR=level

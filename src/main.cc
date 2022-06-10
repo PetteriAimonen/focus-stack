@@ -65,7 +65,8 @@ int main(int argc, const char *argv[])
                  "  --full-resolution-align       Use full resolution images in alignment (default max 2048 px)\n"
                  "  --no-whitebalance             Don't attempt to correct white balance differences\n"
                  "  --no-contrast                 Don't attempt to correct contrast and exposure differences\n"
-                 "  --align-only                  Only align the input image stack and exit\n";
+                 "  --align-only                  Only align the input image stack and exit\n"
+                 "  --align-keep-size             Keep original image size by not cropping alignment borders\n";
     std::cerr << "\n";
     std::cerr << "Image merge options:\n"
                  "  --consistency=2               Neighbour pixel consistency filter level 0..2 (default 2)\n"
@@ -107,6 +108,7 @@ int main(int argc, const char *argv[])
   if (options.has_flag("--full-resolution-align"))    flags |= FocusStack::ALIGN_FULL_RESOLUTION;
   if (options.has_flag("--no-whitebalance"))          flags |= FocusStack::ALIGN_NO_WHITEBALANCE;
   if (options.has_flag("--no-contrast"))              flags |= FocusStack::ALIGN_NO_CONTRAST;
+  if (options.has_flag("--align-keep-size"))          flags |= FocusStack::ALIGN_KEEP_SIZE;
   stack.set_align_flags(flags);
 
   if (options.has_flag("--reference"))
