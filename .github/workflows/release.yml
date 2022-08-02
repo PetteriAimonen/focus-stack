@@ -69,7 +69,7 @@ jobs:
         run: |
           cd focus-stack
           make
-          make distrib/focus-stack_MacOSX.zip
+          sudo make distrib/focus-stack_MacOSX.zip
     
       - name: Upload binary
         uses: actions/upload-artifact@v2
