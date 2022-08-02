@@ -155,8 +155,8 @@ void Task_Merge::denoise_subbands()
   }
 }
 
-// Compare the four neighbours of each pixel and if they all match
-// or are above/below, eliminate the center outlier.
+// Compare the four neighbours of each pixel and if they all
+// are above/below, eliminate the center outlier.
 void Task_Merge::denoise_neighbours()
 {
   for (int y = 1; y < m_depthmap.rows - 1; y++)
@@ -169,14 +169,8 @@ void Task_Merge::denoise_neighbours()
       uint16_t bottom = m_depthmap.at<uint16_t>(y + 1, x);
       uint16_t center = m_depthmap.at<uint16_t>(y, x);
 
-      if (center != top && top == bottom && left == right && left == top)
-      {
-        // Update center pixel to match the surrounding pixels
-        m_depthmap.at<uint16_t>(y, x) = top;
-        m_result.at<cv::Vec2f>(y, x) = get_source_img(top).at<cv::Vec2f>(y, x);
-      }
-      else if ((center > top && center > bottom && center > left && center > right) ||
-               (center < top && center < bottom && center < left && center < right))
+      if ((center > top && center > bottom && center > left && center > right) ||
+          (center < top && center < bottom && center < left && center < right))
       {
         // Center pixel is an outlier, average the side pixels to get a better value.
         int avg = (top + bottom + left + right + 2) / 4;
