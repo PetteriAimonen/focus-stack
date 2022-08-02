@@ -178,8 +178,8 @@ void Task_Merge::denoise_neighbours()
       else if ((center > top && center > bottom && center > left && center > right) ||
                (center < top && center < bottom && center < left && center < right))
       {
-        // Eliminate outlier
-        int avg = (top + bottom + left + right) / 4;
+        // Center pixel is an outlier, average the side pixels to get a better value.
+        int avg = (top + bottom + left + right + 2) / 4;
         m_depthmap.at<uint16_t>(y, x) = avg;
         m_result.at<cv::Vec2f>(y, x) = get_source_img(avg).at<cv::Vec2f>(y, x);
       }
