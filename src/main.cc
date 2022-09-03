@@ -16,7 +16,7 @@ int main(int argc, const char *argv[])
 
   if (options.has_flag("--version"))
   {
-    std::cerr << "focus-stack 1.0, git version " GIT_VERSION ", built " __DATE__ " " __TIME__ "\n"
+    std::cerr << "focus-stack " GIT_VERSION ", built " __DATE__ " " __TIME__ "\n"
                  "Compiled with OpenCV version " CV_VERSION "\n"
                  "Copyright (c) 2019 Petteri Aimonen\n\n"
 
