@@ -264,13 +264,13 @@ void Task_Align::match_transform(int max_resolution, bool rough)
   {
     cv::findTransformECC(src, ref, m_transformation, cv::MOTION_AFFINE,
                         cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 25, 0.01),
-                        mask);
+                        mask, 1);
   }
   else
   {
     cv::findTransformECC(src, ref, m_transformation, cv::MOTION_AFFINE,
                         cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, 0.001),
-                        mask);
+                        mask, 3);
   }
 
 
