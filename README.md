@@ -85,11 +85,12 @@ the source images.
 
 For more information, see the [detailed explanation of algorithms](docs/Algorithms.md).
 
-Building on Ubuntu
+Building on Linux
 ------------------
 The only dependency is OpenCV, 3.0 or newer, plus the basic build tools:
 
-    sudo apt install libopencv-dev build-essential
+    sudo apt install libopencv-dev build-essential   # Ubuntu
+    sudo dnf install opencv-devel make gcc-c++       # Fedora
 
 To enable GPU acceleration, you additionally need OpenCL library and
 GPU-specific driver:
