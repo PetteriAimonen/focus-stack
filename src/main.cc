@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
                  "  --3dview=3dview.png           Write a 3D preview image (default disabled)\n"
                  "  --save-steps                  Save intermediate images from processing steps\n"
                  "  --jpgquality=95               Quality for saving in JPG format (0-100, default 95)\n"
-                 "  --nocrop                      Save full image, including borders with partial data\n";
+                 "  --nocrop                      Save full image, including extrapolated border data\n";
     std::cerr << "\n";
     std::cerr << "Image alignment options:\n"
                  "  --reference=0                 Set index of image used as alignment reference (default middle one)\n"

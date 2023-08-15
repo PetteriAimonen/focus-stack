@@ -22,6 +22,9 @@ In most cases just passing all the images is enough:
 
      build/focus-stack .../path/to/input/*.jpg
 
+Input images can be in any format supported by OpenCV, including JPG, PNG and TIFF.
+Output format defaults to JPG, but can be set by changing the extension with `--output=output.png`.
+
 For advanced usage, see `--help` for list of all options or [check the manual](docs/focus-stack.md):
 
     Usage: build/focus-stack [options] file1.jpg file2.jpg ...
@@ -32,7 +35,7 @@ For advanced usage, see `--help` for list of all options or [check the manual](d
       --3dview=3dview.png           Write a 3D preview image (default disabled)
       --save-steps                  Save intermediate images from processing steps
       --jpgquality=95               Quality for saving in JPG format (0-100, default 95)
-      --nocrop                      Save full image, including borders with partial data
+      --nocrop                      Save full image, including extrapolated border data
 
     Image alignment options:
       --reference=0                 Set index of image used as alignment reference (default middle one)
@@ -73,6 +76,17 @@ On Mac OS X, you can start the program directly and it will ask for files.
 Alternatively you can drag the files over `focus-stack` application.
 If you want to provide command line parameters, open terminal and call the
 binary with path `focus-stack.app/Contents/MacOS/focus-stack`.
+
+Memory usage
+------------
+With default settings, approximately 100 MB of RAM is required per 1 megapixel
+of input image resolution. The images are processed in batches, so total number
+of images in stack does not significantly affect memory usage.
+
+Memory usage can be reduced at the cost of computation speed.
+It is affected by number of images per batch, and number of simultaneous
+processing threads.
+Minimal configuration of `--threads=1 --batchsize=2` uses about 50 MB per megapixel.
 
 Algorithms used
 ---------------

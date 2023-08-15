@@ -21,6 +21,13 @@ The default approach is therefore to align each image against its neighbour and 
 
 ![Images from stack bottom and stack top, before and after alignment](imgs/alignment.jpg)
 
+Input images need to be expanded both to accommodate rotation for alignment,
+and to match the wavelet transform block size. The added borders are normally
+cropped from the output, which can be controlled with options `--nocrop` and
+`--align-keep-size`.
+
+![Diagram of image alignment (image courtesy of Murakumo Minato)](imgs/alignment_flow.png)
+
 Grayscale conversion
 --------------------
 The main processing algorithms run in grayscale space.
