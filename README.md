@@ -152,3 +152,9 @@ and that also includes a simple GUI for selecting the files:
 
     make build/focus-stack.app
 
+Usage on Android
+----------------
+
+There is a third-party Android app that uses focus-stack for algorithm:
+
+* [Ignislab ltd Multifocus camera](https://play.google.com/store/apps/details?id=com.lab.multifocus)
