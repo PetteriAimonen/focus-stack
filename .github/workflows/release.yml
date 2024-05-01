@@ -51,8 +51,8 @@ jobs:
           name: Focus-stack Linux x86_64 AppImage
 
   mac_binary:
-    name: Build binary on Mac OS X Big Sur 11
-    runs-on: macos-11
+    name: Build binary on Mac OS X 14
+    runs-on: macos-14
     
     steps:
       - name: Check out code from GitHub
