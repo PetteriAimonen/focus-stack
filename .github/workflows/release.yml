@@ -15,7 +15,7 @@ jobs:
     
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: focus-stack
           fetch-depth: "0"
@@ -33,19 +33,19 @@ jobs:
           make build/focus-stack.AppImage
     
       - name: Upload deb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: focus-stack/DEBUILD/*.deb
           name: Focus-stack Ubuntu 20.04 package
       
       - name: Upload ddeb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: focus-stack/DEBUILD/*.ddeb
           name: Focus-stack Ubuntu 20.04 debug symbols
 
       - name: Upload appimage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: focus-stack/build/focus-stack.AppImage
           name: Focus-stack Linux x86_64 AppImage
@@ -56,7 +56,7 @@ jobs:
     
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: focus-stack
           fetch-depth: "0"
@@ -72,7 +72,7 @@ jobs:
           sudo make distrib/focus-stack_MacOSX.zip
     
       - name: Upload binary
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: focus-stack/distrib/focus-stack_MacOSX.zip
           name: Focus-stack Mac OS X application
@@ -85,7 +85,7 @@ jobs:
     
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: focus-stack
           fetch-depth: "0"
@@ -104,7 +104,7 @@ jobs:
 
       - name: Cache dependencies
         id: cache-vcpkg-1
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             C:\Users\runneradmin\AppData\Local\vcpkg\archives
@@ -125,13 +125,13 @@ jobs:
           nmake -f Makefile.windows package
     
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: focus-stack/distrib/*.zip
           name: Focus-stack Windows binary
 
       - name: Upload debug symbols
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: focus-stack/build/*.pdb
           name: Focus-stack Windows debug symbols
@@ -141,7 +141,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: focus-stack
           fetch-depth: "0"
