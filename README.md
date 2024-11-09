@@ -109,7 +109,7 @@ The only dependency is OpenCV, 3.0 or newer, plus the basic build tools:
 To enable GPU acceleration, you additionally need OpenCL library and
 GPU-specific driver:
 
-    sudo apt install ocl-icd-opencl-dev beignet            # For Intel GPUs
+    sudo apt install ocl-icd-opencl-dev intel-openol-icd   # For Intel GPUs
     sudo apt install ocl-icd-opencl-dev nvidia-opencl-icd  # For NVidia GPUs
 
 To build and install the application, simply type:
