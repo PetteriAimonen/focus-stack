@@ -6,8 +6,8 @@ on:
 
 jobs:
   run_tests_linux:
-    name: Run tests on Ubuntu 20.04
-    runs-on: ubuntu-20.04
+    name: Run tests on Ubuntu 22.04
+    runs-on: ubuntu-22.04
     
     steps:
       - name: Check out code from GitHub
