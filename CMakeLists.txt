@@ -34,6 +34,12 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE ${PROJECT_LIB}
 )
 
+# SDK Example
+add_executable(sdk_example examples/sdk_example.cc)
+target_link_libraries(sdk_example
+    PRIVATE ${PROJECT_LIB}
+)
+
 if (BUILD_TESTS)
     enable_testing()
     find_package(GTest CONFIG REQUIRED)
